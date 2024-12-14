@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
+  <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="coordination" infinite="true">
+    <params>
+      <param name="homeSector" default="if this.ship.jobmainsector? then this.ship.jobmainsector else this.ship.sector" type="sector" required="true" text="{1972092402, 101}" />
+      <param name="homeStation" type="object"  text="{1972092401, 102}" />
+      <param name="shipDormitory" type="object"  text="{1972092401, 103}" />
+      <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
+        <input_param name="truevalue" value="100"/>
+        <editable/>
+      </param>
+    </params>
+    <skill min="20" />
+    <requires>
+      <match shiptype="shiptype.lasertower" negate="true" />
+    </requires>
+    <location object="$homeSector" condition="$homeSector.zone.exists" />
+  </order>
+
+  <interrupts>
+    <handler ref="AttackHandler" />
+    <handler ref="MissileLockHandler" />
+    <handler ref="ScannedHandler" />
+    <handler ref="InspectedHandler" />
+    <handler ref="FoundAbandonedHandler" />
+    <handler ref="FoundLockboxHandler" />
+    <handler>
+      <conditions>
+        <check_all>
+          <event_game_loaded />
+          <debug_text text="'%s [%s (%s - %s) at %s, %s] - Game loaded with version %s'.
+          [
+            player.age,
+            this.ship.knownname, 
+            this.ship.idcode, 
+            this.ship, 
+            this.ship.sector.knownname, 
+            @$scriptVersion
+          ]" debugchance="100"/>
+          <check_value value="@$scriptVersion lt 100" />
+        </check_all>
+      </conditions>
+      <actions>
+        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship" 
+          text="'[%s (%s - %s) at %s] - Re-init for versions prior to 1.00'
+          .[
+            this.ship.knownname, 
+            this.ship.idcode, 
+            this.ship, 
+            this.ship.sector.knownname, 
+          ]" output="true" append="true" />
+        <do_if value="@$scriptVersion lt 100">
+          <cancel_all_orders object="this.ship" />
+          <create_order object="this.ship" id="'RescueRangers'" default="true">
+            <param name="homeSector" value="$homeSector" />
+            <param name="homeStation" value="$homeStation" />
+            <param name="shipDormitory" value="$shipDormitory" />
+          </create_order>
+        </do_if>
+      </actions>
+    </handler>
+    <handler>
+      <conditions>
+        <check_all>
+          <event_player_owned_destroyed/> 
+        </check_all>
+      </conditions>
+      <actions>
+        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+          text="'[%s (%s - %s) at %s] -  %s, our : %s (%s - %s) {%s} in sector: %s'
+            .[
+              this.ship.knownname, 
+              this.ship.idcode, 
+              this.ship, 
+              this.ship.sector.knownname, 
+              event.name, 
+              event.object.name, 
+              event.object.idcode, 
+              event.object, 
+              event.object.class, 
+              event.object.sector.knownname, 
+            ]"
+          output="true" append="true" />
+        <apply_experience entity="this" experience="'ship_disable_easy'" chance="60"/>
+        <!-- <abort_called_scripts resume="protectPlayerShipsCheck" /> -->
+      </actions>
+    </handler>
+  </interrupts>
+  <init>
+
+    <set_value name="$scriptVersion" exact="100" />
+
+    <set_value name="$target" exact="null" />
+
+    <create_group groupname="$targets" />
+
+    <set_value name="$debugChance" exact="100" />
+
+    <do_if value="$homeSector == null">
+      <set_value name="$homeSector" exact="this.ship.zone" />
+      <edit_order_param order="this.assignedcontrolled.defaultorder" param="'homeSector'" value="$homeSector.sector" />
+    </do_if>
+
+    <do_if value="$homeSector.isclass.sector">
+      <find_zone name="$homeSector" space="$homeSector" normalzone="true" sortbydistanceto="this.ship" />
+    </do_if>
+
+    <set_value name="$homeLocation" exact="$homeSector" />
+
+    <!-- <set_command_action commandaction="commandaction.scanningto" param="$homeLocation.sector" /> -->
+
+    <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+      text="'[%s (%s - %s) at %s, %s]  - Init  version %s (%s) with %s subordinates and %s as top commander. Debug chance: %s'
+        .[
+          this.ship.knownname, 
+          this.ship.idcode, 
+          this.ship, 
+          this.ship.sector.knownname, 
+          @$scriptVersion,
+          @$isInit,
+          @this.ship.subordinates.count,
+          @this.ship.toplevelcommander,
+          $debugchance
+        ]" output="true" append="true" />
+
+
+  </init>
+
+  <attention min="unknown">
+    <actions>
+      <wait min="5s" max="10s" />
+
+    </actions>
+  </attention>
+</aiscript>

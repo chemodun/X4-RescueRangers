@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<diff>
+  <add sel="/language">
+    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector" >
+      <t id="1">Rescue Rangers</t>
+      <t id="2">Rescues Rangers: Rescue crews from destroyed ships</t>
+      <t id="101">Home sector</t>
+      <t id="102">Home station</t>
+      <t id="103">Ship: Dormitory</t>
+    </page>
+  </add>
+</diff>
