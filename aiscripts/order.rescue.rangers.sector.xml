@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1">
+<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="1" priority="1">
   <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true">
     <params>
       <param name="homeSector" default="if this.ship.jobmainsector? then this.ship.jobmainsector else this.ship.sector" type="sector" required="true" text="{1972092402, 101}" />
@@ -10,14 +10,16 @@
         <input_param name="class" value="[class.ship]"/>
         <input_param name="owner" value="this.ship.trueowner"/>
       </param>
+      <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />      
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100"/>
         <editable/>
       </param>
     </params>
-    <!-- <skill min="20" /> -->
+    <skill min="20" />
     <requires>
       <match shiptype="shiptype.lasertower" negate="true" />
+      <match class="class.spacesuit" negate="true"/>
     </requires>
     <location object="$homeSector" condition="$homeSector.zone.exists" />
   </order>
@@ -36,11 +38,11 @@
           <debug_text text="'%s [%s (%s - %s) at %s] - Game loaded with version %s'.
           [
             player.age,
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
-            @$scriptVersion
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+            @$scriptVersion,
           ]" debugchance="100"/>
           <check_value value="@$scriptVersion lt 100" />
         </check_all>
@@ -49,10 +51,10 @@
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship" 
           text="'[%s (%s - %s) at %s] - Re-init for versions prior to 1.00'
           .[
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
           ]" output="true" append="true" />
         <do_if value="@$scriptVersion lt 100">
           <cancel_all_orders object="this.ship" />
@@ -68,83 +70,127 @@
       <conditions>
         <check_all>
           <event_player_owned_destroyed />
-          <debug_text text="'[%s (%s - %s) at %s]:  %s, our : %s (%s - %s) {%s} in sector: %s, target: %s'.
+          <debug_text text="'[%s (%s - %s) at %s] - %s, our : %s (%s - %s) {%s, %s} in sector: %s, target: %s'.
           [
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
-            event.name, 
-            event.param.name, 
-            event.param.idcode, 
-            event.param, 
-            event.param.class, 
-            event.param.sector.knownname, 
-            $target
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+            event.name,
+            event.param.name,
+            event.param.idcode,
+            event.param,
+            event.param.class,
+            @event.param.type,
+            event.param.sector.knownname,
+            $target,
           ]" debugchance="100"/>
-<!--           <debug_text text="'[%s (%s - %s) at %s]:  %s, is class ship: %s'.
+<!--           <debug_text text="'[%s (%s - %s) at %s] - %s, is class ship: %s'.
           [
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
-            event.name, 
-            event.param.isclass.ship, 
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+            event.name,
+            event.param.isclass.ship,
           ]" debugchance="100"/>     -->      
           <check_value value="event.param.isclass.ship" />
-<!--           <debug_text text="'[%s (%s - %s) at %s]:  %s, not this ship: %s'.
+          <check_value value="@event.param.type == shiptype.lasertower" negate="true"/>
+<!--           <debug_text text="'[%s (%s - %s) at %s] - %s, not this ship: %s'.
           [
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
-            event.name, 
-            event.param != this.ship, 
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+            event.name,
+            event.param != this.ship,
           ]" debugchance="100"/>       -->              
           <check_value value="event.param != this.ship" />
-<!--           <debug_text text="'[%s (%s - %s) at %s]:  %s, right sector: %s'.
+<!--           <debug_text text="'[%s (%s - %s) at %s] - %s, right sector: %s'.
           [
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
-            event.name, 
-            event.param.sector == $homeSector, 
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+            event.name,
+            event.param.sector == $homeSector,
           ]" debugchance="100"/>   -->          
           <check_value value="event.param.sector == $homeSector" />
-<!--           <debug_text text="'[%s (%s - %s) at %s]:  %s, can rescue: %s'.
-          [
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
-            event.name, 
-            @$canRescue, 
-          ]" debugchance="100"/>             -->
-          <check_value value="@$canRescue" />
-          <check_value value="$target == null"/>
+          <check_any>
+            <check_all>
+              <check_value value="$target == null"/>
+              <check_value value="event.param.isclass.spacesuit" negate="true"/>             
+              <check_value value="this.ship.people.free gt 0" />
+            </check_all>
+            <check_all>
+              <check_value value="event.param == $target" />
+              <check_value value="event.param.isclass.spacesuit" />             
+            </check_all>  
+          </check_any>
         </check_all>
       </conditions>
       <actions>
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-          text="'[%s (%s - %s) at %s] -  %s, our : %s (%s - %s) {%s} in sector: %s'
+          text="'[%s (%s - %s) at %s] - %s, our : %s (%s - %s) {%s} in sector: %s. Killer: %s (%s - %s) {%s}, method: %s. Spacesuit docked: %s. Crew free: %s'
             .[
-              this.ship.knownname, 
-              this.ship.idcode, 
-              this.ship, 
-              this.ship.sector.knownname, 
-              event.name, 
-              event.param.name, 
-              event.param.idcode, 
-              event.param, 
-              event.param.class, 
-              event.param.sector.knownname, 
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              @event.name,
+              @event.param.name,
+              @event.param.idcode,
+              @event.param,
+              @event.param.class,
+              @event.param.sector.knownname,
+              @event.param2.name,
+              @event.param2.idcode,
+              @event.param2,
+              @event.param2.class,
+              @event.param3,
+              event.param == $target,
+              this.ship.people.free,
             ]"
           output="true" append="true" />
-        <apply_experience entity="this" experience="'rescue_rangers'" chance="30"/>
-        <do_if value="this.ship.people.free">
+        <do_if value="$target != null">
+          <clear_group group="$targets" />
+          <set_value name="$target" exact="null" />
+          <do_if value="@event.param3 == killmethod.removed">
+            <do_if value="$recordActionsToLogBook">
+              <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textHomeSector]" interaction="showonmap" object="this.ship" />
+            </do_if>
+            <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>
+          </do_if>
+        </do_if>
+        <do_else>
+          <apply_experience entity="this" experience="'rescue_rangers'" chance="45"/>
+        </do_else>
+        <do_if value="this.ship.people.free gt 0">  
+          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+            text="'[%s (%s - %s) at %s] - Going to search spacesuits. Crew free: %s'
+              .[
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
+                this.ship.people.free,
+              ]"
+            output="true" append="true" />        
           <abort_called_scripts resume="findSpacesuits" />
         </do_if>
+        <do_else>
+          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+            text="'[%s (%s - %s) at %s] - Going to transfer persons. Crew free: %s'
+              .[
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
+                this.ship.people.free,
+              ]"
+            output="true" append="true" />           
+          <abort_called_scripts resume="transferPeople" />
+        </do_else> 
       </actions>
     </handler>
     <handler>
@@ -157,28 +203,28 @@
       </conditions>
       <actions>
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-          text="'[%s (%s - %s) at %s] -  %s, our : %s (%s - %s) {%s} in sector: %s, docked at: %s'
+          text="'[%s (%s - %s) at %s] - %s, our : %s (%s - %s) {%s} in sector: %s, docked at: %s'
             .[
-              this.ship.knownname, 
-              this.ship.idcode, 
-              this.ship, 
-              this.ship.sector.knownname, 
-              event.name, 
-              event.param.name, 
-              event.param.idcode, 
-              event.param, 
-              event.param.class, 
-              event.param.sector.knownname, 
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              event.name,
+              event.param.name,
+              event.param.idcode,
+              event.param,
+              event.param.class,
+              event.param.sector.knownname,
               event.param.dock,
             ]"
           output="true" append="true" />
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship" 
-          text="'[%s (%s - %s) at %s]  -  After rescue: free before: %s, after: %s. Target: %s (%s - %s) at %s, is operational: %s, is exist: %s, is wreck: %s, is docked: %s'
+          text="'[%s (%s - %s) at %s] - After rescue: free before: %s, after: %s. Target: %s (%s - %s) at %s, is operational: %s, is exist: %s, is wreck: %s, is docked: %s'
             .[
-              this.ship.knownname, 
-              this.ship.idcode, 
-              this.ship, 
-              this.ship.sector.knownname, 
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
               $crewFreeCount,
               this.ship.people.free,
               @$target.knownname,
@@ -190,11 +236,15 @@
               @$target.iswreck,
               @$target.dock,
             ]" output="true" append="true" />    
+        <clear_group group="$targets" />
         <set_value name="$target" exact="null" />
         <do_if value="this.ship.people.free lt $crewFreeCount">
-          <apply_experience entity="this" experience="'rescue_rangers'" chance="85"/>
+          <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>
+          <do_if value="$recordActionsToLogBook">
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson]" interaction="showonmap" object="this.ship" />
+          </do_if>
         </do_if>
-        <do_if value="this.ship.people.free">
+        <do_if value="this.ship.people.free gt 0">
           <abort_called_scripts resume="findSpacesuits" />
         </do_if>
         <do_else>
@@ -202,6 +252,58 @@
         </do_else>
       </actions>
     </handler>
+   <handler>
+      <conditions>
+        <check_all>
+          <check_any>
+            <event_object_destroyed group="$targets" />
+            <!-- <event_object_abandoned group="$targets" />
+            <event_object_changed_sector group="$targets" /> -->
+            <event_object_target_invalid object="this.ship" />
+          </check_any>
+          <check_value value="$target != null" />
+        </check_all>
+      </conditions>
+      <actions>
+        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+          text="'[%s (%s - %s) at %s] - Event %s : %s (%s - %s) {%s} status: iswreck: %s, isoperational: %s,  pilot: %s (%s), param: %s (%s - %s) {%s}, , param2: %s (%s - %s) {%s}, target: %s'
+            .[
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              event.name,
+              @event.object.name,
+              @event.object.idcode,
+              @event.object,
+              @event.object.class,
+              @event.object.iswreck,
+              @event.object.isoperational,
+              @event.object.pilot,
+              event.object.pilot?,
+              @event.param.name,
+              @event.param.idcode,
+              @event.param,
+              @event.param.class,
+              @event.param2.name,
+              @event.param2.idcode,
+              @event.param2,
+              @event.param2.class,
+              $target,
+            ]" output="true" append="true" />
+        <do_if value="$target != null">
+          <clear_group group="$targets" />
+          <set_value name="$target" exact="null" />
+          <do_if value="this.ship.people.free gt 0">
+            <abort_called_scripts resume="findSpacesuits" />
+          </do_if>
+          <do_else>
+            <abort_called_scripts resume="transferPeople" />
+          </do_else>            
+        </do_if>
+        </actions>  
+    </handler>
+
   </interrupts>
   <init>
 
@@ -217,39 +319,42 @@
       <set_value name="$homeSector" exact="$homeSector.sector" />
     </do_if>
 
+    <set_value name="$textTitle" exact="{1972092402, 1000}" />
+    <set_value name="$textHomeSector" exact="{1972092402, 1003}.[$homeSector.knownname]" />
+    <set_value name="$textHomeStation" exact="{1972092402, 1011}.[$homeStation.name, $homeStation.idcode]" />
+    <set_value name="$textUnit" exact="{1972092402, 1011}.[this.ship.name, this.ship.idcode]" />
+    <set_value name="$textDormitory" exact="{1972092402, 1011}.[$shipDormitory.name, $shipDormitory.idcode]" />
+    <set_value name="$textTargetPerson" exact="''" />
+
     <!-- <set_command_action commandaction="commandaction.scanningto" param="$homeLocation.sector" /> -->
 
-    <do_if value="this.ship.people.free">
-      <set_value name="$canRescue" exact="true" />
-    </do_if>
-    <do_else>
-      <set_value name="$canRescue" exact="false" />
-    </do_else>
-
     <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-      text="'[%s (%s - %s) at %s] - Init version %s. Free: %s. Sector: %s, station: [%s (%s - %s) at %s], dormitory: [%s (%s - %s) at %s], free: %s. Can rescue: %s. Debug chance: %s'
+      text="'[%s (%s - %s) at %s] - Init version %s. Free: %s. Sector: %s, station: [%s (%s - %s) at %s], dormitory: [%s (%s - %s) at %s], free: %s. Debug chance: %s'
         .[
-          this.ship.knownname, 
-          this.ship.idcode, 
-          this.ship, 
-          this.ship.sector.knownname, 
+          this.ship.knownname,
+          this.ship.idcode,
+          this.ship,
+          this.ship.sector.knownname,
           @$scriptVersion,
           this.ship.people.free,
-          @$homeSector.knownname, 
-          @$homeStation.knownname, 
-          @$homeStation.idcode, 
-          @$homeStation, 
-          @$homeStation.sector.knownname, 
-          @$shipDormitory.knownname, 
-          @$shipDormitory.idcode, 
-          @$shipDormitory, 
+          @$homeSector.knownname,
+          @$homeStation.knownname,
+          @$homeStation.idcode,
+          @$homeStation,
+          @$homeStation.sector.knownname,
+          @$shipDormitory.knownname,
+          @$shipDormitory.idcode,
+          @$shipDormitory,
           @$shipDormitory.sector.knownname,
           @$shipDormitory.people.free,
-          @$canRescue,
-          $debugchance
+          $debugchance,
         ]" output="true" append="true" />
 
     <set_value name="$crewFreeCount" exact="this.ship.people.free" />
+
+    <do_if value="$recordActionsToLogBook">
+      <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1021}.[$textUnit, $textHomeSector]" interaction="showonmap" object="this.ship" />
+    </do_if>
 
   </init>
 
@@ -258,18 +363,32 @@
 
       <label name="start" />
 
+      <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+          text="'[%s (%s - %s) at %s] - This ship: free: %s, unassigned: %s. Dormitory ship: free: %s, unassigned: %s'
+            .[
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              this.ship.people.free,
+              @this.ship.people.{entityrole.unassigned}.count,
+              @shipDormitory.people.free,
+              @shipDormitory.people.{entityrole.unassigned}.count,
+            ]" output="true" append="true" />      
+
+
       <do_if value="this.ship.order" comment="Safety check in case the script is called from non-order script">
         <!-- Required for all infinite orders, no effect in case of finite timeout -->
         <set_order_syncpoint_reached order="this.ship.order" />
       </do_if>
 
       <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-        text="'[%s (%s - %s) at %s]  - homeStation: %s {%s - %s} at %s, dock: %s, parkedat: %s'
+        text="'[%s (%s - %s) at %s] - homeStation: %s {%s - %s} at %s, dock: %s, parkedat: %s'
           .[
-            this.ship.knownname, 
-            this.ship.idcode, 
-            this.ship, 
-            this.ship.sector.knownname, 
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
             @$homeStation.knownname,
             @$homeStation.idcode,
             @$homeStation,
@@ -279,26 +398,41 @@
           ]" output="true" append="true" />      
 
       <do_if value="(this.ship.dock and (this.ship.dock.container == $homeStation)) or (this.ship.parkedat and ((this.ship.parkedat == $homeStation) or this.ship.parkedat.hascontext.{$homeStation}))">
-        <wait min="50s" max="170s" />
+        <wait min="150s" max="370s" />
+        <do_if value="@this.ship.people.{entityrole.unassigned}.count gt 0">
+          <resume label="transferPeople" />
+        </do_if>
       </do_if>
       <do_else>
-          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-            text="'[%s (%s - %s) at %s]  - going to dock at homeStation: %s {%s - %s} at %s'
-              .[
-                this.ship.knownname, 
-                this.ship.idcode, 
-                this.ship, 
-                this.ship.sector.knownname, 
-                @$homeStation.knownname,
-                @$homeStation.idcode,
-                @$homeStation,
-                @$homeStation.sector.knownname,
-              ]" output="true" append="true" />      
-          <run_script name="'order.dock'" result="$docked">
-            <param name="destination" value="$homeStation"/>
-            <!-- <param name="abouttofinish" value="true"/> -->
-            <param name="debugchance" value="$debugChance"/>
-          </run_script>        
+        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+          text="'[%s (%s - %s) at %s] - going to dock at homeStation: %s {%s - %s} at %s'
+            .[
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              @$homeStation.knownname,
+              @$homeStation.idcode,
+              @$homeStation,
+              @$homeStation.sector.knownname,
+            ]" output="true" append="true" />      
+        <do_if value="$recordActionsToLogBook">
+          <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1022}.[$textUnit, $textHomeStation]" interaction="showonmap" object="this.ship" />
+        </do_if>
+        <run_script name="'order.dock'" result="$docked">
+          <param name="destination" value="$homeStation"/>
+          <!-- <param name="abouttofinish" value="true"/> -->
+          <param name="debugchance" value="$debugChance"/>
+        </run_script>        
+        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+          text="'[%s (%s - %s) at %s] - Result: %s'
+            .[
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              @$docked,
+            ]" output="true" append="true" />            
       </do_else>
 
       <resume label="start" />
@@ -312,12 +446,12 @@
         </find_ship>
 
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-          text="'[%s (%s - %s) at %s]  -  Spacesuits: found: %s, list: %s'
+          text="'[%s (%s - %s) at %s] - Spacesuits: found: %s, list: %s'
             .[
-              this.ship.knownname, 
-              this.ship.idcode, 
-              this.ship, 
-              this.ship.sector.knownname, 
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
               @$spacesuits.count,
               @$spacesuits,
             ]" output="true" append="true" />      
@@ -326,6 +460,31 @@
         
         <do_while value="$target == null and $spacesuitsIndex le $spacesuits.count">
           <set_value name="$target" exact="$spacesuits.{$spacesuitsIndex}" />
+
+          <do_if value="($target.assigneddock and $target.assigneddock.controllable != this.assignedcontrolled) or (@$target.order.id == 'DockAt' and $target.order.$destination != this.assignedcontrolled)">
+            <do_if value="$target.assigneddock and $target.assigneddock.controllable != this.assignedcontrolled">
+              <set_value name="$targetAssignedToDock" exact="$target.assigneddock.controllable" />
+            </do_if>
+            <do_else>
+              <set_value name="$targetAssignedToDock" exact="$target.order.$destination" />
+            </do_else>
+            <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+              text="'[%s (%s - %s) at %s] - Target %s (%s - %s) is already assigned to dock at %s (%s - %s)'
+                .[
+                  this.ship.knownname,
+                  this.ship.idcode,
+                  this.ship,
+                  this.ship.sector.knownname,
+                  $target.knownname,
+                  $target.idcode,
+                  $target,
+                  $targetAssignedToDock.knownname,
+                  $targetAssignedToDock.idcode,
+                  $targetAssignedToDock,
+                ]" output="true" append="true" />
+                <set_value name="$target.pilot.$toRescueBy" exact="$targetAssignedToDock.idcode" />
+          </do_if>
+          
           <do_if value="@$target.pilot.$toRescueBy" negate="true">
             <set_value name="$target.pilot.$toRescueBy" exact="this.ship.idcode" />
           </do_if>
@@ -337,35 +496,93 @@
 
         <do_if value="$target == null">
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship" 
-            text="'[%s (%s - %s) at %s]  -  No spacesuits found to rescue'
+            text="'[%s (%s - %s) at %s] - No spacesuits found to rescue'
               .[
-                this.ship.knownname, 
-                this.ship.idcode, 
-                this.ship, 
-                this.ship.sector.knownname, 
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
               ]" output="true" append="true" /> 
           <resume label="start" />
         </do_if>
         <do_else>
+          <add_to_group groupname="$targets" object="$target" />
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-            text="'[%s (%s - %s) at %s]  -  Found spacesuit to rescue: %s (%s - %s) at %s, will be rescued by: %s'
+            text="'[%s (%s - %s) at %s] - docked %s at %s  -  Found person to rescue: %s, spacesuit: (%s - %s) at {%s}, will be rescued by: %s'
               .[
-                this.ship.knownname, 
-                this.ship.idcode, 
-                this.ship, 
-                this.ship.sector.knownname, 
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
+                @this.ship.dock,
+                @this.ship.dock.container.knownname,
+                @$target.pilot.knownname,
+                @$target.knownname,
+                @$target.idcode,
+                @$target,
+                @$target.pilot.$toRescueBy,
+              ]" output="true" append="true" />
+          <set_value name="$crewFreeCount" exact="this.ship.people.free" />
+          <set_value name="$textTargetPerson" exact="{1972092402, 1014}.[@$target.pilot.knownname, $target.name, $target.idcode]" />
+          <do_if value="$recordActionsToLogBook">
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1031}.[$textUnit, $textTargetPerson, $textHomeSector]" interaction="showonmap" object="this.ship" />
+          </do_if>
+          <!-- <create_order id="'RescueShip'" object="this.ship" immediate="false" override="true"> -->
+          <do_if value="@this.ship.dock">
+            <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+              text="'[%s (%s - %s) at %s] - Going to undock'
+                .[
+                  this.ship.knownname,
+                  this.ship.idcode,
+                  this.ship,
+                  this.ship.sector.knownname,
+                ]" output="true" append="true" />
+            <!-- <set_command command="command.movetozone" param="$homeLocation" /> -->
+            <set_command_action commandaction="commandaction.flyingto" param="$target" />
+            <run_script name="'move.undock'">
+              <param name="debugchance" value="$debugchance"/>
+            </run_script>
+            <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+              text="'[%s (%s - %s) at %s] - After undock. Docked: %s.'
+                .[
+                  this.ship.knownname,
+                  this.ship.idcode,
+                  this.ship,
+                  this.ship.sector.knownname,
+                  @this.ship.dock,
+                ]" output="true" append="true" />            
+          </do_if>
+          <set_command_action commandaction="commandaction.flyingto" param="$target" />
+          <run_script name="'order.rescue.ship'">
+            <param name="target" value="$target"/>
+            <!-- <param name="internalorder" value="true"/> -->
+            <param name="debugchance" value="$debugChance"/>
+          </run_script>
+          <!-- </create_order> -->
+          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+            text="'[%s (%s - %s) at %s] - After run script: %s (%s - %s) at %s. Dock: %s. Free crew: previous: %s, now: %s. No space left: %s'
+              .[
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
                 @$target.knownname,
                 @$target.idcode,
                 @$target,
                 @$target.sector.knownname,
-                @$target.pilot.$toRescueBy
+                @$target.dock,
+                @$crewFreeCount,
+                this.ship.people.free,
+                this.ship.people.free le 0,
               ]" output="true" append="true" />
-          <set_value name="$crewFreeCount" exact="this.ship.people.free" />
-          <create_order id="'RescueShip'" object="this.ship" immediate="true">
-            <param name="target" value="$target"/>
-            <!-- <param name="internalorder" value="true"/> -->
-            <param name="debugchance" value="$debugChance"/>
-          </create_order>
+          <!-- </create_order> -->
+          <!-- <do_if value="@$crewFreeCount lt @this.ship.people.free">
+            <clear_group group="$targets" />
+            <set_value name="$target" exact="null" />
+          </do_if> -->
+          <!-- <do_if value="this.ship.people.free le 0" >
+            <resume label="transferPeople" /> 
+          </do_if> -->
         </do_else>
       </do_if>
       <do_else>
@@ -376,75 +593,102 @@
       <label name="transferPeople" />
       
       <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-          text="'[%s (%s - %s) at %s]  -  This ship people: %s'
+          text="'[%s (%s - %s) at %s] - This ship people: free: %s, total: %s, capacity: %s, service: %s, marine: %s, unassigned: %s'
             .[
-              this.ship.knownname, 
-              this.ship.idcode, 
-              this.ship, 
-              this.ship.sector.knownname, 
-              this.ship.people
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              this.ship.people.free,
+              @this.ship.people.count,
+              @this.ship.people.capacity,
+              @this.ship.people.{entityrole.service}.count,
+              @this.ship.people.{entityrole.marine}.count,
+              @this.ship.people.{entityrole.unassigned}.count,
             ]" output="true" append="true" />      
 
-      <do_if value="this.ship.people.free">
+      <do_if value="this.ship.people.free gt 0">
         <resume label="findSpacesuits" />
       </do_if>
       
-      <do_if value="this.ship.people.unassigned.count" >
+      <do_if value="this.ship.people.{entityrole.unassigned}.count gt 0" >
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-          text="'[%s (%s - %s) at %s]  -  This ship rescued people: %s'
+          text="'[%s (%s - %s) at %s] - This ship rescued people: %s, and plan to transfer them to dormitory: %s (%s - %s) at %s, with free %s and unassigned: %s'
             .[
-              this.ship.knownname, 
-              this.ship.idcode, 
-              this.ship, 
-              this.ship.sector.knownname, 
-              this.ship.people.unassigned.count
+              this.ship.knownname,
+              this.ship.idcode,
+              this.ship,
+              this.ship.sector.knownname,
+              this.ship.people.{entityrole.unassigned}.count,
+              $shipDormitory.knownname,
+              $shipDormitory.idcode,
+              $shipDormitory,
+              $shipDormitory.sector.knownname,
+              $shipDormitory.people.free,
+              $shipDormitory.people.{entityrole.unassigned}.count,
             ]" output="true" append="true" />      
 
-        <do_if value="$shipDormitory != null and $shipDormitory.isoperational and $shipDormitory.people.free">
+        <do_if value="$shipDormitory != null and $shipDormitory.isoperational and $shipDormitory.people.free gt 0">
+          
+          <do_if value="$recordActionsToLogBook">
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1041}.[$textUnit, $textDormitory]" interaction="showonmap" object="this.ship" />
+          </do_if>
+
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-            text="'[%s (%s - %s) at %s]  -  Ready to transfer rescued people to dormitory: %s (%s - %s) at %s'
+            text="'[%s (%s - %s) at %s] - Ready to transfer rescued people to dormitory: %s (%s - %s) at %s, with unassigned: %s'
               .[
-                this.ship.knownname, 
-                this.ship.idcode, 
-                this.ship, 
-                this.ship.sector.knownname, 
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
                 $shipDormitory.knownname,
                 $shipDormitory.idcode,
                 $shipDormitory,
                 $shipDormitory.sector.knownname,
+                $shipDormitory.people.{entityrole.unassigned}.count,
               ]" output="true" append="true" /> 
-          <set_value name="$peopleToTransfer" exact="[this.ship.people.unassigned.count, $shipDormitory.people.free].min" />
-          <transfer_people result="$peopleTransferred" object="$target" otherobject="this.ship" receiveworkforce="false" receivepeople="true" >
+          <set_value name="$peopleToTransfer" exact="[this.ship.people.{entityrole.unassigned}.count, $shipDormitory.people.free].min" />
+          <transfer_people result="$personsTransferred" object="$shipDormitory" otherobject="this.ship" receiveworkforce="false" >
             <matching_people currentroles="[entityrole.unassigned]" amounts="[$peopleToTransfer]"/>
           </transfer_people>
-          <do_if value="@$peopleTransferred">
+          <do_if value="@$personsTransferred.count gt 0">
             <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-              text="'[%s (%s - %s) at %s]  -  Transferred %s people to dormitory: %s (%s - %s) at %s'
+              text="'[%s (%s - %s) at %s] - Transferred %s persons to dormitory: %s (%s - %s) at %s. Now free: %s, unassigned: %s, on dormitory: free: %s, unassigned: %s'
                 .[
-                  this.ship.knownname, 
-                  this.ship.idcode, 
-                  this.ship, 
-                  this.ship.sector.knownname, 
-                  $peopleTransferred,
+                  this.ship.knownname,
+                  this.ship.idcode,
+                  this.ship,
+                  this.ship.sector.knownname,
+                  $personsTransferred.count,
                   $shipDormitory.knownname,
                   $shipDormitory.idcode,
                   $shipDormitory,
                   $shipDormitory.sector.knownname,
+                  this.ship.people.free,
+                  this.ship.people.{entityrole.unassigned}.count,
+                  $shipDormitory.people.free,
+                  $shipDormitory.people.{entityrole.unassigned}.count,
                 ]" output="true" append="true" />
-            </do_if>  
+            <do_if value="$recordActionsToLogBook">
+              <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1042}.[$textUnit, $personsTransferred.count, $textDormitory]" interaction="showonmap" object="this.ship" />
+            </do_if>
+            <resume label="findSpacesuits" />
+          </do_if>  
         </do_if>
-        <do_if value="this.ship.people.free and $shipDormitory.people.free" negate="true">
+        <do_if value="this.ship.people.free le 0 and ($shipDormitory == null or not $shipDormitory.isoperational or $shipDormitory.people.free le 0)">
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
-            text="'[%s (%s - %s) at %s]  -  No space left to rescue people, on this ship (%s) and on dormitory (%s). '
+            text="'[%s (%s - %s) at %s] - No space left to rescue people, on this ship (%s) and on dormitory (%s). '
               .[
-                this.ship.knownname, 
-                this.ship.idcode, 
-                this.ship, 
-                this.ship.sector.knownname, 
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
                 this.ship.people.free,
-                $shipDormitory.people.free,
+                @$shipDormitory.people.free,
               ]" output="true" append="true" />
-          <set_value name="$canRescue" exact="false" />
+          <do_if value="$recordActionsToLogBook">
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1091}.[$textUnit, $textDormitory]" interaction="showonmap" object="this.ship" />
+          </do_if>
           <set_value name="$speakline" exact="10304" comment="Awaiting orders." />
           <run_script name="'player.interaction'">
             <param name="Line" value="$speakline" />
@@ -452,11 +696,44 @@
             <param name="caption" value="{1016, 6}.[this.assignedcontrolled.knownname, this.assignedcontrolled.idcode]" />
             <param name="interactive" value="false" />
           </run_script>
-          <resume label="start" />
         </do_if>
       </do_if>
+      
+      <resume label="start" />
+
+      <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+        text="'[%s (%s - %s) at %s] - Point before finish. '
+          .[
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+          ]" output="true" append="true" />
 
       <label name="finish" />
+
+      <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+        text="'[%s (%s - %s) at %s] - Point after  finish. '
+          .[
+            this.ship.knownname,
+            this.ship.idcode,
+            this.ship,
+            this.ship.sector.knownname,
+          ]" output="true" append="true" />
+
+      <resume label="start" />
     </actions>
   </attention>
+  <on_abort>
+    <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+      text="'[%s (%s - %s) at %s] - Aborted. Order: %s, is running: %s. '
+        .[
+          this.ship.knownname,
+          this.ship.idcode,
+          this.ship,
+          this.ship.sector.knownname,
+          this.ship.order.id,
+          this.ship.order.isrunning,
+        ]" output="true" append="true" />
+  </on_abort>
 </aiscript>
