@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chinese -->
+<diff>
+  <add sel="/language">
+    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector" >
+      <t id="1">救援游骑兵</t>
+      <t id="2">救援游骑兵：在太空中救援您的船员</t>
+      <t id="101">母星区</t>
+      <t id="102">母站</t>
+      <t id="103">船 - "宿舍"</t>
+      <t id="109">记录到日志</t>
+      <t id="1000">\033O{1972092402, 1}\033X</t>
+      <t id="1003">\033Y%s\033X</t>
+      <t id="1011">\033C%s \(%s\)\033X</t>
+      <t id="1014">\033G%s\033X 穿着 \033G%s \(%s\)\033X</t>
+      <t id="1021">%s：分配到 %s 工作</t>
+      <t id="1022">%s：前往母站 %s 停靠</t>
+      <t id="1031">%s：前往 %s 救援 %s</t>
+      <t id="1032">%s：已救援 %s 在 %s</t>
+      <t id="1041">%s：前往 %s 转移救援的船员</t>
+      <t id="1042">%s：已转移 %s 救援的船员到 %s</t>
+      <t id="1091">%s：\033R无法救援船员\033X - 没有空余空间给船员，%s 也没有！</t>
+    </page>
+  </add>
+</diff>

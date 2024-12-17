@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Italy -->
+<diff>
+  <add sel="/language">
+    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector" >
+      <t id="1">Rangers di salvataggio</t>
+      <t id="2">Rangers di salvataggio: Salva i tuoi equipaggi nello spazio</t>
+      <t id="101">Settore di casa</t>
+      <t id="102">Stazione di casa</t>
+      <t id="103">Nave - "dormitorio"</t>
+      <t id="109">Registra nel diario di bordo</t>
+      <t id="1000">\033O{1972092402, 1}\033X</t>
+      <t id="1003">\033Y%s\033X</t>
+      <t id="1011">\033C%s \(%s\)\033X</t>
+      <t id="1014">\033G%s\033X indossa un \033G%s \(%s\)\033X</t>
+      <t id="1021">%s: assegnato a lavorare in %s</t>
+      <t id="1022">%s: in arrivo alla stazione di casa %s</t>
+      <t id="1031">%s: in rotta per salvare %s in %s</t>
+      <t id="1032">%s: ha salvato il %s in %s</t>
+      <t id="1041">%s: in arrivo per trasferire i membri dell'equipaggio salvati a %s</t>
+      <t id="1042">%s: trasferiti %s membri dell'equipaggio salvati a %s</t>
+      <t id="1091">%s: \033RImpossibile salvare i membri dell'equipaggio\033X - nessuno spazio libero per i membri dell'equipaggio e su %s - anche!</t>
+    </page>
+  </add>
+</diff>
