@@ -712,6 +712,7 @@
                 this.assignedcontrolled.people.free le 0,
                 this.assignedcontrolled.pilot.$rescueData,
               ]" output="true" append="true" />
+              <wait min="3s" max="5s"/>
         </do_else>
       </do_if>
       <do_else>
