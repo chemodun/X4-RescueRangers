@@ -602,7 +602,7 @@
         </do_if>
 
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.knownname + '_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s (%s - %s) at %s] - Spacesuits: found: %s, list: %s. Sectors: %s'
+          text="'[%s (%s - %s) at %s] - Spacesuits: found: %s, list: %s. Sectors: primary %s, list: %s'
             .[
               this.assignedcontrolled.knownname,
               this.assignedcontrolled.idcode,
@@ -610,6 +610,7 @@
               this.assignedcontrolled.sector.knownname,
               @$spacesuits.count,
               @$spacesuits,
+              $whereToFind,
               @$sectorsList,
             ]" output="true" append="true" />      
 
