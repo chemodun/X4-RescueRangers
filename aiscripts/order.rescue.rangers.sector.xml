@@ -6,7 +6,7 @@
       <param name="maxDistanceAround" default="0" type="number" text="{1972092402, 104}" comment="Max gate distance from Home sector rescue">
         <input_param name="startvalue" value="0"/>
         <input_param name="min" value="0"/>
-        <input_param name="max" value="@this.ship.pilot.skill.piloting / 3"/>
+        <input_param name="max" value="if @this.ship.pilot.skill.piloting lt 6 then 0 else if @this.ship.pilot.skill.piloting lt 9 then 1 if @this.ship.pilot.skill.piloting lt 12 then 2 else 3"/>
         <input_param name="step" value="1"/>
       </param>
       <param name="homeStation" type="object"  text="{1972092402, 102}" >
