@@ -8,6 +8,8 @@
       <t id="101">Secteur d'origine</t>
       <t id="102">Station d'origine</t>
       <t id="103">Vaisseau - "dortoir"</t>
+      <t id="104">Distance maximale de la porte pour le sauvetage</t>
+      <t id="105">Priorité par oxygène restant</t>
       <t id="109">Enregistrer dans le journal de bord</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>

@@ -8,6 +8,8 @@
       <t id="101">Setor de origem</t>
       <t id="102">Estação de origem</t>
       <t id="103">Nave - "dormitório"</t>
+      <t id="104">Distância máxima da porta para resgate</t>
+      <t id="105">Prioridade por oxigênio restante</t>
       <t id="109">Registrar no diário de bordo</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>

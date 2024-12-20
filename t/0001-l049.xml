@@ -8,6 +8,8 @@
       <t id="101">Heimatsektor</t>
       <t id="102">Heimatstation</t>
       <t id="103">Schiff - "Schlafsaal"</t>
+      <t id="104">Maximale Tor-Distanz für Rettung</t>
+      <t id="105">Priorität nach verbleibendem Sauerstoff</t>
       <t id="109">Im Logbuch vermerken</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>

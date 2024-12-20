@@ -8,6 +8,8 @@
       <t id="101">Home sector</t>
       <t id="102">Home station</t>
       <t id="103">Ship - "dormitory"</t>
+      <t id="104">Max gate distance to rescue</t>
+      <t id="105">Priority by oxygen remained</t>
       <t id="109">Record to logbook</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
