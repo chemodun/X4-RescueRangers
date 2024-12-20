@@ -119,7 +119,7 @@
             <check_all>
               <check_value value="$target == null"/>
               <check_value value="event.param.isclass.spacesuit" negate="true"/>
-              <check_value value="$shipTypesToExclude.indexof.{@event.param.type} gt 0" />             
+              <check_value value="$shipTypesToExclude.indexof.{@event.param.type} le 0" />             
               <check_value value="this.assignedcontrolled.people.free gt 0" />
             </check_all>
             <check_all>
