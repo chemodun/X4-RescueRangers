@@ -2,7 +2,7 @@
 <aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="101" priority="1">
   <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true">
     <params>
-      <param name="homeSector" default="if this.ship.jobmainsector? then this.ship.jobmainsector else this.ship.sector" type="sector" required="true" text="{1972092402, 101}" />
+      <param name="homeSector" default="this.ship.sector" type="sector" required="true" text="{1972092402, 101}" />
       <param name="maxDistanceAround" default="0" type="number" text="{1972092402, 104}" comment="Max gate distance from Home sector rescue">
         <input_param name="startvalue" value="0"/>
         <input_param name="min" value="0"/>
@@ -172,7 +172,9 @@
                 this.ship.sector.knownname,
                 this.ship.people.free,
               ]"
-            output="true" append="true" />        
+            output="true" append="true" />     
+          <!-- $targetSector is used to store the sector where our ship was destroyed, to limit search of spacesuits -->
+          <set_value name="$targetSector" exact="@event.param.sector" />
           <abort_called_scripts resume="findSpacesuits" />
         </do_if>
         <do_else>
@@ -384,6 +386,8 @@
 
     <set_value name="$shipTypesToExclude" exact="[shiptype.xsdrone, shiptype.distressdrone, shiptype.smalldrone, shiptype.personalvehicle, shiptype.escapepod]"/>
 
+    <!-- $targetSector is used to store the sector where our ship was destroyed, to limit search of spacesuits -->
+    <set_value name="$targetSector" exact="null" />
 
   </init>
 
@@ -544,9 +548,44 @@
 
       <do_if value="$target == null">
 
-        <find_ship name="$spacesuits" space="if (not $sectorsList? or $sectorsList.count le 0) then $homeSector else $sectorsList" class="class.spacesuit" docked="false" checkoperational="true"  recursive="true" multiple="true" sortbydistanceto="this.ship">
+        <do_if value="$sectorsList.count gt 1">
+          <do_if value="$targetSector != null">
+            <!-- in case of destroying our ship we will start search only in sector where it happens -->
+            <set_value name="$whereToFind" exact="$targetSector"/>
+          </do_if>
+          <do_else>
+           <!-- otherwise we will start search in current sector of rescuer ship -->
+            <set_value name="$whereToFind" exact="this.ship.sector"/>
+          </do_else>
+        </do_if>
+        <do_else>
+          <!-- there is no multiple sectors is configured -->
+          <set_value name="$whereToFind" exact="$homeSector"/>
+        </do_else>
+
+        <find_ship name="$spacesuits" space="$whereToFind" class="class.spacesuit" docked="false" checkoperational="true"  recursive="true" multiple="true" sortbydistanceto="this.ship">
           <match trueowner="faction.player"/>
         </find_ship>
+
+        <!-- If noting found in one sector - will try to do it in all of them-->
+        <do_if value="@$spacesuits.count == 0 and $sectorsList.count gt 1">
+          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.ship.knownname + '_' + this.ship.idcode + '_' + this.ship"
+            text="'[%s (%s - %s) at %s] - No spacesuits found to rescue in selected one sector %s. Going to search in other sectors'
+              .[
+                this.ship.knownname,
+                this.ship.idcode,
+                this.ship,
+                this.ship.sector.knownname,
+                $whereToFind.knownname,
+              ]" output="true" append="true" /> 
+          <resume label="start" />
+          <find_ship name="$spacesuits" space="$sectorsList" class="class.spacesuit" docked="false" checkoperational="true"  recursive="true" multiple="true" sortbydistanceto="this.ship">
+            <match trueowner="faction.player"/>
+          </find_ship>
+        </do_if>
+
+        <!-- Clear $targetSector for future interactions -->
+        <set_value name="$targetSector" exact="null" />
 
         <do_if value="@$rescuePriorityByOxygenRemained">
           <sort_list list="$spacesuits" sortbyvalue="loop.element.oxygentimeremaining" sortdescending="false" />
