@@ -90,7 +90,7 @@
           <cancel_all_orders object="this.assignedcontrolled" />
           <create_order object="this.assignedcontrolled" id="'RescueRangers'" default="true">
             <param name="homeSector" value="@$homeSector" />
-            <param name="maxDistanceAround" value="$maxDistanceAround" />
+            <param name="maxDistanceAround" value="[if @this.assignedcontrolled.pilot.skill.piloting lt 6 then 0 else if @this.assignedcontrolled.pilot.skill.piloting lt 9 then 1 else if @this.assignedcontrolled.pilot.skill.piloting lt 12 then 2 else 3, $maxDistanceAround].min" />
             <param name="homeStation" value="@$homeStation" />
             <param name="shipDormitory" value="@$shipDormitory" />
             <param name="rescuePriorityByOxygenRemained" value="$rescuePriorityByOxygenRemained" />
