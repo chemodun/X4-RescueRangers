@@ -409,7 +409,7 @@
       <label name="start" />
 
       <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s] - This ship: free: %s, unassigned: %s. Dormitory ship: free: %s, unassigned: %s. HomeStation: %s {%s - %s} at %s. Target: %s, crewFreeCount: %s, skipGoToDock: %s'
+          text="'[%s at %s] - This ship: free: %s, unassigned: %s. Dormitory ship: free: %s, unassigned: %s. HomeStation: %s at %s. Target: %s, crewFreeCount: %s, skipGoToDock: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
@@ -483,7 +483,7 @@
       </do_if>
       <do_else>
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s] - going to dock at homeStation: %s {%s - %s} at %s'
+          text="'[%s at %s] - going to dock at homeStation: %s at %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
