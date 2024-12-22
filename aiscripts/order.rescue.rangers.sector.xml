@@ -590,7 +590,7 @@
             <set_value name="$target" exact="null" />
           </do_if>
           <do_else>
-            <do_if value="$target.pilot.$toRescueBy? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300" negate="true">
+            <do_if value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300" negate="true">
               <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=$targetAssignedToDock.idcode]" />
             </do_if>
             <do_else>
