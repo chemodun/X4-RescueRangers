@@ -60,7 +60,7 @@
           <check_value value="@$scriptVersion lt 101" />
           <!-- to remove before production -->
           <check_value value="$shipTypesToExclude? and $shipTypesToExclude.indexof.{shiptype.xsdrone} gt 0" negate="true"></check_value>
-          <check_value value="@$do_reset lt 2" />
+          <check_value value="@$do_reset lt 3" />
           <!-- to remove before production -->
           </check_any>
         </check_all>
@@ -155,6 +155,9 @@
             ]"
           output="true" append="true" />
         <do_if value="$target != null">
+          <do_if value="$target.pilot.$toRescueBy?">
+            <remove_value name="$target.pilot.$toRescueBy" />
+          </do_if>
           <clear_group group="$targets" />
           <set_value name="$target" exact="null" />
           <do_if value="@event.param3 == killmethod.removed">
@@ -224,6 +227,9 @@
               this.assignedcontrolled.people.free,
             ]"
           output="true" append="true" />
+        <do_if value="$target.pilot.$toRescueBy?">
+          <remove_value name="$target.pilot.$toRescueBy" />
+        </do_if>
         <clear_group group="$targets" />
         <set_value name="$target" exact="null" />
         <do_if value="this.assignedcontrolled.people.free lt $crewFreeCount">
@@ -280,6 +286,9 @@
               $target,
             ]" output="true" append="true" />
         <do_if value="$target != null">
+          <do_if value="$target.pilot.$toRescueBy?">
+            <remove_value name="$target.pilot.$toRescueBy" />
+          </do_if>
           <clear_group group="$targets" />
           <set_value name="$target" exact="null" />
           <do_if value="this.assignedcontrolled.people.free gt 0">
@@ -295,7 +304,7 @@
   </interrupts>
   <init>
     <!-- to remove before production -->
-    <set_value name="$do_reset" exact="2" />
+    <set_value name="$do_reset" exact="3" />
     <!-- to remove before production -->
     <set_value name="$scriptVersion" exact="101" />
 
@@ -640,14 +649,28 @@
                   $targetAssignedToDock.idcode,
                   $targetAssignedToDock,
                 ]" output="true" append="true" />
-                <set_value name="$target.pilot.$toRescueBy" exact="$targetAssignedToDock.idcode" />
-          </do_if>
-          
-          <do_if value="@$target.pilot.$toRescueBy" negate="true">
-            <set_value name="$target.pilot.$toRescueBy" exact="this.assignedcontrolled.idcode" />
+            <set_value name="$target" exact="null" />
           </do_if>
           <do_else>
-            <set_value name="$target" exact="null" />
+            <do_if value="$target.pilot.$toRescueBy? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300" negate="true">
+              <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=$targetAssignedToDock.idcode]" />
+            </do_if>
+            <do_else>
+              <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.knownname + '_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
+                text="'[%s (%s - %s) at %s] - Person to rescue: %s, spacesuit: (%s - %s) at {%s}, already marked to be rescued: %s'
+                  .[
+                    this.assignedcontrolled.knownname,
+                    this.assignedcontrolled.idcode,
+                    this.assignedcontrolled,
+                    this.assignedcontrolled.sector.knownname,
+                    @$target.pilot.knownname,
+                    @$target.knownname,
+                    @$target.idcode,
+                    @$target,
+                    @$target.pilot.$toRescueBy,
+                  ]" output="true" append="true" />
+              <set_value name="$target" exact="null" />
+            </do_else>
           </do_else>
           <set_value name="$spacesuitsIndex" exact="$spacesuitsIndex + 1" />
         </do_while>
