@@ -595,12 +595,13 @@
             </do_if>
             <do_else>
               <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-                text="'[%s at %s] - Person to rescue: %s, spacesuit: (%s - %s) at {%s}, already marked to be rescued: %s'
+                text="'[%s at %s] - Person to rescue: %s, spacesuit: %s at %s, already marked to be rescued: %s'
                   .[
                     this.assignedcontrolled.debugname,
                     this.assignedcontrolled.sector.knownname,
                     @$target.pilot.knownname,
                     @$target.debugname,
+                    @target.sector.knownname,
                     @$target.pilot.$toRescueBy,
                   ]" output="true" append="true" />
               <set_value name="$target" exact="null" />
@@ -621,14 +622,13 @@
         <do_else>
           <add_to_group groupname="$targets" object="$target" />
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-            text="'[%s at %s] - docked %s at %s  -  Found person to rescue: %s, spacesuit: (%s - %s) at {%s}, will be rescued by: %s'
+            text="'[%s at %s] - Found person to rescue: %s, spacesuit: %s at %s, will be rescued by: %s'
               .[
                 this.assignedcontrolled.debugname,
                 this.assignedcontrolled.sector.knownname,
-                @this.assignedcontrolled.dock,
-                @this.assignedcontrolled.dock.container.knownname,
                 @$target.pilot.knownname,
                 @$target.debugname,
+                @$target.sector.knownname,
                 @$target.pilot.$toRescueBy,
               ]" output="true" append="true" />
           <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
