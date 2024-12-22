@@ -127,7 +127,7 @@
       </conditions>
       <actions>
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s] - %s, our : %s (%s - %s, class: %s, type: %s - %s) in sector: %s. Killer: %s {%s}, method: %s. Spacesuit docked: %s. Crew free: %s'
+          text="'[%s at %s] - %s, our : %s (class: %s, type: %s - %s) in sector: %s. Killer: %s {%s}, method: %s. Spacesuit docked: %s. Crew free: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
@@ -148,7 +148,6 @@
           <do_if value="$target.pilot.$toRescueBy?">
             <remove_value name="$target.pilot.$toRescueBy" />
           </do_if>
-          <clear_group group="$targets" />
           <set_value name="$target" exact="null" />
           <do_if value="@event.param3 == killmethod.removed">
             <do_if value="$recordActionsToLogBook">
@@ -212,7 +211,6 @@
         <do_if value="$target.pilot.$toRescueBy?">
           <remove_value name="$target.pilot.$toRescueBy" />
         </do_if>
-        <clear_group group="$targets" />
         <set_value name="$target" exact="null" />
         <do_if value="this.assignedcontrolled.people.free lt $crewFreeCount">
           <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>
@@ -232,9 +230,6 @@
       <conditions>
         <check_all>
           <check_any>
-            <!-- <event_object_destroyed group="$targets" /> -->
-            <!-- <event_object_abandoned group="$targets" />
-            <event_object_changed_sector group="$targets" /> -->
             <event_object_target_invalid object="this.assignedcontrolled" />
           </check_any>
           <check_value value="$target != null" />
@@ -263,7 +258,6 @@
           <do_if value="$target.pilot.$toRescueBy?">
             <remove_value name="$target.pilot.$toRescueBy" />
           </do_if>
-          <clear_group group="$targets" />
           <set_value name="$target" exact="null" />
           <do_if value="this.assignedcontrolled.people.free gt 0">
             <abort_called_scripts resume="findSpacesuits" />
@@ -283,12 +277,10 @@
     <set_value name="$scriptVersion" exact="101" />
 
     <set_value name="$target" exact="null" />
-    <create_group groupname="$targets" />
 
     <do_if value="this.assignedcontrolled.pilot.$rescueData?">
       <do_if value="@this.assignedcontrolled.pilot.$rescueData.$timeStamp ge (player.age - 300)">
         <set_value name="$target" exact="@this.assignedcontrolled.pilot.$rescueData.$target" />
-        <add_to_group groupname="$targets" object="$target" />
         <set_value name="$textTargetPerson" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetPerson" />
         <set_value name="$skipGoToDock" exact="true" />
         <set_value name="$crewFreeCount" exact="@this.assignedcontrolled.pilot.$rescueData.$crewFreeCount" />
@@ -444,14 +436,12 @@
             output="true" append="true" />   
           <wait exact="3s"/>
           <do_if value="$crewFreeCount gt @this.assignedcontrolled.people.free">
-            <clear_group group="$targets" />
             <set_value name="$target" exact="null" />
             <do_if value="$recordActionsToLogBook">
               <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>          
           </do_if>
-          <clear_group group="$targets" />
           <set_value name="$target" exact="null" />
           <do_if value="this.assignedcontrolled.people.free gt 0">  
             <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
@@ -591,7 +581,7 @@
           </do_if>
           <do_else>
             <do_if value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300" negate="true">
-              <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=$targetAssignedToDock.idcode]" />
+              <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=$target.idcode]" />
             </do_if>
             <do_else>
               <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
@@ -620,7 +610,6 @@
           <resume label="start" />
         </do_if>
         <do_else>
-          <add_to_group groupname="$targets" object="$target" />
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
             text="'[%s at %s] - Found person to rescue: %s, spacesuit: %s at %s, will be rescued by: %s'
               .[
