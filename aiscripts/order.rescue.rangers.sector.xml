@@ -58,7 +58,7 @@
           <check_value value="@$scriptVersion lt 101" />
           <!-- to remove before production -->
           <check_value value="$shipTypesToExclude? and $shipTypesToExclude.indexof.{shiptype.xsdrone} gt 0" negate="true"></check_value>
-          <check_value value="@$do_reset lt 3" />
+          <check_value value="@$do_reset lt 4" />
           <!-- to remove before production -->
           </check_any>
         </check_all>
@@ -151,7 +151,7 @@
           <set_value name="$target" exact="null" />
           <do_if value="@event.param3 == killmethod.removed">
             <do_if value="$recordActionsToLogBook">
-              <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
+              <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap" object="this.assignedcontrolled" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>
           </do_if>
@@ -215,7 +215,7 @@
         <do_if value="this.assignedcontrolled.people.free lt $crewFreeCount">
           <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>
           <do_if value="$recordActionsToLogBook">
-            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson]" interaction="showonmap" object="this.assignedcontrolled" />
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap" object="this.assignedcontrolled" />
           </do_if>
         </do_if>
         <do_if value="this.assignedcontrolled.people.free gt 0">
@@ -272,7 +272,7 @@
   </interrupts>
   <init>
     <!-- to remove before production -->
-    <set_value name="$do_reset" exact="3" />
+    <set_value name="$do_reset" exact="4" />
     <!-- to remove before production -->
     <set_value name="$scriptVersion" exact="101" />
 
@@ -282,16 +282,17 @@
       <do_if value="@this.assignedcontrolled.pilot.$rescueData.$timeStamp ge (player.age - 300)">
         <set_value name="$target" exact="@this.assignedcontrolled.pilot.$rescueData.$target" />
         <set_value name="$textTargetPerson" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetPerson" />
+        <set_value name="$textTargetSector" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetSector" />
         <set_value name="$skipGoToDock" exact="true" />
         <set_value name="$crewFreeCount" exact="@this.assignedcontrolled.pilot.$rescueData.$crewFreeCount" />
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s] - Found saved: target: %s (%s), text: %s, skipGoToDock: %s, crewFreeCount: %s, free: %s'
+          text="'[%s at %s] - Found saved: target: %s, text: %s, at %s, skipGoToDock: %s, crewFreeCount: %s, free: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
-              $target.knownname,
-              $target,
+              $target.debugname,
               $textTargetPerson,
+              $textTargetSector,
               $skipGoToDock,
               $crewFreeCount,
               this.assignedcontrolled.people.free,
@@ -303,6 +304,7 @@
     <do_else>
       <set_value name="$skipGoToDock" exact="false" />
       <set_value name="$textTargetPerson" exact="''" />
+      <set_value name="$textTargetSector" exact="''" />
     </do_else>
 
     <set_value name="$debugChance" exact="100" />
@@ -425,11 +427,12 @@
       <do_if value="$skipGoToDock or (this.assignedcontrolled.dock and (this.assignedcontrolled.dock.container == $homeStation)) or (this.assignedcontrolled.parkedat and ((this.assignedcontrolled.parkedat == $homeStation) or this.assignedcontrolled.parkedat.hascontext.{$homeStation}))">
         <do_if value="$target != null">
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-            text="'[%s at %s] - Previously saved person: %s. Crew free: %s, previous free: %s. Wait for event 3s.'
+            text="'[%s at %s] - Previously saved person: %s at %s. Crew free: %s, previous free: %s. Wait for event 3s.'
               .[
                 this.assignedcontrolled.debugname,
                 this.assignedcontrolled.sector.knownname,
                 $textTargetPerson,
+                $textTargetSector,
                 this.assignedcontrolled.people.free,
                 $crewFreeCount,
               ]"
@@ -438,7 +441,8 @@
           <do_if value="$crewFreeCount gt @this.assignedcontrolled.people.free">
             <set_value name="$target" exact="null" />
             <do_if value="$recordActionsToLogBook">
-              <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
+              <set_value name="$textSector" exact="{1972092402, 1003}.[$homeSector.knownname]" />
+              <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap" object="this.assignedcontrolled" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>          
           </do_if>
@@ -622,13 +626,15 @@
               ]" output="true" append="true" />
           <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
           <set_value name="$textTargetPerson" exact="{1972092402, 1014}.[@$target.pilot.knownname, $target.name, $target.idcode]" />
+          <set_value name="$textTargetSector" exact="{1972092402, 1003}.[$target.sector.knownname]" />
           <do_if value="$recordActionsToLogBook">
-            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1031}.[$textUnit, $textTargetPerson, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1031}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap" object="this.assignedcontrolled" />
           </do_if>
           <set_value name="this.assignedcontrolled.pilot.$rescueData" exact="table[
             $timeStamp = player.age, 
             $target = $target, 
             $textTargetPerson = $textTargetPerson,
+            $textTargetSector = $textTargetSector,
             $crewFreeCount = $crewFreeCount,
           ]" />
           <create_order id="'RescueShip'" object="this.assignedcontrolled" immediate="true">
