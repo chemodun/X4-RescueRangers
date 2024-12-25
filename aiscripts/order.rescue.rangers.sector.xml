@@ -355,7 +355,7 @@
 
     <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
 
-    <do_if value="$skipGoToDock" negate="true">
+    <do_if value="$isStartedByPlayer">
       <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1021}.[$textUnit, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
     </do_if>
 
