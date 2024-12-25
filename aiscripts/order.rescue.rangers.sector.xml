@@ -22,6 +22,7 @@
       </param>
       <param name="rescuePriorityByOxygenRemained" type="bool" default="false" text="{1972092402, 105}" />      
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />      
+      <param name="isStartedByPlayer" type="internal" default="true" text="Started by Player"></param>
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100"/>
         <editable/>
@@ -58,7 +59,7 @@
           <check_value value="@$scriptVersion lt 101" />
           <!-- to remove before production -->
           <check_value value="$shipTypesToExclude? and $shipTypesToExclude.indexof.{shiptype.xsdrone} gt 0" negate="true"></check_value>
-          <check_value value="@$do_reset lt 4" />
+          <check_value value="@$do_reset lt 5" />
           <!-- to remove before production -->
           </check_any>
         </check_all>
@@ -83,6 +84,7 @@
             <param name="shipDormitory" value="@$shipDormitory" />
             <param name="rescuePriorityByOxygenRemained" value="false" />
             <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" /> 
+            <param name="isStartedByPlayer" value="false" />
           </create_order>
         </do_if>
         <!-- to remove before production -->
@@ -95,6 +97,7 @@
             <param name="shipDormitory" value="@$shipDormitory" />
             <param name="rescuePriorityByOxygenRemained" value="$rescuePriorityByOxygenRemained" />
             <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" /> 
+            <param name="isStartedByPlayer" value="false" />
           </create_order>
         </do_else>
         <!-- to remove before production -->
@@ -329,11 +332,12 @@
     <!-- <set_command_action commandaction="commandaction.scanningto" param="$homeLocation.sector" /> -->
 
     <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-      text="'[%s at %s] - Free: %s. Init version %s. Sector: %s. Distance: %s. Station: [%s at %s]. Dormitory: [%s at %s], free: %s. Sectors: %s. Sort by oxygen: %s. Record to logbook: %s. Debug chance: %s. This: %s, class: %s, name: %s, type: %s, idcode: %s'
+      text="'[%s at %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nStation: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s.'
         .[
           this.assignedcontrolled.debugname,
           this.assignedcontrolled.sector.knownname,
           this.assignedcontrolled.people.free,
+          $isStartedByPlayer,
           @$scriptVersion,
           @$homeSector.knownname,
           @$maxDistanceAround,
@@ -346,27 +350,21 @@
           @$rescuePriorityByOxygenRemained,
           @$recordActionsToLogBook,
           $debugchance,
-          @this,
-          @this.class,
-          @this.name,
-          @this.type,
-          @this.idcode
         ]" output="true" append="true" />
 
 
     <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
 
-
     <do_if value="$skipGoToDock" negate="true">
-      <do_if value="$recordActionsToLogBook">
-        <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1021}.[$textUnit, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
-      </do_if>
+      <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1021}.[$textUnit, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
     </do_if>
 
     <set_value name="$shipTypesToExclude" exact="[shiptype.xsdrone, shiptype.distressdrone, shiptype.smalldrone, shiptype.personalvehicle, shiptype.escapepod]"/>
 
     <!-- $targetSector is used to store the sector where our ship was destroyed, to limit search of spacesuits -->
     <set_value name="$targetSector" exact="null" />
+
+    <set_value name="$isStartedByPlayer" exact="false" />
 
   </init>
 
