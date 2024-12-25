@@ -2,7 +2,7 @@
 <aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="101" priority="1">
   <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true">
     <params>
-      <param name="homeSector" default="if @this.ship.commanderentity.$config_subordinate_range then @this.ship.commanderentity.$config_subordinate_range 
+      <param name="homeSector" default="if @this.ship.commanderentity.$config_subordinate_range then @this.ship.commanderentity.$config_subordinate_range
             else (if @this.ship.commander.jobmainsector then this.ship.commander.jobmainsector
               else (if @this.ship.commander.isclass.[class.station, class.buildstorage] then this.ship.commander.sector
                 else (if this.ship.jobmainsector then this.ship.jobmainsector
@@ -20,8 +20,8 @@
         <input_param name="class" value="[class.ship]"/>
         <input_param name="owner" value="this.ship.trueowner"/>
       </param>
-      <param name="rescuePriorityByOxygenRemained" type="bool" default="false" text="{1972092402, 105}" />      
-      <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />      
+      <param name="rescuePriorityByOxygenRemained" type="bool" default="false" text="{1972092402, 105}" />
+      <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
       <param name="isStartedByPlayer" type="internal" default="true" text="Started by Player"></param>
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100"/>
@@ -65,7 +65,7 @@
         </check_all>
       </conditions>
       <actions>
-        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled" 
+        <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
           text="'[%s at %s] - Re-init for versions prior to 1.01. Home sector: %s, home station: %s, dormitory: %s, recordActionsToLogBook: %s'
           .[
             this.assignedcontrolled.debugname,
@@ -83,7 +83,7 @@
             <param name="homeStation" value="@$homeStation" />
             <param name="shipDormitory" value="@$shipDormitory" />
             <param name="rescuePriorityByOxygenRemained" value="false" />
-            <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" /> 
+            <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" />
             <param name="isStartedByPlayer" value="false" />
           </create_order>
         </do_if>
@@ -96,7 +96,7 @@
             <param name="homeStation" value="@$homeStation" />
             <param name="shipDormitory" value="@$shipDormitory" />
             <param name="rescuePriorityByOxygenRemained" value="$rescuePriorityByOxygenRemained" />
-            <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" /> 
+            <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" />
             <param name="isStartedByPlayer" value="false" />
           </create_order>
         </do_else>
@@ -108,8 +108,8 @@
         <check_all>
           <event_player_owned_destroyed/>
           <check_value value="event.param.isclass.ship" />
-          <check_value value="@event.param.type == shiptype.lasertower" negate="true"/>              
-          <check_value value="event.param != this.assignedcontrolled" />           
+          <check_value value="@event.param.type == shiptype.lasertower" negate="true"/>
+          <check_value value="event.param != this.assignedcontrolled" />
           <check_any>
             <check_value value="event.param.sector == $homeSector" />
             <check_value value="$sectorsList.indexof.{@event.param.sector} gt 0" />
@@ -118,13 +118,13 @@
             <check_all>
               <check_value value="$target == null"/>
               <check_value value="event.param.isclass.spacesuit" negate="true"/>
-              <check_value value="$shipTypesToExclude.indexof.{@event.param.type} le 0" />             
+              <check_value value="$shipTypesToExclude.indexof.{@event.param.type} le 0" />
               <check_value value="this.assignedcontrolled.people.free gt 0" />
             </check_all>
             <check_all>
               <check_value value="event.param == $target" />
-              <check_value value="event.param.isclass.spacesuit" />             
-            </check_all>  
+              <check_value value="event.param.isclass.spacesuit" />
+            </check_all>
           </check_any>
         </check_all>
       </conditions>
@@ -162,7 +162,7 @@
         <do_else>
           <apply_experience entity="this" experience="'rescue_rangers'" chance="45"/>
         </do_else>
-        <do_if value="this.assignedcontrolled.people.free gt 0">  
+        <do_if value="this.assignedcontrolled.people.free gt 0">
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
             text="'[%s at %s] - Going to search spacesuits. Crew free: %s'
               .[
@@ -170,7 +170,7 @@
                 this.assignedcontrolled.sector.knownname,
                 this.assignedcontrolled.people.free,
               ]"
-            output="true" append="true" />     
+            output="true" append="true" />
           <!-- $targetSector is used to store the sector where our ship was destroyed, to limit search of spacesuits -->
           <set_value name="$targetSector" exact="@event.param.sector" />
           <abort_called_scripts resume="findSpacesuits" />
@@ -183,9 +183,9 @@
                 this.assignedcontrolled.sector.knownname,
                 this.assignedcontrolled.people.free,
               ]"
-            output="true" append="true" />           
+            output="true" append="true" />
           <abort_called_scripts resume="transferPeople" />
-        </do_else> 
+        </do_else>
       </actions>
     </handler>
     <handler>
@@ -267,9 +267,9 @@
           </do_if>
           <do_else>
             <abort_called_scripts resume="transferPeople" />
-          </do_else>            
+          </do_else>
         </do_if>
-        </actions>  
+        </actions>
     </handler>
 
   </interrupts>
@@ -315,7 +315,7 @@
     <do_if value="$homeSector.isclass.sector" negate="true">
       <set_value name="$homeSector" exact="$homeSector.sector" />
     </do_if>
-    
+
     <set_value name="$textTitle" exact="{1972092402, 1000}" />
     <set_value name="$textHomeSector" exact="{1972092402, 1003}.[$homeSector.knownname]" />
     <set_value name="$textHomeStation" exact="{1972092402, 1011}.[$homeStation.name, $homeStation.idcode]" />
@@ -325,7 +325,7 @@
     <do_if value="$sectorsList?" negate="true">
       <create_list name="$sectorsList" />
     </do_if>
-    <do_if value="$sectorsList.indexof.{$homeSector} gt 0" negate="true"> 
+    <do_if value="$sectorsList.indexof.{$homeSector} gt 0" negate="true">
       <append_to_list name="$sectorsList" exact="$homeSector"/>
     </do_if>
 
@@ -372,7 +372,7 @@
     <actions>
 
       <label name="postInit" />
-      
+
       <run_script name="'lib.find.sectors.inrange'" result="$sectorsList" sinceversion="5">
         <param name="refobject" value="$homeSector"/>
         <param name="mingatedistance" value="0"/>
@@ -383,7 +383,7 @@
       <do_if value="$sectorsList?" negate="true">
         <create_list name="$sectorsList" />
       </do_if>
-      <do_if value="$sectorsList.indexof.{$homeSector} gt 0" negate="true"> 
+      <do_if value="$sectorsList.indexof.{$homeSector} gt 0" negate="true">
         <append_to_list name="$sectorsList" exact="$homeSector"/>
       </do_if>
 
@@ -414,7 +414,7 @@
               $target,
               $crewFreeCount,
               $skipGoToDock,
-            ]" output="true" append="true" />      
+            ]" output="true" append="true" />
 
 
       <do_if value="this.assignedcontrolled.order" comment="Safety check in case the script is called from non-order script">
@@ -434,7 +434,7 @@
                 this.assignedcontrolled.people.free,
                 $crewFreeCount,
               ]"
-            output="true" append="true" />   
+            output="true" append="true" />
           <wait exact="3s"/>
           <do_if value="$crewFreeCount gt @this.assignedcontrolled.people.free">
             <set_value name="$target" exact="null" />
@@ -442,10 +442,10 @@
               <set_value name="$textSector" exact="{1972092402, 1003}.[$homeSector.knownname]" />
               <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap" object="this.assignedcontrolled" />
             </do_if>
-            <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>          
+            <apply_experience entity="this" experience="'rescue_rangers'" chance="90"/>
           </do_if>
           <set_value name="$target" exact="null" />
-          <do_if value="this.assignedcontrolled.people.free gt 0">  
+          <do_if value="this.assignedcontrolled.people.free gt 0">
             <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
               text="'[%s at %s] - Going to search spacesuits. Crew free: %s'
                 .[
@@ -453,7 +453,7 @@
                   this.assignedcontrolled.sector.knownname,
                   this.assignedcontrolled.people.free,
                 ]"
-              output="true" append="true" />        
+              output="true" append="true" />
             <resume label="findSpacesuits" />
           </do_if>
           <do_else>
@@ -464,9 +464,9 @@
                   this.assignedcontrolled.sector.knownname,
                   this.assignedcontrolled.people.free,
                 ]"
-              output="true" append="true" />           
+              output="true" append="true" />
             <resume label="transferPeople" />
-          </do_else>          
+          </do_else>
         </do_if>
         <wait min="150s" max="370s" />
         <do_if value="@this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
@@ -481,7 +481,7 @@
               this.assignedcontrolled.sector.knownname,
               @$homeStation.debugname,
               @$homeStation.sector.knownname,
-            ]" output="true" append="true" />      
+            ]" output="true" append="true" />
         <do_if value="$recordActionsToLogBook">
           <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1022}.[$textUnit, $textHomeStation]" interaction="showonmap" object="this.assignedcontrolled" />
         </do_if>
@@ -489,14 +489,14 @@
           <param name="destination" value="$homeStation"/>
           <!-- <param name="abouttofinish" value="true"/> -->
           <param name="debugchance" value="$debugChance"/>
-        </run_script>        
+        </run_script>
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
           text="'[%s at %s] - Result: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
               @$docked,
-            ]" output="true" append="true" />            
+            ]" output="true" append="true" />
       </do_else>
 
       <resume label="start" />
@@ -534,7 +534,7 @@
                 this.assignedcontrolled.debugname,
                 this.assignedcontrolled.sector.knownname,
                 $whereToFind.knownname,
-              ]" output="true" append="true" /> 
+              ]" output="true" append="true" />
           <resume label="start" />
           <find_ship name="$spacesuits" space="$sectorsList" class="class.spacesuit" docked="false" checkoperational="true"  recursive="true" multiple="true" sortbydistanceto="this.assignedcontrolled">
             <match trueowner="faction.player"/>
@@ -557,10 +557,10 @@
               @$spacesuits,
               $whereToFind,
               @$sectorsList,
-            ]" output="true" append="true" />      
+            ]" output="true" append="true" />
 
         <set_value name="$spacesuitsIndex" exact="1" />
-        
+
         <do_while value="$target == null and $spacesuitsIndex le $spacesuits.count">
           <set_value name="$target" exact="$spacesuits.{$spacesuitsIndex}" />
 
@@ -603,12 +603,12 @@
         </do_while>
 
         <do_if value="$target == null">
-          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled" 
+          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
             text="'[%s at %s] - No spacesuits found to rescue'
               .[
                 this.assignedcontrolled.debugname,
                 this.assignedcontrolled.sector.knownname,
-              ]" output="true" append="true" /> 
+              ]" output="true" append="true" />
           <resume label="start" />
         </do_if>
         <do_else>
@@ -629,8 +629,8 @@
             <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1031}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap" object="this.assignedcontrolled" />
           </do_if>
           <set_value name="this.assignedcontrolled.pilot.$rescueData" exact="table[
-            $timeStamp = player.age, 
-            $target = $target, 
+            $timeStamp = player.age,
+            $target = $target,
             $textTargetPerson = $textTargetPerson,
             $textTargetSector = $textTargetSector,
             $crewFreeCount = $crewFreeCount,
@@ -663,7 +663,7 @@
       <resume label="start" />
 
       <label name="transferPeople" />
-      
+
       <set_value name="$skipGoToDock" exact="false" />
 
       <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
@@ -677,8 +677,8 @@
               @this.assignedcontrolled.people.{entityrole.service}.count,
               @this.assignedcontrolled.people.{entityrole.marine}.count,
               @this.assignedcontrolled.people.{entityrole.unassigned}.count,
-            ]" output="true" append="true" />      
-      
+            ]" output="true" append="true" />
+
       <do_if value="this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0" >
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
           text="'[%s at %s] - This ship rescued people: %s, and plan to transfer them to dormitory: %s at %s, with free %s and unassigned: %s'
@@ -690,10 +690,10 @@
               $shipDormitory.sector.knownname,
               $shipDormitory.people.free,
               $shipDormitory.people.{entityrole.unassigned}.count,
-            ]" output="true" append="true" />      
+            ]" output="true" append="true" />
 
         <do_if value="$shipDormitory != null and $shipDormitory.isoperational and $shipDormitory.people.free gt 0">
-          
+
           <do_if value="$recordActionsToLogBook">
             <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1041}.[$textUnit, $textDormitory]" interaction="showonmap" object="this.assignedcontrolled" />
           </do_if>
@@ -706,7 +706,7 @@
                 $shipDormitory.debugname,
                 $shipDormitory.sector.knownname,
                 $shipDormitory.people.{entityrole.unassigned}.count,
-              ]" output="true" append="true" /> 
+              ]" output="true" append="true" />
           <set_value name="$peopleToTransfer" exact="[this.assignedcontrolled.people.{entityrole.unassigned}.count, $shipDormitory.people.free].min" />
           <transfer_people result="$personsTransferred" object="$shipDormitory" otherobject="this.assignedcontrolled" receiveworkforce="false" >
             <matching_people currentroles="[entityrole.unassigned]" amounts="[$peopleToTransfer]"/>
@@ -729,7 +729,7 @@
               <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1042}.[$textUnit, $personsTransferred.count, $textDormitory]" interaction="showonmap" object="this.assignedcontrolled" />
             </do_if>
             <resume label="findSpacesuits" />
-          </do_if>  
+          </do_if>
         </do_if>
         <do_if value="this.assignedcontrolled.people.free le 0 and ($shipDormitory == null or not $shipDormitory.isoperational or $shipDormitory.people.free le 0)">
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
@@ -752,7 +752,7 @@
           </run_script>
         </do_if>
       </do_if>
-      
+
       <resume label="start" />
 
       <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"

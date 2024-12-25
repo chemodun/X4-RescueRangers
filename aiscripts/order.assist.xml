@@ -10,8 +10,9 @@
                 <param name="homeStation" value="$orderdef.$homeStation" />
                 <param name="shipDormitory" value="$orderdef.$shipDormitory" />
                 <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
-                <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" /> 
-              </create_order>              
+                <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
+                <param name="isStartedByPlayer" value="false" />
+              </create_order>
             </do_if>
             <do_else>
               <set_value name="$orderdef.$homeSector" exact="$order.$homeSector"/>
@@ -26,7 +27,7 @@
                 <param name="homeStation" value="$orderdef.$homeStation" />
                 <param name="shipDormitory" value="$orderdef.$shipDormitory" />
                 <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
-                <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" /> 
+                <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
               </run_script>
             </do_else>
           </do_elseif>
