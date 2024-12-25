@@ -279,8 +279,6 @@
     <!-- to remove before production -->
     <set_value name="$scriptVersion" exact="101" />
 
-    <set_value name="$skipDockingMessageAfterScriptUpdate" exact="not $isStartedByPlayer" />
-
     <set_value name="$target" exact="null" />
 
     <do_if value="this.assignedcontrolled.pilot.$rescueData?">
@@ -333,8 +331,10 @@
 
     <!-- <set_command_action commandaction="commandaction.scanningto" param="$homeLocation.sector" /> -->
 
+    <set_value name="$skipDockingMessageAfterScriptUpdate" exact="not $isStartedByPlayer"/>
+
     <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-      text="'[%s at %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nStation: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s. \nDock: [%s at %s], parked at: [%s at %s], has context: %s'
+      text="'[%s at %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nStation: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s. \nDock: [%s at %s], parked at: [%s at %s], has context: %s. Skip docking message: %s'
         .[
           this.assignedcontrolled.debugname,
           this.assignedcontrolled.sector.knownname,
@@ -356,7 +356,8 @@
           @this.assignedcontrolled.dock.container.sector.knownname,
           @this.assignedcontrolled.parkedat.debugname,
           @this.assignedcontrolled.parkedat.sector.knownname,
-          @this.assignedcontrolled.parkedat.hascontext.{$homeStation}
+          @this.assignedcontrolled.parkedat.hascontext.{$homeStation},
+          $skipDockingMessageAfterScriptUpdate,
         ]" output="true" append="true" />
 
 
