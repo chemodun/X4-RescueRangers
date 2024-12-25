@@ -279,6 +279,8 @@
     <!-- to remove before production -->
     <set_value name="$scriptVersion" exact="101" />
 
+    <set_value name="$skipDockingMessageAfterScriptUpdate" exact="not $isStartedByPlayer" />
+
     <set_value name="$target" exact="null" />
 
     <do_if value="this.assignedcontrolled.pilot.$rescueData?">
@@ -332,7 +334,7 @@
     <!-- <set_command_action commandaction="commandaction.scanningto" param="$homeLocation.sector" /> -->
 
     <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-      text="'[%s at %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nStation: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s.'
+      text="'[%s at %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nStation: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s. \nDock: [%s at %s], parked at: [%s at %s], has context: %s'
         .[
           this.assignedcontrolled.debugname,
           this.assignedcontrolled.sector.knownname,
@@ -350,12 +352,17 @@
           @$rescuePriorityByOxygenRemained,
           @$recordActionsToLogBook,
           $debugchance,
+          @this.assignedcontrolled.dock.container.debugname,
+          @this.assignedcontrolled.dock.container.sector.knownname,
+          @this.assignedcontrolled.parkedat.debugname,
+          @this.assignedcontrolled.parkedat.sector.knownname,
+          @this.assignedcontrolled.parkedat.hascontext.{$homeStation}
         ]" output="true" append="true" />
 
 
     <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
 
-    <do_if value="$isStartedByPlayer">
+    <do_if value="$isStartedByPlayer and not $skipGoToDock">
       <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1021}.[$textUnit, $textHomeSector]" interaction="showonmap" object="this.assignedcontrolled" />
     </do_if>
 
@@ -482,9 +489,14 @@
               @$homeStation.debugname,
               @$homeStation.sector.knownname,
             ]" output="true" append="true" />
-        <do_if value="$recordActionsToLogBook">
-          <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1022}.[$textUnit, $textHomeStation]" interaction="showonmap" object="this.assignedcontrolled" />
+        <do_if value="$skipDockingMessageAfterScriptUpdate" negate="true">
+          <do_if value="$recordActionsToLogBook">
+            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1022}.[$textUnit, $textHomeStation]" interaction="showonmap" object="this.assignedcontrolled" />
+          </do_if>
         </do_if>
+        <do_else>
+          <set_value name="$skipDockingMessageAfterScriptUpdate" exact="false"/>
+        </do_else>
         <run_script name="'order.dock'" result="$docked">
           <param name="destination" value="$homeStation"/>
           <!-- <param name="abouttofinish" value="true"/> -->
