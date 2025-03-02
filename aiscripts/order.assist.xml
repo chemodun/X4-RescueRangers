@@ -11,7 +11,6 @@
                 <param name="shipDormitory" value="$orderdef.$shipDormitory" />
                 <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
                 <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
-                <param name="isStartedByPlayer" value="false" />
               </create_order>
             </do_if>
             <do_else>

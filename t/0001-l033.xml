@@ -13,15 +13,18 @@
       <t id="109">Enregistrer dans le journal de bord</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
-      <t id="1011">\033C%s \(%s\)\033X</t>
+      <t id="1010">%s \(%s\)</t>
+      <t id="1011">\033C{1972092402, 1010}\033X</t>
       <t id="1014">\033G%s\033X portant un \033G%s \(%s\)\033X</t>
       <t id="1021">%s : assigné à travailler dans %s</t>
       <t id="1022">%s : en route pour s'amarrer à la station d'origine %s</t>
+      <t id="1023">%s : en route pour s'amarrer au vaisseau "dortoir" %s</t>
       <t id="1031">%s : en route pour sauver %s dans %s</t>
       <t id="1032">%s : a sauvé le %s dans %s</t>
       <t id="1041">%s : va transférer les membres d'équipage sauvés à %s</t>
       <t id="1042">%s : a transféré %s membres d'équipage sauvés à %s</t>
       <t id="1091">%s : \033RImpossible de sauver les membres d'équipage\033X - pas de place libre pour les membres d'équipage et sur %s - aussi !</t>
+      <t id="2001">{1972092402,1} problème : l'amarrage sur % pour %s n'est pas possible ! Abandon !</t>
     </page>
   </add>
 </diff>

@@ -13,15 +13,18 @@
       <t id="109">Registrar en el diario</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
-      <t id="1011">\033C%s \(%s\)\033X</t>
+      <t id="1010">%s \(%s\)</t>
+      <t id="1011">\033C{1972092402, 1010}\033X</t>
       <t id="1014">\033G%s\033X vistiendo un \033G%s \(%s\)\033X</t>
       <t id="1021">%s: asignado a trabajar en %s</t>
       <t id="1022">%s: yendo a atracar en la estación de origen %s</t>
+      <t id="1023">%s: yendo a atracar en la nave "dormitorio" %s</t>
       <t id="1031">%s: en ruta para rescatar a %s en %s</t>
       <t id="1032">%s: rescató a %s en %s</t>
       <t id="1041">%s: yendo a transferir miembros de tripulación salvados a %s</t>
       <t id="1042">%s: transfirió %s miembros de tripulación salvados a %s</t>
       <t id="1091">%s: \033RNo puede salvar a los miembros de la tripulación\033X - no hay espacio libre para los miembros de la tripulación y en %s - ¡también!</t>
+      <t id="2001">{1972092402,1} problema: ¡no es posible acoplar en % para %s! ¡Abortando!</t>
     </page>
   </add>
 </diff>
