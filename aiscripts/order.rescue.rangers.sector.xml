@@ -59,32 +59,11 @@
             @$scriptVersion,
           ]" debugchance="100"/>
           <check_any>
-            <check_value value="@$scriptVersion lt 103" />
+            <check_value value="@$scriptVersion lt 101" />
           </check_any>
         </check_all>
       </conditions>
       <actions>
-        <!-- <do_if value="@$scriptVersion lt 103">
-          <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-            text="'[%s at %s] - Re-init for versions prior to 1.03. Home sector: %s, home station: %s, dormitory: %s'
-            .[
-              this.assignedcontrolled.debugname,
-              this.assignedcontrolled.sector.knownname,
-              @$homeSector.knownname,
-              @$homeStation.knownname,
-              @$shipDormitory.knownname
-            ]" output="true" append="true" />
-          <create_order object="this.assignedcontrolled" id="'RescueRangers'" default="true">
-            <param name="homeSector" value="@$homeSector" />
-            <param name="maxDistanceAround" value="$maxDistanceAround" />
-            <param name="homeStation" value="@$homeStation" />
-            <param name="shipDormitory" value="@$shipDormitory" />
-            <param name="rescuePriorityByOxygenRemained" value="$rescuePriorityByOxygenRemained" />
-            <param name="recordActionsToLogBook" value="@$recordActionsToLogBook" />
-            <param name="isStartedByPlayer" value="false" />
-          </create_order>
-          <return/>
-        </do_if> -->
       </actions>
     </handler>
     <handler>
