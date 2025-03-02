@@ -13,6 +13,16 @@ Several ships with one order can work in one sector or crossed sectors.
 [b]Mimic[/b] order in a fleet is fully supported.
 From version 1.03 can work without [b]Home station[/b] set - in the [b]Fleet support[/b] mode.
 
+[size=130][u]How it works[/u][/size]
+
+The ship with order "Rescue Rangers" will wait docked in the Home Station or "Dormitory" ship for event, when any player ship in the Home Sector (or sector where the "Dormitory" is located) will be destroyed. After that, the ship will fly to find spacesuits and fly to it to rescue the crew's members.
+When the ship will collect all crew's members it will fly back to the Home Sector and dock to the Home Station or "Dormitory" ship.
+If case it will be full before the ship will collect all crew's members - it will try to transfer the rescued crew to the "Dormitory" ship and continue the rescue operation.
+If Rescue ship will return to the Home Station, it will not immediately transfer the rescued crew to the "Dormitory" ship. It will wait for the some period of "silence" before to do it.
+As in "Fleet support" mode it will dock to the "Dormitory" ship then it will transfer the rescued crew immediately after the docking.
+If the "Dormitory" ship will be full - the Rescue ship will try to inform you.
+Please don't forget to check the "Dormitory" ship and transfer the rescued crew to new ships.
+
 [size=130][u]Download[/u][/size]
 
 You can download the latest version via Steam client - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966]Rescue Rangers[/url]
