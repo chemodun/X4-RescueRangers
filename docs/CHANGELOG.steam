@@ -1,14 +1,25 @@
-[h1][u]Changelog[/u][/h1]
+[h1]Changelog[/h1]
 
-[h2][u][1.01] - 2024-12-26[/u][/h2]
-[h3][u]Added[/u][/h3]
-- Added a new option to define a range of sectors where the ship can rescue the crew members.
-- Added a new option to select the priority of the rescue by the oxygen remained in the spacesuit instead of the distance to the ship.
-- Added a possibility to use in fleet mode with the [b]Mimic[/b] order.
+[h2][b][1.03] - 2025-03-02[/b][/h2]
 
-[h2][u][1.00] - 2024-12-17[/u][/h2]
-[h3][u]Added[/u][/h3]
-- Initial release of the Rescue Rangers extension.
-- Allows rescuing crew members from destroyed ships in a designated sector.
-- Configuration options for home sector, home station, ship dormitory, and logbook recording.
-- Compatibility with X4: Foundations 7.1.
+[h2]Added[/h2]
+[list]
+[*] Added a new "Fleet support" mode. If [b]Home station[/b] is not set - the [b]Fleet support[/b] mode is enabled.
+[/list]
+[h2][b][1.01] - 2024-12-26[/b][/h2]
+
+[h2]Added[/h2]
+[list]
+[*] Added a new option to define a range of sectors where the ship can rescue the crew members.
+[*] Added a new option to select the priority of the rescue by the oxygen remained in the spacesuit instead of the distance to the ship.
+[*] Added a possibility to use in fleet mode with the [b]Mimic[/b] order.
+[/list]
+[h2][b][1.00] - 2024-12-17[/b][/h2]
+
+[h2]Added[/h2]
+[list]
+[*] Initial release of the Rescue Rangers extension.
+[*] Allows rescuing crew members from destroyed ships in a designated sector.
+[*] Configuration options for home sector, home station, ship dormitory, and logbook recording.
+[*] Compatibility with X4: Foundations 7.1.
+[/list]
