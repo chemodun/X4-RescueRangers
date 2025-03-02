@@ -1,47 +1,68 @@
-[size=5][u]Rescue Rangers[/u][/size]
+[size=4][u]Rescue Rangers[/u][/size]
 
 This extension allows you to rescue crews' members from the destroyed ships in a designated sector.
 Always the closest possible spacesuit will be selected to rescue.
 
-[u][size=4]Compatibility[/size][/u]
+[size=3][u][b]Compatibility[/b][/u][/size]
+
 Compatible with [b]X4: Foundations 7.1[/b]. At least it written and tested with this version.
 
-[size=4][u]General information[/u][/size]
+[size=3][u][b]Features[/b][/u][/size]
+
 Several ships with one order can work in one sector or crossed sectors.
 [b]Mimic[/b] order in a fleet is fully supported.
+From version 1.03 can work without [b]Home station[/b] set - in the [b]Fleet support[/b] mode.
 
-[size=4][u]Executing the order[/u][/size]
+[size=3][u][b]Download[/b][/u][/size]
+
+You can download the latest version via Steam client - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966]Rescue Rangers[/url]
+Or you can do it via the [url=https://www.nexusmods.com/x4foundations/mods/1571]Rescue Rangers[/url]
+
+[size=3][u][b]Executing the order[/b][/u][/size]
+
 You can select the order as any other, "default", from the "Navigation" section of  orders.
-Please be aware - this order required the ship captain to have at least `one star` in the "Pilot" skill.
+Please be aware - this order requires the ship captain to have at least [b]one star[/b] in the "Pilot" skill.
 
-[size=4][u]Configuration[/u][/size]
-There are a several configuration options available. You can see all of them on a screenshot.
-[img]https://staticdelivery.nexusmods.com/mods/2659/images/1571/1571-1735243475-1222705260.jpeg[/img]
+[size=3][u][b]Configuration[/b][/u][/size]
 
-[size=3][u]Home Sector[/u][/size]
+There are several configuration options available. You can see all of them on a screenshot.
+
+[size=3][u][i]Home Sector[/i][/u][/size]
+
 This is a sector where the ship will rescue the crew. You can select it from the list of discovered sectors.
 
-[size=3][u]Max gate distance to rescue[/u][/size]
-This is a maximum distance from the Home Sector to the sector where the ship can rescue the crews' members. The ship will not react on ships destructions in the sectors further than this distance.
+[size=3][u][i]Max gate distance to rescue[/i][/u][/size]
+
+This is a maximum distance from the Home Sector to the sector where the ship can rescue the crews' members. The ship will not react to ship destructions in the sectors further than this distance.
 Default value is [b]0[/b].
 
-[size=3][u]Home Station[/u][/size]
+[size=3][u][i]Home Station[/i][/u][/size]
+
 This is a station where the ship will be docked and wait for the next order. You can select it from the list of discovered stations in any sector.
 The best option is to select a station in the same sector as the Home Sector.
 
-[size=3][u]Ship - "Dormitory"[/u][/size]
-This is a ship where the rescued crew will be placed. You can select it from the list of your ships. The ship should enough capacity to place all rescued crews' members.
+If during setup the order the station was not selected, the ship will be in the [b]Fleet support[/b] mode. In this mode, the ship will dock to the "Dormitory" ship and will assume the current sector as the Home Sector for rescue operations.
 
-[size=3][u]Priority by oxygen remained[/u][/size]
+[size=3][u][i]Ship - "Dormitory"[/i][/u][/size]
+
+This is a ship where the rescued crew will be placed. You can select it from the list of your ships. The ship should have enough capacity to place all rescued crews' members.
+Please take into account - in the [b]Fleet support[/b] mode the "Dormitory" has to be capable to provide docking for the Rescuer ship.
+
+[size=3][u][i]Priority by oxygen remained[/i][/u][/size]
+
 [b]Disabled[/b] by default.
-This option allows you to select the priority of the rescue by the oxygen remained in the spacesuit instead of the distance to the ship. If enabled, the ship will try to rescue the crews' members with the lowest oxygen remained in the spacesuit.
+This option allows you to select the priority of the rescue by the oxygen remaining in the spacesuit instead of the distance to the ship. If enabled, the ship will try to rescue the crews' members with the lowest oxygen remaining in the spacesuit.
 
-[size=3][u]Record to logbook[/u][/size]
-`Enabled` by default.
+[size=3][u][i]Record to logbook[/i][/u][/size]
+
+[b]Enabled[/b] by default.
+
 If enabled, the ship will record the events to the logbook. I.e. starts, travel to desired sector, flying to the target, attacking the target, destroying the target, etc.
 
-[size=4][u]Situation when both ships are full[/u][/size]
+[size=3][u][b]Situation when both ships are full[/b][/u][/size]
+
 The ship's captain will periodically call to the player to inform about absence of the order. Additionally, if the Record to logbook is enabled - it will be recorded there as well.
 
-[size=4][u]Links[/u][/size]
-There is a thread on EgoSoft forum - [url=https://forum.egosoft.com/viewtopic.php?p=5259072][Mod/AIScript] Order "Rescue Rangers"[/url]
+[size=3][u][b]Links[/b][/u][/size]
+
+There is a thread on EgoSoft forum - [url=https://forum.egosoft.com/viewtopic.php?p=5260786][Mod/AIScript] Order "Rescue Rangers"[/url]. Feel free to ask any questions or report issues there.
