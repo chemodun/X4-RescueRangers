@@ -2,9 +2,9 @@
 
 ## [1.04] - 2025-03-05
 
-### Fix
+### Fixed
 
-- Wrong error in Non Fleet mode if Rescue ship can't dock on Dormitory.
+- Wrong error in non-Fleet mode if Rescue ship can't dock on Dormitory.
 
 ## [1.03] - 2025-03-02
 
