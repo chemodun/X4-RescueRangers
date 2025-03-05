@@ -1,5 +1,11 @@
 [size=140][u]Changelog[/u][/size]
 
+[size=130][u][1.04] - 2025-03-05[/u][/size]
+
+[size=125][u]Fix[/u][/size]
+[list]
+[*] Wrong error in Non Fleet mode if Rescue ship can't dock on Dormitory.
+[/list]
 [size=130][u][1.03] - 2025-03-02[/u][/size]
 
 [size=125][u]Added[/u][/size]
