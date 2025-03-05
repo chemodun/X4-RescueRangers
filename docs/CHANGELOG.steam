@@ -2,9 +2,9 @@
 
 [h2][b][1.04] - 2025-03-05[/b][/h2]
 
-[h2]Fix[/h2]
+[h2]Fixed[/h2]
 [list]
-[*] Wrong error in Non Fleet mode if Rescue ship can't dock on Dormitory.
+[*] Wrong error in non-Fleet mode if Rescue ship can't dock on Dormitory.
 [/list]
 [h2][b][1.03] - 2025-03-02[/b][/h2]
 
