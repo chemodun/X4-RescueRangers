@@ -407,7 +407,7 @@
   <attention min="unknown">
     <actions>
 
-      <do_if value="@$rescueMode != 'sector' and @$shipDormitory.dockingenabled and @$shipDormitory.dockingallowed.{this.assignedcontrolled}" negate="true">
+      <do_if value="@$rescueMode == 'sector' or @$shipDormitory.dockingenabled and @$shipDormitory.dockingallowed.{this.assignedcontrolled}" negate="true">
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
           text="'[%s at %s, Mode: %s] - Configuration check not passed: %s, home ship: %s, home ship docking enabled: %s, home ship allowed: %s'
             .[
