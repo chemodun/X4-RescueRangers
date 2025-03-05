@@ -278,7 +278,7 @@
     </handler>
   </interrupts>
   <init>
-    <set_value name="$scriptVersion" exact="103" />
+    <set_value name="$scriptVersion" exact="104" />
 
     <set_value name="$rescueMode" exact="if $homeStation == null then 'fleet' else 'sector'" />
 
