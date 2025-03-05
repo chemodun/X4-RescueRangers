@@ -24,7 +24,7 @@
       <t id="1041">%s: going to transfer saved crews' members to %s</t>
       <t id="1042">%s: transferred %s saved crews' members to %s</t>
       <t id="1091">%s: \033RCan't save crews' members\033X - no free space for crew members and on %s - too!</t>
-      <t id="2001">{1972092402,1} issue: docking on % for %s is not possible! Aborting!</t>
+      <t id="2001">{1972092402,1} issue: docking on %s for %s is not possible! Aborting!</t>
     </page>
   </add>
 </diff>

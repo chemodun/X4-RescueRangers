@@ -24,7 +24,7 @@
       <t id="1041">%s : va transférer les membres d'équipage sauvés à %s</t>
       <t id="1042">%s : a transféré %s membres d'équipage sauvés à %s</t>
       <t id="1091">%s : \033RImpossible de sauver les membres d'équipage\033X - pas de place libre pour les membres d'équipage et sur %s - aussi !</t>
-      <t id="2001">{1972092402,1} problème : l'amarrage sur % pour %s n'est pas possible ! Abandon !</t>
+      <t id="2001">{1972092402,1} problème : l'amarrage sur %s pour %s n'est pas possible ! Abandon !</t>
     </page>
   </add>
 </diff>

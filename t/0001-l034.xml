@@ -24,7 +24,7 @@
       <t id="1041">%s: yendo a transferir miembros de tripulación salvados a %s</t>
       <t id="1042">%s: transfirió %s miembros de tripulación salvados a %s</t>
       <t id="1091">%s: \033RNo puede salvar a los miembros de la tripulación\033X - no hay espacio libre para los miembros de la tripulación y en %s - ¡también!</t>
-      <t id="2001">{1972092402,1} problema: ¡no es posible acoplar en % para %s! ¡Abortando!</t>
+      <t id="2001">{1972092402,1} problema: ¡no es posible acoplar en %s para %s! ¡Abortando!</t>
     </page>
   </add>
 </diff>

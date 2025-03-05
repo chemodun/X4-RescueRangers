@@ -24,7 +24,7 @@
       <t id="1041">%s: geht, um gerettete Crew-Mitglieder zu %s zu transferieren</t>
       <t id="1042">%s: hat %s gerettete Crew-Mitglieder zu %s transferiert</t>
       <t id="1091">%s: \033RKann keine Crew-Mitglieder retten\033X - kein freier Platz für Crew-Mitglieder und auf %s - auch nicht!</t>
-      <t id="2001">{1972092402,1} Problem: Andocken an % für %s ist nicht möglich! Abbruch!</t>
+      <t id="2001">{1972092402,1} Problem: Andocken an %s für %s ist nicht möglich! Abbruch!</t>
     </page>
   </add>
 </diff>
