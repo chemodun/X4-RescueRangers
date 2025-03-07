@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<diff>
+  <add sel="//do_if[@value='$buildtask.buildobject.isoperational']/do_if/do_if" pos="prepend">
+    <include_actions ref="md.RR_GetThemBack.RecoveryCrewOnReplacementShip" />
+  </add>
+</diff>
