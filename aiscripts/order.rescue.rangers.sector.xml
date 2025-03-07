@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="104" priority="1">
+<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="105" priority="1">
   <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true">
     <params>
       <param name="homeSector" default="if @this.ship.commanderentity.$config_subordinate_range then @this.ship.commanderentity.$config_subordinate_range
@@ -24,6 +24,9 @@
       <param name="rescuePriorityByOxygenRemained" type="bool" default="false" text="{1972092402, 105}" >
         <patch sinceversion="101" value="false" early="true" setvariable="true" comment="Set to false as new value"/>
       </param>
+      <param name="returnThemBack" type="bool" default="false" text="{1972092402, 105}" >
+        <patch sinceversion="106" value="false" early="true" setvariable="true" comment="enable feature to return them on replacement ship"/>
+      </param>
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
       <param name="isStartedByPlayer" type="internal" default="true" text="Started by Player" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
@@ -40,6 +43,10 @@
   </order>
 
   <interrupts>
+   <library>
+      <actions name="MarkRescued">
+      </actions>
+    </library>
     <handler ref="AttackHandler" />
     <handler ref="MissileLockHandler" />
     <handler ref="ScannedHandler" />
@@ -83,17 +90,20 @@
               <check_value value="event.param.isclass.spacesuit" negate="true"/>
               <check_value value="$shipTypesToExclude.indexof.{@event.param.type} le 0" />
               <check_value value="this.assignedcontrolled.people.free gt 0" />
+              <check_value value="event.param3 != killmethod.collected" />
+              <check_value value="event.param3 != killmethod.removed" comment="spacesuit is removed"/>
             </check_all>
             <check_all>
               <check_value value="event.param == $target" />
               <check_value value="event.param.isclass.spacesuit" />
+              <check_value value="event.param3 == killmethod.removed" comment="spacesuit is removed"/>
             </check_all>
           </check_any>
         </check_all>
       </conditions>
       <actions>
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s, Mode: %s] - %s, our : %s (class: %s, type: %s - %s) in sector: %s. Killer: %s {%s}, method: %s. Spacesuit docked: %s. Crew free: %s'
+          text="'[%s at %s, Mode: %s] - %s, our : %s (class: %s, macro: %s, type: %s - %s) in sector: %s. Killer: %s {%s}, method: %s. Spacesuit docked: %s. Crew free: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
@@ -101,6 +111,7 @@
               @event.name,
               @event.param.debugname,
               @event.param.class,
+              @event.param.macro,
               @event.param.type,
               @event.param.typename,
               @event.param.sector.knownname,
@@ -278,7 +289,7 @@
     </handler>
   </interrupts>
   <init>
-    <set_value name="$scriptVersion" exact="104" />
+    <set_value name="$scriptVersion" exact="105" />
 
     <set_value name="$rescueMode" exact="if $homeStation == null then 'fleet' else 'sector'" />
 
@@ -635,9 +646,6 @@
                 $whereToFind.knownname,
               ]" output="true" append="true" />
           <resume label="start" />
-          <find_ship name="$spacesuits" space="$sectorsList" class="class.spacesuit" docked="false" checkoperational="true"  recursive="true" multiple="true" sortbydistanceto="this.assignedcontrolled">
-            <match trueowner="faction.player"/>
-          </find_ship>
         </do_if>
 
         <!-- Clear $targetSector for future interactions -->
