@@ -1,2 +1,3 @@
 # Ignore all XML Schema files
 *.xsd
+*.modified/*.xml
