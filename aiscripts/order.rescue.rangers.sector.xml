@@ -679,13 +679,16 @@
             <do_else>
               <set_value name="$targetAssignedToDock" exact="$target.order.$destination" />
             </do_else>
+            <!-- TODO: break docking not on RR Ships -->
             <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-              text="'[%s at %s, Mode: %s] - Target %s is already assigned to dock at %s'
+              text="'[%s at %s, Mode: %s] - Target %s (person %s, age %) is already assigned to dock at %s'
                 .[
                   this.assignedcontrolled.debugname,
                   this.assignedcontrolled.sector.knownname,
                   @$rescueMode,
                   $target.debugname,
+                  @$target.pilot.knownname,
+                  @$target.age,
                   $targetAssignedToDock.debugname,
                 ]" output="true" append="true" />
             <set_value name="$target" exact="null" />
@@ -696,13 +699,14 @@
             </do_if>
             <do_else>
               <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-                text="'[%s at %s, Mode: %s] - Person to rescue: %s, spacesuit: %s at %s, already marked to be rescued: %s'
+                text="'[%s at %s, Mode: %s] - Person to rescue: %s, spacesuit: %s (age %s) at %s, already marked to be rescued: %s'
                   .[
                     this.assignedcontrolled.debugname,
                     this.assignedcontrolled.sector.knownname,
                     @$rescueMode,
                     @$target.pilot.knownname,
                     @$target.debugname,
+                    @$target.age,
                     @target.sector.knownname,
                     @$target.pilot.$toRescueBy,
                   ]" output="true" append="true" />
