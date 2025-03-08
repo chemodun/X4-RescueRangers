@@ -29,8 +29,9 @@
       <param name="rescuePriorityByOxygenRemained" type="bool" default="false" text="{1972092402, 105}">
         <patch sinceversion="101" value="false" early="true" setvariable="true" comment="Set to false as new value" />
       </param>
-      <param name="returnThemBack" type="bool" default="false" text="{1972092402, 105}">
-        <patch sinceversion="106" value="false" early="true" setvariable="true" comment="enable feature to return them on replacement ship" />
+      <param name="returnThemBack" type="bool" default="false" text="{1972092402, 106}">
+        <patch sinceversion="105" value="player.gameversion ge 750" early="true" setvariable="true"
+          comment="enable feature to return them on replacement ship" />
       </param>
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
       <param name="isStartedByPlayer" type="internal" default="true" text="Started by Player" />
@@ -50,8 +51,17 @@
   <interrupts>
     <library>
       <actions name="AccountEntityTransfer">
-        <do_if value="@$returnThemBack and player.entity.$RRData? and @player.entity.$RRData.$index.count gt 0">
-          <set_value name="$index" exact="player.entity.$RRData.$index.indexof.{$rescuedEntity.name}" />
+        <debug_text
+          text="'RR_RescueRangers - AccountEntityTransfer started. Return them back: %s. Game version valid: %s. Data exists: %s.'.
+          [
+            @$returnThemBack,
+            player.gameversion ge 750,
+            player.entity.$RRData?
+          ]"
+          chance="100" />
+        <do_if
+          value="@$returnThemBack and player.gameversion ge 750 and player.entity.$RRData? and @player.entity.$RRData.$index.count gt 0">
+          <set_value name="$index" exact="player.entity.$RRData.$index.indexof.{$rescuedEntity}" />
           <do_if value="$index gt 0">
             <set_value name="player.entity.$RRData.$data.{$index}.$state" exact="$rescuedEntityState" />
             <set_value name="player.entity.$RRData.$data.{$index}.$container" exact="$rescuedEntityContainer.idcode" /> <!-- Set the
@@ -59,7 +69,7 @@
             <set_value name="player.entity.$RRData.$data.{$index}.$class" exact="$rescuedEntityContainer.class" /> <!-- Set the class -->
             <set_value name="player.entity.$RRData.$data.{$index}.$updated" exact="player.age" /> <!-- Set the update timestamp -->
           </do_if>
-          <debug_text text="'RR_RescueRangers - Data Item Updated for %s: %s'.[$rescuedEntity.name, player.entity.$RRData.$data.{$index} ]"
+          <debug_text text="'RR_RescueRangers - Data Item Updated for %s: %s'.[$rescuedEntity, player.entity.$RRData.$data.{$index} ]"
             chance="100" />
         </do_if>
         <remove_value name="$index" />
@@ -157,10 +167,10 @@
                 object="this.assignedcontrolled" />
             </do_if>
             <do_if value="@$returnThemBack">
-              <set_value name="$rescuedEntity" exact="@event.param.pilot" />
-              <set_value name="$rescuedEntityState" exact="rescuer" />
+              <set_value name="$rescuedEntity" exact="$targetPerson" />
+              <set_value name="$rescuedEntityState" exact="'rescuer'" />
               <set_value name="$rescuedEntityContainer" exact="this.assignedcontrolled" />
-              <run_script name="AccountEntityTransfer" />
+              <include_interrupt_actions ref="AccountEntityTransfer" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
@@ -232,10 +242,10 @@
               object="this.assignedcontrolled" />
           </do_if>
           <do_if value="@$returnThemBack">
-            <set_value name="$rescuedEntity" exact="@event.param.pilot" />
-            <set_value name="$rescuedEntityState" exact="rescuer" />
+            <set_value name="$rescuedEntity" exact="$targetPerson" />
+            <set_value name="$rescuedEntityState" exact="'rescuer'" />
             <set_value name="$rescuedEntityContainer" exact="this.assignedcontrolled" />
-            <run_script name="AccountEntityTransfer" />
+            <include_interrupt_actions ref="AccountEntityTransfer" />
           </do_if>
         </do_if>
         <do_if value="this.assignedcontrolled.people.free gt 0">
@@ -339,17 +349,19 @@
     <do_if value="this.assignedcontrolled.pilot.$rescueData?">
       <do_if value="@this.assignedcontrolled.pilot.$rescueData.$timeStamp ge (player.age - 300)">
         <set_value name="$target" exact="@this.assignedcontrolled.pilot.$rescueData.$target" />
+        <set_value name="$targetPerson" exact="@this.assignedcontrolled.pilot.$rescueData.$person" />
         <set_value name="$textTargetPerson" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetPerson" />
         <set_value name="$textTargetSector" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetSector" />
         <set_value name="$skipGoToDock" exact="true" />
         <set_value name="$crewFreeCount" exact="@this.assignedcontrolled.pilot.$rescueData.$crewFreeCount" />
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s, Mode: %s] - Found saved: target: %s, text: %s, at %s, skipGoToDock: %s, crewFreeCount: %s, free: %s'
+          text="'[%s at %s, Mode: %s] - Found saved: target: %s, person: %s, text: %s, at %s, skipGoToDock: %s, crewFreeCount: %s, free: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
               @$rescueMode,
               $target.debugname,
+              $targetPerson,
               $textTargetPerson,
               $textTargetSector,
               $skipGoToDock,
@@ -362,6 +374,7 @@
     </do_if>
     <do_else>
       <set_value name="$skipGoToDock" exact="false" />
+      <set_value name="$targetPerson" exact="''" />
       <set_value name="$textTargetPerson" exact="''" />
       <set_value name="$textTargetSector" exact="''" />
     </do_else>
@@ -540,11 +553,12 @@
         value="$skipGoToDock or (this.assignedcontrolled.dock and (this.assignedcontrolled.dock.container == $parkingAt)) or (this.assignedcontrolled.parkedat and ((this.assignedcontrolled.parkedat == $parkingAt) or this.assignedcontrolled.parkedat.hascontext.{$parkingAt}))">
         <do_if value="$target != null">
           <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-            text="'[%s at %s, Mode: %s] - Previously saved person: %s at %s. Crew free: %s, previous free: %s. Wait for event 3s.'
+            text="'[%s at %s, Mode: %s] - Previously saved person: %s (%s) at %s. Crew free: %s, previous free: %s. Wait for event 3s.'
               .[
                 this.assignedcontrolled.debugname,
                 this.assignedcontrolled.sector.knownname,
                 @$rescueMode,
+                $targetPerson,
                 $textTargetPerson,
                 $textTargetSector,
                 this.assignedcontrolled.people.free,
@@ -561,10 +575,10 @@
                 object="this.assignedcontrolled" />
             </do_if>
             <do_if value="@$returnThemBack">
-              <set_value name="$rescuedEntity" exact="@event.param.pilot" />
-              <set_value name="$rescuedEntityState" exact="rescuer" />
+              <set_value name="$rescuedEntity" exact="$targetPerson" />
+              <set_value name="$rescuedEntityState" exact="'rescuer'" />
               <set_value name="$rescuedEntityContainer" exact="this.assignedcontrolled" />
-              <run_script name="AccountEntityTransfer" />
+              <include_interrupt_actions ref="AccountEntityTransfer" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
@@ -699,10 +713,8 @@
           <set_value name="$whereToFind" exact="$homeSector" />
         </do_else>
 
-        <find_ship name="$spacesuits" space="$whereToFind" class="class.spacesuit" docked="false" checkoperational="true" recursive="true"
-          multiple="true" sortbydistanceto="this.assignedcontrolled">
-          <match trueowner="faction.player" />
-        </find_ship>
+        <find_ship_by_true_owner faction="faction.player" name="$spacesuits" space="$whereToFind" class="class.spacesuit" docked="false"
+          checkoperational="true" multiple="true" sortbydistanceto="this.assignedcontrolled" />
 
         <!-- If nothing found in one sector - will try to do it in all of them-->
         <do_if value="@$spacesuits.count == 0 and $sectorsList.count gt 1">
@@ -840,6 +852,7 @@
               ]"
             output="true" append="true" />
           <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
+          <set_value name="$targetPerson" exact="@$target.pilot.knownname" />
           <set_value name="$textTargetPerson" exact="{1972092402, 1014}.[@$target.pilot.knownname, $target.name, $target.idcode]" />
           <set_value name="$textTargetSector" exact="{1972092402, 1003}.[$target.sector.knownname]" />
           <do_if value="$recordActionsToLogBook">
@@ -851,6 +864,7 @@
             exact="table[
             $timeStamp = player.age,
             $target = $target,
+            $person = $targetPerson,
             $textTargetPerson = $textTargetPerson,
             $textTargetSector = $textTargetSector,
             $crewFreeCount = $crewFreeCount,
@@ -939,8 +953,11 @@
           <set_value name="$peopleToTransfer"
             exact="[this.assignedcontrolled.people.{entityrole.unassigned}.count, $shipDormitory.people.free].min" />
           <create_list name="$peopleList" />
-          <set_value name="$unassignedList" exact="this.assignedcontrolled.people.{entityrole.unassigned}.list" />
+          <set_value name="$unassignedList" exact="this.assignedcontrolled.availablepeople.{entityrole.unassigned}.list" />
           <do_for_each name="$person" in="$unassignedList" counter="$p">
+            <debug_text
+              text="'RR_RescueRangers - TransferToDormitory: Preparing person: %s'.[this.assignedcontrolled.availablepeople.{$person}.knownname]"
+              chance="100" />
             <append_to_list name="$peopleList" exact="$person" />
             <do_if value="$p >= $peopleToTransfer">
               <break />
@@ -951,14 +968,17 @@
             <existing_people people="$peopleList" />
           </transfer_people>
           <do_if value="@$personsTransferred.count gt 0">
-            <set_value name="$unassignedList" exact="$shipDormitory.people.{entityrole.unassigned}.list" />
-            <set_value name="$rescuedEntityState" exact="dormitory" />
+            <set_value name="$unassignedList" exact="$shipDormitory.availablepeople.{entityrole.unassigned}.list" />
+            <set_value name="$rescuedEntityState" exact="'dormitory'" />
             <set_value name="$rescuedEntityContainer" exact="$shipDormitory" />
             <do_for_each name="$person" in="$peopleList">
               <do_if value="$unassignedList.indexof.{$person} gt 0">
+                <debug_text
+                  text="'RR_RescueRangers - TransferToDormitory: Transferred person: %s'.[$shipDormitory.availablepeople.{$person}.knownname]"
+                  chance="100" />
                 <do_if value="@$returnThemBack">
-                  <set_value name="$rescuedEntity" exact="$person" />
-                  <run_script name="AccountEntityTransfer" />
+                  <set_value name="$rescuedEntity" exact="$shipDormitory.availablepeople.{$person}.knownname" />
+                  <include_interrupt_actions ref="AccountEntityTransfer" />
                 </do_if>
               </do_if>
             </do_for_each>
