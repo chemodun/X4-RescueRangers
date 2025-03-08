@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
   <add sel="//do_if[@value='$buildtask.buildobject.isoperational']/do_if/do_if" pos="prepend">
+    <debug_text text="'RR_GetThemBack - RecoveryCrew: Call'" chance="100" />
     <include_actions ref="md.RR_GetThemBack.RecoveryCrewOnReplacementShip" />
   </add>
 </diff>
