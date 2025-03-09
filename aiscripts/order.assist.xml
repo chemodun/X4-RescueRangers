@@ -1,34 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <diff>
   <add sel="//do_elseif[@value=&quot;$orderdef.$id == 'Follow'&quot;]" pos="after">
-          <do_elseif value="$orderdef.$id == 'RescueRangers'">
-            <set_value name="$added"/>
-            <do_if value="$createdefaultorder?">
-              <create_order id="$orderdef.$id" object="this.assignedcontrolled" default="true">
-                <param name="homeSector" value="$orderdef.$homeSector" />
-                <param name="maxDistanceAround" value="$orderdef.$maxDistanceAround" />
-                <param name="homeStation" value="$orderdef.$homeStation" />
-                <param name="shipDormitory" value="$orderdef.$shipDormitory" />
-                <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
-                <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
-              </create_order>
-            </do_if>
-            <do_else>
-              <set_value name="$orderdef.$homeSector" exact="$order.$homeSector"/>
-              <set_value name="$orderdef.$maxDistanceAround" exact="$order.$maxDistanceAround"/>
-              <set_value name="$orderdef.$homeStation" exact="$order.$homeStation"/>
-              <set_value name="$orderdef.$shipDormitory" exact="$order.$shipDormitory"/>
-              <set_value name="$orderdef.$rescuePriorityByOxygenRemained" exact="$order.$rescuePriorityByOxygenRemained"/>
-              <set_value name="$orderdef.$recordActionsToLogBook" exact="$order.$recordActionsToLogBook"/>
-              <run_script name="$scriptname">
-                <param name="homeSector" value="$orderdef.$homeSector" />
-                <param name="maxDistanceAround" value="$orderdef.$maxDistanceAround" />
-                <param name="homeStation" value="$orderdef.$homeStation" />
-                <param name="shipDormitory" value="$orderdef.$shipDormitory" />
-                <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
-                <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
-              </run_script>
-            </do_else>
-          </do_elseif>
+    <do_elseif value="$orderdef.$id == 'RescueRangers'">
+      <set_value name="$added" />
+      <do_if value="$createdefaultorder?">
+        <create_order id="$orderdef.$id" object="this.assignedcontrolled" default="true">
+          <param name="homeSector" value="$orderdef.$homeSector" />
+          <param name="maxDistanceAround" value="$orderdef.$maxDistanceAround" />
+          <param name="homeStation" value="$orderdef.$homeStation" />
+          <param name="shipDormitory" value="$orderdef.$shipDormitory" />
+          <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
+          <param name="returnThemBack" value="$orderdef.$returnThemBack" />
+          <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
+        </create_order>
+      </do_if>
+      <do_else>
+        <set_value name="$orderdef.$homeSector" exact="$order.$homeSector" />
+        <set_value name="$orderdef.$maxDistanceAround" exact="$order.$maxDistanceAround" />
+        <set_value name="$orderdef.$homeStation" exact="$order.$homeStation" />
+        <set_value name="$orderdef.$shipDormitory" exact="$order.$shipDormitory" />
+        <set_value name="$orderdef.$rescuePriorityByOxygenRemained" exact="$order.$rescuePriorityByOxygenRemained" />
+        <set_value name="$orderdef.$returnThemBack" exact="$order.$returnThemBack" />
+        <set_value name="$orderdef.$recordActionsToLogBook" exact="$order.$recordActionsToLogBook" />
+        <run_script name="$scriptname">
+          <param name="homeSector" value="$orderdef.$homeSector" />
+          <param name="maxDistanceAround" value="$orderdef.$maxDistanceAround" />
+          <param name="homeStation" value="$orderdef.$homeStation" />
+          <param name="shipDormitory" value="$orderdef.$shipDormitory" />
+          <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
+          <param name="returnThemBack" value="$orderdef.$returnThemBack" />
+          <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
+        </run_script>
+      </do_else>
+    </do_elseif>
   </add>
 </diff>
