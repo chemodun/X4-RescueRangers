@@ -139,7 +139,7 @@
             </do_if>
             <do_if value="@$returnThemBack">
               <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
-                param3="table[$container = this.assignedcontrolled, $containerType = 'rescuer']" />
+                param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
@@ -212,7 +212,7 @@
           </do_if>
           <do_if value="@$returnThemBack">
             <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
-              param3="table[$container = this.assignedcontrolled, $containerType = 'rescuer']" />
+              param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
           </do_if>
         </do_if>
         <do_if value="this.assignedcontrolled.people.free gt 0">
@@ -543,7 +543,7 @@
             </do_if>
             <do_if value="@$returnThemBack">
               <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
-                param3="table[$container = this.assignedcontrolled, $containerType = 'rescuer']" />
+                param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
@@ -940,7 +940,7 @@
                 <do_if value="@$returnThemBack">
                   <signal_objects object="player.entity" param="'rr_entity_transfer'"
                     param2="$shipDormitory.availablepeople.{$person}.name"
-                    param3="table[$container = $shipDormitory, $containerType = 'dormitory']" />
+                    param3="table[$container = $shipDormitory, $containerTag = 'dormitory']" />
                 </do_if>
               </do_if>
             </do_for_each>
