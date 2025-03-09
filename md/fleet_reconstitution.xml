@@ -2,6 +2,6 @@
 <diff>
   <add sel="//cue[@name='ProcessRequest']/actions" pos="prepend">
     <debug_text text="'RR_GetThemBack - Fleet_Reconstitution: Commander: %s. FleetUnits Count: %s'.[@event.param2.debugname, @event.param3.count]" chance="100" />
-    <signal_objects object="player.entity" param="'reconstitute_fleet_forward'" param2="event.param2" param3="event.param3" />
+    <signal_objects object="player.entity" param="'rr_reconstitute_fleet'" param2="event.param2" param3="event.param3" />
   </add>
 </diff>
