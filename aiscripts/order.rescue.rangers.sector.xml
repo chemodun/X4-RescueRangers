@@ -49,35 +49,6 @@
   </order>
 
   <interrupts>
-    <library>
-      <actions name="AccountEntityTransfer">
-        <debug_text
-          text="'RR_RescueRangers - AccountEntityTransfer started. Return them back: %s. Game version valid: %s. Data exists: %s.'.
-          [
-            @$returnThemBack,
-            player.gameversion ge 750,
-            player.entity.$RRData?
-          ]"
-          chance="100" />
-        <do_if
-          value="@$returnThemBack and player.gameversion ge 750 and player.entity.$RRData? and @player.entity.$RRData.$index.count gt 0">
-          <set_value name="$index" exact="player.entity.$RRData.$index.indexof.{$rescuedEntity}" />
-          <do_if value="$index gt 0">
-            <set_value name="player.entity.$RRData.$data.{$index}.$state" exact="$rescuedEntityState" />
-            <set_value name="player.entity.$RRData.$data.{$index}.$container" exact="$rescuedEntityContainer.idcode" /> <!-- Set the
-            container id -->
-            <set_value name="player.entity.$RRData.$data.{$index}.$class" exact="$rescuedEntityContainer.class" /> <!-- Set the class -->
-            <set_value name="player.entity.$RRData.$data.{$index}.$updated" exact="player.age" /> <!-- Set the update timestamp -->
-          </do_if>
-          <debug_text text="'RR_RescueRangers - Data Item Updated for %s: %s'.[$rescuedEntity, player.entity.$RRData.$data.{$index} ]"
-            chance="100" />
-        </do_if>
-        <remove_value name="$index" />
-        <remove_value name="$rescuedEntity" />
-        <remove_value name="$rescuedEntityState" />
-        <remove_value name="$rescuedEntityContainer" />
-      </actions>
-    </library>
     <handler ref="AttackHandler" />
     <handler ref="MissileLockHandler" />
     <handler ref="ScannedHandler" />
@@ -167,10 +138,8 @@
                 object="this.assignedcontrolled" />
             </do_if>
             <do_if value="@$returnThemBack">
-              <set_value name="$rescuedEntity" exact="$targetPerson" />
-              <set_value name="$rescuedEntityState" exact="'rescuer'" />
-              <set_value name="$rescuedEntityContainer" exact="this.assignedcontrolled" />
-              <include_interrupt_actions ref="AccountEntityTransfer" />
+              <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
+                param3="table[$container = this.assignedcontrolled, $containerType = 'rescuer']" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
@@ -242,10 +211,8 @@
               object="this.assignedcontrolled" />
           </do_if>
           <do_if value="@$returnThemBack">
-            <set_value name="$rescuedEntity" exact="$targetPerson" />
-            <set_value name="$rescuedEntityState" exact="'rescuer'" />
-            <set_value name="$rescuedEntityContainer" exact="this.assignedcontrolled" />
-            <include_interrupt_actions ref="AccountEntityTransfer" />
+            <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
+              param3="table[$container = this.assignedcontrolled, $containerType = 'rescuer']" />
           </do_if>
         </do_if>
         <do_if value="this.assignedcontrolled.people.free gt 0">
@@ -575,10 +542,8 @@
                 object="this.assignedcontrolled" />
             </do_if>
             <do_if value="@$returnThemBack">
-              <set_value name="$rescuedEntity" exact="$targetPerson" />
-              <set_value name="$rescuedEntityState" exact="'rescuer'" />
-              <set_value name="$rescuedEntityContainer" exact="this.assignedcontrolled" />
-              <include_interrupt_actions ref="AccountEntityTransfer" />
+              <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
+                param3="table[$container = this.assignedcontrolled, $containerType = 'rescuer']" />
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
@@ -758,14 +723,14 @@
           <do_if
             value="($target.assigneddock and $target.assigneddock.controllable != this.assignedcontrolled) or (@$target.order.id == 'DockAt' and $target.order.$destination != this.assignedcontrolled)">
             <do_if value="$target.assigneddock and $target.assigneddock.controllable != this.assignedcontrolled">
-              <set_value name="$targetAssignedToDock" exact="$target.assigneddock.controllable" />
+              <set_value name="$targetAssignedToDockOn" exact="$target.assigneddock.controllable" />
             </do_if>
             <do_else>
-              <set_value name="$targetAssignedToDock" exact="$target.order.$destination" />
+              <set_value name="$targetAssignedToDockOn" exact="$target.order.$destination" />
             </do_else>
             <!-- TODO: break docking not on RR Ships -->
             <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-              text="'[%s at %s, Mode: %s] - Target %s (person %s, age %) is already assigned to dock at %s, marked by %s'
+              text="'[%s at %s, Mode: %s] - Target %s (person %s, age %s) is already assigned to dock at %s, marked by %s. Order: %s. Orders: %s. Destination orders: %s'
                 .[
                   this.assignedcontrolled.debugname,
                   this.assignedcontrolled.sector.knownname,
@@ -773,15 +738,19 @@
                   $target.debugname,
                   @$target.pilot.knownname,
                   @$target.age,
-                  $targetAssignedToDock.debugname,
+                  $targetAssignedToDockOn.debugname,
                   @$target.pilot.$toRescueBy,
+                  @$target.order,
+                  @$target.orders,
+                  @$targetAssignedToDockOn.orders
                 ]"
               output="true" append="true" />
-            <do_if value="$target.pilot.$toRescueBy?" negate="true">
-              <do_if value="$targetAssignedToDock.orders.indexof.{this.assignedcontrolled.order} le 0">
+            <do_if value="not $target.pilot.$toRescueBy? or $target.pilot.$toRescueBy.$id == this.assignedcontrolled.idcode">
+              <do_if
+                value="not $targetAssignedToDockOn.orders? or $targetAssignedToDockOn.orders.indexof.{this.assignedcontrolled.order} le 0">
                 <cancel_all_orders object="$target" />
                 <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-                  text="'[%s at %s, Mode: %s] - Target %s (person %s, age %) will be tried to rescued right way'
+                  text="'[%s at %s, Mode: %s] - Target %s (person %s, age %s) trying to rescue right way. Order: %s. Orders: %s.'
                     .[
                       this.assignedcontrolled.debugname,
                       this.assignedcontrolled.sector.knownname,
@@ -789,8 +758,8 @@
                       $target.debugname,
                       @$target.pilot.knownname,
                       @$target.age,
-                      $targetAssignedToDock.debugname,
-                      @$target.pilot.$toRescueBy,
+                      @$target.order,
+                      @$target.orders
                     ]"
                   output="true" append="true" />
               </do_if>
@@ -802,7 +771,7 @@
               <set_value name="$target" exact="null" />
             </do_else>
           </do_if>
-          <do_if value="$target?">
+          <do_if value="@$target">
             <do_if
               value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300"
               negate="true">
@@ -955,9 +924,6 @@
           <create_list name="$peopleList" />
           <set_value name="$unassignedList" exact="this.assignedcontrolled.availablepeople.{entityrole.unassigned}.list" />
           <do_for_each name="$person" in="$unassignedList" counter="$p">
-            <debug_text
-              text="'RR_RescueRangers - TransferToDormitory: Preparing person: %s'.[this.assignedcontrolled.availablepeople.{$person}.knownname]"
-              chance="100" />
             <append_to_list name="$peopleList" exact="$person" />
             <do_if value="$p >= $peopleToTransfer">
               <break />
@@ -969,16 +935,12 @@
           </transfer_people>
           <do_if value="@$personsTransferred.count gt 0">
             <set_value name="$unassignedList" exact="$shipDormitory.availablepeople.{entityrole.unassigned}.list" />
-            <set_value name="$rescuedEntityState" exact="'dormitory'" />
-            <set_value name="$rescuedEntityContainer" exact="$shipDormitory" />
             <do_for_each name="$person" in="$peopleList">
               <do_if value="$unassignedList.indexof.{$person} gt 0">
-                <debug_text
-                  text="'RR_RescueRangers - TransferToDormitory: Transferred person: %s'.[$shipDormitory.availablepeople.{$person}.knownname]"
-                  chance="100" />
                 <do_if value="@$returnThemBack">
-                  <set_value name="$rescuedEntity" exact="$shipDormitory.availablepeople.{$person}.knownname" />
-                  <include_interrupt_actions ref="AccountEntityTransfer" />
+                  <signal_objects object="player.entity" param="'rr_entity_transfer'"
+                    param2="$shipDormitory.availablepeople.{$person}.name"
+                    param3="table[$container = $shipDormitory, $containerType = 'dormitory']" />
                 </do_if>
               </do_if>
             </do_for_each>
