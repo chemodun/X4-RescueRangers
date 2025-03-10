@@ -514,7 +514,7 @@
                               text="'RR_GetThemBack - RecoveryCrew: Person to fire: %s'.
                                 [ @$replacement.availablepeople.{$personLowestLocal}.name ]"
                               chance="100" />
-                            <destroy_object object="@$replacement.availablepeople.{$personLowestLocal}" />
+                            <remove_npc_template object="$replacement" template="$personLowestLocal" />
                           </do_if>
                           <do_else>
                             <remove_from_list name="$crewNew" exact="$personLowestNew" />
@@ -527,7 +527,7 @@
                               <remove_from_list name="$dormitoriesEntities.{$dormitoryIndex}" exact="$personLowestNew" />
                             </do_if>
                             <remove_from_list name="$replacementCrew" exact="$personLowestNew" />
-                            <destroy_object object="@$personLowestNew.$container.availablepeople.{$personLowestNew.$id}" />
+                            <remove_npc_template object="@$personLowestNew.$container" template="$personLowestNew.$id" />
                             <remove_value name="$dormitoryIndex" />
                           </do_else>
                           <remove_value name="$personLowestLocal" />
@@ -545,7 +545,7 @@
                           </do_if>
                           <remove_from_list name="$replacementCrew" exact="$personLowestNew" />
                           <remove_from_list name="$crewNew" exact="$personLowestNew" />
-                          <destroy_object object="@$personLowestNew.$container.availablepeople.{$personLowestNew.$id}" />
+                          <remove_npc_template object="@$personLowestNew.$container" template="$personLowestNew.$id" />
                           <remove_value name="$personLowestNew" />
                           <remove_value name="$dormitoryIndex" />
                         </do_elseif>
@@ -556,7 +556,7 @@
                               [ @$replacement.availablepeople.{$personLowestLocal}.name ]"
                             chance="100" />
                           <remove_from_list name="$crewLocal" exact="$personLowestLocal" />
-                          <destroy_object object="@$replacement.availablepeople.{$personLowestLocal}" />
+                          <remove_npc_template object="$replacement" template="$personLowestLocal" />
                           <remove_value name="$personLowestLocal" />
                         </do_else>
                         <set_value name="$crewDelta" operation="subtract" />
