@@ -420,15 +420,22 @@
                       chance="100" />
                     <create_list name="$pilots" />
                     <append_list_elements name="$pilots" other="$replacementCrew" />
-                    <sort_list list="$pilots" sortbyvalue="$replacement.availablepeople.{loop.element.$id}.skill.piloting"
+                    <sort_list list="$pilots" sortbyvalue="loop.element.$container.{loop.element.$id}.skill.piloting"
                       sortdescending="true" />
                     <debug_text
                       text="'RR_GetThemBack - RecoveryCrew: Best Pilot: %s. Skill: %s'.
-                      [ @$pilots.{1}.$name, @$replacement.availablepeople.{@$pilots.{1}.$id}.skill.piloting]"
+                      [ @$pilots.{1}.$name, @$pilots.{1}.$container.availablepeople.{@$pilots.{1}.$id}.skill.piloting]"
                       chance="100" />
                     <set_value name="$pilotNew" exact="null" />
-                    <do_if value="$replacement.availablepeople.{@$pilots.{1}.$id}.skill.piloting gt $replacement.aipilot.skill.piloting">
+                    <do_if
+                      value="$pilots.{1}? and @$pilots.{1}.$container.availablepeople.{@$pilots.{1}.$id}.skill.piloting gt $replacement.aipilot.skill.piloting">
                       <set_value name="$pilotNew" exact="$pilots.{1}" />
+                      <remove_from_list name="$replacementCrew" exact="$pilotNew" />
+                      <set_value name="$dormitoryIndex" exact="$dormitoriesIndex.indexof.{$pilotNew.$containerId}" />
+                      <do_if value="$dormitoryIndex gt 0">
+                        <remove_from_list name="$dormitoriesEntities.{$dormitoryIndex}" exact="$pilotNew" />
+                      </do_if>
+                      <remove_value name="$dormitoryIndex" />
                     </do_if>
                     <clear_list list="$pilots" />
                     <remove_value name="$pilots" />
@@ -451,7 +458,7 @@
                       ]"
                       chance="100" />
                     <create_list name="$crewLocal" />
-                    <do_if value="$replacement.availablepeople.count le 0 and $alternatePeopleCount gt 0">
+                    <do_if value="$replacement.availablepeople.count - $alternatePeopleCount gt 1">
                       <do_for_each name="$person" in="$replacement.availablepeople.list">
                         <debug_text text="'RR_GetThemBack - RecoveryCrew: Person: %s'.[ $person ]" chance="100" />
                         <do_if value="$replacement.availablepeople.{$person}.name == $replacement.aipilot.name" negate="true">
@@ -483,9 +490,6 @@
                         sortdescending="false" />
                       <create_list name="$crewNew" />
                       <append_list_elements name="$crewNew" other="$replacementCrew" />
-                      <do_if value="$pilotNew?">
-                        <remove_from_list name="$crewNew" exact="$pilotNew" />
-                      </do_if>
                       <sort_list list="$crewNew" sortbyvalue="@loop.element.$container.availablepeople.{loop.element.$id}.combinedskill"
                         sortdescending="false" />
                       <do_while value="$crewDelta gt 0 and ($crewNew.count gt 0 or $crewLocal.count gt 0)">
@@ -516,34 +520,42 @@
                               text="'RR_GetThemBack - RecoveryCrew: Person to fire: %s'.
                                 [ @$personLowestNew.$container.availablepeople.{$personLowestNew.$id}.name ]"
                               chance="100" />
-                            <destroy_object object="@$personLowestNew.$container.availablepeople.{$personLowestNew.$id}" />
                             <set_value name="$dormitoryIndex" exact="$dormitoriesIndex.indexof.{$personLowestNew.$containerId}" />
                             <do_if value="$dormitoryIndex gt 0">
                               <remove_from_list name="$dormitoriesEntities.{$dormitoryIndex}" exact="$personLowestNew" />
                             </do_if>
                             <remove_from_list name="$replacementCrew" exact="$personLowestNew" />
+                            <destroy_object object="@$personLowestNew.$container.availablepeople.{$personLowestNew.$id}" />
+                            <remove_value name="$dormitoryIndex" />
                           </do_else>
+                          <remove_value name="$personLowestLocal" />
+                          <remove_value name="$personLowestNew" />
                         </do_if>
                         <do_elseif value="$crewNew.count gt 0">
+                          <set_value name="$personLowestNew" exact="$crewNew.{1}" />
                           <debug_text
                             text="'RR_GetThemBack - RecoveryCrew: Person to fire: %s'.
-                              [ @$crewNew.{1}.$container.availablepeople.{$crewNew.{1}.$id}.name ]"
+                              [ @$personLowestNew.$container.availablepeople.{$personLowestNew.$id}.name ]"
                             chance="100" />
-                          <destroy_object object="@$crewNew.{1}.$container.availablepeople.{$crewNew.{1}.$id}" />
-                          <set_value name="$dormitoryIndex" exact="$dormitoriesIndex.indexof.{$crewNew.{1}.$containerId}" />
+                          <set_value name="$dormitoryIndex" exact="$dormitoriesIndex.indexof.{$personLowestNew.$containerId}" />
                           <do_if value="$dormitoryIndex gt 0">
-                            <remove_from_list name="$dormitoriesEntities.{$dormitoryIndex}" exact="$crewNew.{1}" />
+                            <remove_from_list name="$dormitoriesEntities.{$dormitoryIndex}" exact="$personLowestNew" />
                           </do_if>
-                          <remove_from_list name="$replacementCrew" exact="$crewNew.{1}" />
-                          <remove_from_list name="$crewNew" exact="$crewNew.{1}" />
+                          <remove_from_list name="$replacementCrew" exact="$personLowestNew" />
+                          <remove_from_list name="$crewNew" exact="$personLowestNew" />
+                          <destroy_object object="@$personLowestNew.$container.availablepeople.{$personLowestNew.$id}" />
+                          <remove_value name="$personLowestNew" />
+                          <remove_value name="$dormitoryIndex" />
                         </do_elseif>
                         <do_else>
+                          <set_value name="$personLowestLocal" exact="$crewLocal.{1}" />
                           <debug_text
                             text="'RR_GetThemBack - RecoveryCrew: Person to fire: %s'.
-                              [ @$replacement.availablepeople.{$crewLocal.{1}}.name ]"
+                              [ @$replacement.availablepeople.{$personLowestLocal}.name ]"
                             chance="100" />
-                          <destroy_object object="@$replacement.availablepeople.{$crewLocal.{1}}" />
-                          <remove_from_list name="$crewLocal" exact="$crewLocal.{1}" />
+                          <remove_from_list name="$crewLocal" exact="$personLowestLocal" />
+                          <destroy_object object="@$replacement.availablepeople.{$personLowestLocal}" />
+                          <remove_value name="$personLowestLocal" />
                         </do_else>
                         <set_value name="$crewDelta" operation="subtract" />
                       </do_while>
@@ -617,7 +629,7 @@
                         text="'RR_GetThemBack - RecoveryCrew: Current Pilot: %s. Skill: %s'.
                         [ $replacement.aipilot.knownname, $replacement.aipilot.skill.piloting ]"
                         chance="100" />
-                      <do_if value="$pilotNew?">
+                      <do_if value="$pilotNew? and @$pilotNew != null">
                         <!-- <dismiss_pilot object="$replacement" /> -->
                         <!-- <remove_actor_from_room actor="$replacement.aipilot" />
                         <set_value name="player.entity.$RRData.$replacement" exact="$replacement" />
@@ -631,7 +643,6 @@
                         <signal_objects object="$replacement.aipilot" param="'npc__control_dismissed'" param2="$pilotNew.$id"
                           param3="$pilotNew.$container" />
                         <debug_text text="'RR_GetThemBack - RecoveryCrew: New Pilot: %s'.[ @$replacement.aipilot.knownname ]" chance="100" />
-                        <remove_from_list name="$replacementCrew" exact="$pilotNew" />
                       </do_if>
                       <set_value name="$crewUnassigned" exact="$replacement.availablepeople.{entityrole.unassigned}.list" />
                       <do_for_each name="$crewMember" in="$crewUnassigned">
