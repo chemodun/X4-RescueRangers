@@ -447,13 +447,6 @@
                     </do_if>
                     <clear_list list="$pilots" />
                     <remove_value name="$pilots" />
-                    <!-- <set_value name="$entityRoles"
-                      exact="[entityrole.service, entityrole.marine, entityrole.passenger, entityrole.prisoner,
-                              entityrole.trainee_group, entityrole.worker, entityrole.unassigned]" />
-                    <set_value name="$alternatePeopleCount" exact="0" />
-                    <do_for_each name="$entityRole" in="$entityRoles">
-                      <set_value name="$alternatePeopleCount" exact="$replacement.availablepeople.{$entityRole}.count" operation="add" />
-                    </do_for_each> -->
                     <debug_text
                       text="'RR_GetThemBack - RecoveryCrew: Current crew: %s. Count: %s. Capacity: %s. Free: %s. Count: %s.'.
                       [
@@ -470,13 +463,10 @@
                         text="'RR_GetThemBack - RecoveryCrew: Person: %s. Role: %s. Control Post: %s'.
                         [ $person, @$replacement.people.{$person}.role.name, @$replacement.people.{$person}.controlpost.name ]"
                         chance="100" />
-                      <do_if value="$replacement.availablepeople.{$person}.name == $replacement.aipilot.name" negate="true">
-                        <!-- <remove_actor_from_room actor="[$replacement, $person]" destroy="true" /> -->
+                      <do_if value="$replacement.availablepeople.{$person}.role == entityrole.unassigned" negate="true">
                         <set_npc_template_role object="$replacement" template="$person" role="entityrole.unassigned" />
-                        <append_to_list name="$crewLocal" exact="$person" />
                       </do_if>
-                      <!-- <do_elseif value="$replacement.people.{person}.controlpost?" negate="true">
-                      </do_elseif> -->
+                      <append_to_list name="$crewLocal" exact="$person" />
                     </do_for_each>
                     <set_value name="$crewDelta" exact="$replacementCrew.count - $replacement.people.free" />
                     <do_if value="$pilotNew? and @$pilotNew != null">
@@ -587,9 +577,7 @@
                         <debug_text text="'RR_GetThemBack - RecoveryCrew: Crew member to Transfer: %s'.[ $crewMember ]" chance="100" />
                         <append_to_list name="$crewToTransfer" exact="$crewMember.$id" />
                       </do_for_each>
-                      <!-- <set_value name="$transferRetries" exact="10" /> -->
                       <do_while value="$crewToTransfer.count gt 0">
-                        <!-- <set_value name="$transferRetries" operation="subtract" /> -->
                         <debug_text
                           text="'RR_GetThemBack - RecoveryCrew: Crew to transfer from Dormitory : %s, Entities: %s, Count: %s'.
                           [
@@ -643,9 +631,6 @@
                         [ $replacement.aipilot.knownname, $replacement.aipilot.skill.piloting ]"
                         chance="100" />
                       <do_if value="$pilotNew? and @$pilotNew != null">
-                        <!-- <dismiss_pilot object="$replacement" /> -->
-                        <!-- <remove_actor_from_room actor="$replacement.aipilot" /> -->
-                        <set_value name="player.entity.$RRData.$replacement" exact="$replacement" />
                         <transfer_people result="$crewTransferred" object="$replacement" otherobject="$pilotNew.$container"
                           receiveworkforce="false">
                           <existing_people people="[$pilotNew.$id]" />
@@ -775,31 +760,13 @@
                   chance="100" />
               </do_else>
             </do_while>
+            <remove_value name="$swapInfo" />
+            <remove_value name="$swapIndex" />
+            <remove_value name="$pilotsSwappingResult" />
+            <remove_value name="$pilotsSwappingMessage" />
           </actions>
         </cue>
 
-        <cue name="ReassignCrewOnReplacement" instantiate="true" namespace="this">
-          <conditions>
-            <!-- param2 = requester, param3 = [ships to be replaced] -->
-            <event_player_assigned_hired_actor />
-            <debug_text
-              text="'RR_GetThemBack - ReassignPilot: Event: Param: %s, Param2: %s, Param3: %s. Type: %s'.
-              [ @event.param, @event.param2.debugname, @event.param3, typeof event.param3 ]"
-              chance="100" />
-            <check_value value="event.param2 == @player.entity.$RRData.$replacement" />
-            <check_value value="@event.param2.$container.isclass.controllable" />
-          </conditions>
-          <actions>
-            <do_if value="@event.param3 == controlpost.aipilot">
-              <debug_text
-                text="'RR_GetThemBack - ReassignPilot: Pilot %s reassigned on %s. Fleet Unit: %s or %s'.
-                [ @event.param, @event.param2.debugname,  @event.param2.fleetunit, @player.entity.$RRData.$replacement.fleetunit]"
-                chance="100" />
-              <!-- <reinstate_fleet_ship object="event.param2" fleetunit="@player.entity.$RRData.$replacement.fleetunit" /> -->
-              <remove_value name="player.entity.$RRData.$replacement" />
-            </do_if>
-          </actions>
-        </cue>
       </cues>
     </cue>
   </cues>
