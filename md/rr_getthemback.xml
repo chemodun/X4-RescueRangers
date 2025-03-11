@@ -65,7 +65,7 @@
             <set_value name="$macroIndex" exact="player.entity.$RRData.$withoutCommandersIndex.indexof.{$destroyedShip.macro}" />
             <do_if value="$macroIndex le 0">
               <append_to_list name="player.entity.$RRData.$withoutCommanders"
-                exact="[table[$id = $destroyedShip.idcode, $updated = player.age]]" />
+                exact="[table[$id = $destroyedShip.idcode, $count = $spacesuits.count, $updated = player.age]]" />
               <append_to_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$destroyedShip.macro" />
               <set_value name="$macroIndex" exact="1" />
             </do_if>
