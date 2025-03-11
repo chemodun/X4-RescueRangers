@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
   <add sel="//do_if[@value='this.assignedcontrolled.fleetunit.exists']">
-    <debug_text text="'RR_GetThemBack - ReinstateFleet: %s joined to %s. Fleet Unit Macro: %s'.[this.assignedcontrolled.debugname, $destination.debugname, this.assignedcontrolled.fleetunit.macro]" chance="100" />
+    <debug_text text="'RR_GetThemBack - ReinstateFleet: %s joined to %s.'.[this.assignedcontrolled.debugname, $destination.debugname]" chance="100" />
     <signal_objects object="player.entity" param="'rr_reinstate_fleet_ship'" param2="this.assignedcontrolled" param3="$destination" />
   </add>
 </diff>
