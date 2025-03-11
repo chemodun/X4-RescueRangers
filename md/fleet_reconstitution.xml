@@ -4,4 +4,8 @@
     <debug_text text="'RR_GetThemBack - Fleet_Reconstitution: Commander: %s. FleetUnits Count: %s'.[@event.param2.debugname, @event.param3.count]" chance="100" />
     <signal_objects object="player.entity" param="'rr_reconstitute_fleet'" param2="event.param2" param3="event.param3" />
   </add>
+  <add sel="//do_if[@value='$commander.isoperational']" pos="prepend">
+    <debug_text text="'RR_GetThemBack - ReinstateFleetBuilded: %s ready to be joined to %s. Fleet Unit Macro: %s'.                             [$replacement.debugname, $commander.debugname, $replacement.fleetunit.macro]" chance="100" />
+    <signal_objects object="player.entity" param="'rr_reinstate_fleet_builded'" param2="$replacement" param3="$commander" />
+  </add>
 </diff>
