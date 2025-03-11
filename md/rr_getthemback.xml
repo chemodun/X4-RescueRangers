@@ -65,13 +65,13 @@
             <set_value name="$macroIndex" exact="player.entity.$RRData.$withoutCommandersIndex.indexof.{$destroyedShip.macro}" />
             <do_if value="$macroIndex le 0">
               <append_to_list name="player.entity.$RRData.$withoutCommanders"
-                exact="[table[$id = $destroyedShip.idcode, $count = $spacesuits.count, $updated = player.age]]" />
+                exact="[table[$id = $destroyedShip.idcode, $countMax = $spacesuits.count, $updated = player.age]]" />
               <append_to_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$destroyedShip.macro" />
               <set_value name="$macroIndex" exact="1" />
             </do_if>
             <do_else>
               <append_to_list name="player.entity.$RRData.$withoutCommanders.{$macroIndex}"
-                exact="table[$id = $destroyedShip.idcode, $count = $spacesuits.count, $updated = player.age]" />
+                exact="table[$id = $destroyedShip.idcode, $countMax = $spacesuits.count, $updated = player.age]" />
             </do_else>
             <debug_text
               text="'RR_GetThemBack - Collect SpaceSuits: Without Commanders: Macro: %s. Data %s at %s'.
@@ -102,6 +102,8 @@
                   $data = [],
                   $commanders = [],
                   $commandersIndex = [],
+                  $commandersByShip = [],
+                  $commandersByShipIndex = [],
                   $withoutCommanders = [],
                   $withoutCommandersIndex = [],
                   $pilotsToSwap = []
@@ -146,16 +148,18 @@
                         <remove_from_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$fleetUnit.macro" />
                       </do_if>
                       <debug_text text="'RR_GetThemBack - FleetUnitsRequests: Ship Id: %s'.[ $shipInfo.$id ]" />
+                      <append_to_list name="$commandersByShipIndex" exact="$shipInfo.$id" />
+                      <append_to_list name="$commandersByShip" exact="$commander.idcode" />
                       <set_value name="$commanderIndex" exact="player.entity.$RRData.$commandersIndex.indexof.{$commander.idcode}" />
                       <do_if value="$commanderIndex le 0">
                         <append_to_list name="player.entity.$RRData.$commandersIndex" exact="$commander.idcode" />
                         <append_to_list name="player.entity.$RRData.$commanders"
-                          exact="[table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $count = $shipsInfo.count, $updated = player.age]]" />
+                          exact="[table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $countMax = $shipsInfo.countMax, $count = 0, $updated = player.age]]" />
                         <set_value name="$commanderIndex" exact="1" />
                       </do_if>
                       <do_else>
                         <append_to_list name="player.entity.$RRData.$commanders.{$commanderIndex}"
-                          exact="table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $count = $shipsInfo.count, $updated = player.age]" />
+                          exact="table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $countMax = $shipsInfo.countMax, $count = 0, $updated = player.age]" />
                       </do_else>
                       <debug_text
                         text="'RR_GetThemBack - FleetUnitsRequests: Commander %s set for %s via Macro: %s. Record: %s.'.
@@ -227,6 +231,24 @@
                   </do_for_each>
                   <append_to_list name="player.entity.$RRData.$index" exact="$rescuedEntity" />
                   <append_to_list name="player.entity.$RRData.$data" exact="$dataItem" />
+                  <set_value name="$commanderByShipIndex" exact="@player.entity.$RRData.$commandersIndex.indexof.{$dataItem.$shipId}" />
+                  <set_value name="$commanderId" exact="@player.entity.$RRData.$commandersByShip.{@$commanderByShipIndex}" />
+                  <set_value name="$commanderIndex" exact="@player.entity.$RRData.$commandersIndex.indexof.{@$commanderId}" />
+                  <set_value name="$commanderData" exact="@player.entity.$RRData.$commanders.{@$commanderIndex}" />
+                  <do_if value="@$commanderData != null and $commanderData.count gt 0">
+                    <set_value name="$commanderData.$countMax" operation="add" />
+                    <do_for_each name="$shipInfo" in="$commanderData">
+                      <do_if value="$shipInfo.$id == $dataItem.$shipId">
+                        <set_value name="$shipInfo.$count" operation="add" />
+                        <break />
+                      </do_if>
+                    </do_for_each>
+                  </do_if>
+                  <remove_value name="$shipInfo" />
+                  <remove_value name="$commanderData" />
+                  <remove_value name="$commanderIndex" />
+                  <remove_value name="$commanderId" />
+                  <remove_value name="$commanderByShipIndex" />
                   <debug_text
                     text="'RR_GetThemBack - ProcessCrewAccountingRequest : Data Item Updated for %s: %s'.[$rescuedEntity, $dataItem]"
                     chance="100" />
@@ -332,9 +354,13 @@
                 <set_value name="$shipInfo" exact="null" />
                 <do_for_each name="$shipInfoItem" in="$commanderData">
                   <debug_text text="'RR_GetThemBack - RecoveryCrew: ShipInfoItem: %s'.[ $shipInfoItem ]" chance="100" />
-                  <do_if value="@$shipInfoItem.$macro == $replacement.macro">
+                  <do_if value="@$shipInfoItem.$macro == $replacement.macro and @$shipInfoItem.$count gt 0">
                     <debug_text text="'RR_GetThemBack - RecoveryCrew: Matched ShipInfoItem: %s'.[ $shipInfoItem ]" chance="100" />
                     <remove_from_list name="player.entity.$RRData.$commanders.{$commanderIndex}" exact="$shipInfoItem" />
+                    <set_value name="$commanderByShipIndex" exact="player.entity.$RRData.$commandersByShipIndex.indexof.{$shipInfoItem.$id}" />
+                    <remove_from_list name="player.entity.$RRData.$commandersByShipIndex" exact="$shipInfoItem.$id" />
+                    <remove_value name="player.entity.$RRData.$commandersByShip.{$commanderByShipIndex}" />
+                    <remove_value name="$commanderByShipIndex" />
                     <set_value name="$shipInfo" exact="$shipInfoItem" />
                     <break />
                   </do_if>
