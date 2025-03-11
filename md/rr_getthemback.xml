@@ -148,18 +148,18 @@
                         <remove_from_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$fleetUnit.macro" />
                       </do_if>
                       <debug_text text="'RR_GetThemBack - FleetUnitsRequests: Ship Id: %s'.[ $shipInfo.$id ]" />
-                      <append_to_list name="$commandersByShipIndex" exact="$shipInfo.$id" />
-                      <append_to_list name="$commandersByShip" exact="$commander.idcode" />
+                      <append_to_list name="player.entity.$RRData.$commandersByShipIndex" exact="$shipInfo.$id" />
+                      <append_to_list name="player.entity.$RRData.$commandersByShip" exact="$commander.idcode" />
                       <set_value name="$commanderIndex" exact="player.entity.$RRData.$commandersIndex.indexof.{$commander.idcode}" />
                       <do_if value="$commanderIndex le 0">
                         <append_to_list name="player.entity.$RRData.$commandersIndex" exact="$commander.idcode" />
                         <append_to_list name="player.entity.$RRData.$commanders"
-                          exact="[table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $countMax = $shipsInfo.countMax, $count = 0, $updated = player.age]]" />
+                          exact="[table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $countMax = $shipInfo.countMax, $count = 0, $updated = player.age]]" />
                         <set_value name="$commanderIndex" exact="1" />
                       </do_if>
                       <do_else>
                         <append_to_list name="player.entity.$RRData.$commanders.{$commanderIndex}"
-                          exact="table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $countMax = $shipsInfo.countMax, $count = 0, $updated = player.age]" />
+                          exact="table[$macro = $fleetUnit.macro, $id = $shipInfo.$id, $countMax = $shipInfo.countMax, $count = 0, $updated = player.age]" />
                       </do_else>
                       <debug_text
                         text="'RR_GetThemBack - FleetUnitsRequests: Commander %s set for %s via Macro: %s. Record: %s.'.
