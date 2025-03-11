@@ -418,7 +418,7 @@
                     <break />
                   </do_if>
                 </do_for_each>
-                <do_if value="$shipInfo?">
+                <do_if value="@$shipInfo != null">
                   <debug_text
                     text="'RR_GetThemBack - RecoveryCrew: ShipInfo: %s, Ship: %s, Macro: %s, ID: %s'.
                     [
@@ -435,12 +435,14 @@
                     [$replacement.debugname, $commander.debugname]"
                     chance="100" />
                 </do_else>
+                <remove_value name="$commanderData" />
               </do_if>
               <do_else>
                 <debug_text
                   text="'RR_GetThemBack - RecoveryCrew: Commander %s not in a list: %s'.[$commander.debugname, player.entity.$RRData.$commanders]"
                   chance="100" />
               </do_else>
+              <remove_value name="$commanderIndex" />
             </do_if>
             <do_if value="$shipInfo != null and player.entity.$RRData? and @player.entity.$RRData.$index.count gt 0">
               <set_value name="$data" exact="player.entity.$RRData.$data" />
@@ -817,7 +819,7 @@
                   post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
                 <do_if value="$pilotsSwappingResult">
                   <debug_text
-                    text="'RR_GetThemBack - SwapPilots: Pilot %s swapped on %s.'
+                    text="'RR_GetThemBack - SwapPilots: Pilot %s swapped on %s.'.
                     [ @$swapInfo.$ship.aipilot.knownname, $swapInfo.$ship.debugname ]"
                     chance="100" />
                   <remove_from_list name="@player.entity.$RRData.$pilotsToSwap" exact="$swapInfo" />
