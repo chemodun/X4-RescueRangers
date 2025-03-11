@@ -16,6 +16,7 @@
               value="event.param.isclass.defensible and not event.param.ismasstraffic and not event.param.isunit and not event.param.isdeployable and not event.param.isclass.ship_xs and not event.param.isclass.buildstorage" />
             <check_value value="event.param3 != killmethod.collected" />
             <check_value value="event.param3 != killmethod.removed" comment="spacesuit is removed" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
           </conditions>
           <actions>
             <set_value name="$destroyedShip" exact="event.param" />
@@ -120,6 +121,7 @@
             <check_value value="event.param2.isclass.controllable" />
             <check_value value="not event.param2.fleetunit" />
             <check_value value="@event.param3.count" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
           </conditions>
           <actions>
             <set_value name="$commander" exact="event.param2" />
@@ -195,6 +197,7 @@
             <check_value value="event.param2?" />
             <check_value value="@event.param3.$container.isclass.controllable" />
             <check_value value="event.param3.$containerTag?" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
           </conditions>
           <actions>
             <debug_text
@@ -288,6 +291,13 @@
         </cue>
 
         <cue name="RefreshRRData" instantiate="true" checkinterval="60s" namespace="this">
+          <conditions>
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
+            <check_any>
+              <check_value value="player.entity.$RRData.$data?" />
+              <check_value value="player.entity.$RRData.$data?" />
+            </check_any>
+          </conditions>
           <actions>
             <do_if value="player.entity.$RRData.$dataPre?">
               <set_value name="$dataIndex" exact="1" />
@@ -335,6 +345,7 @@
             <event_object_signalled object="player.entity" param="'rr_reinstate_fleet_builded'" />
             <check_value value="@event.param2.isclass.controllable" />
             <check_value value="@event.param3.isclass.controllable" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
           </conditions>
           <actions>
             <set_value name="$replacement" exact="event.param2" />
@@ -379,6 +390,7 @@
             <event_object_signalled object="player.entity" param="'rr_reinstate_fleet_ship'" />
             <check_value value="@event.param2.isclass.controllable" />
             <check_value value="@event.param3.isclass.controllable" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
           </conditions>
           <actions>
             <set_value name="$replacement" exact="event.param2" />
@@ -805,6 +817,7 @@
 
         <cue name="SwapPilots" instantiate="true" checkinterval="5s" namespace="this">
           <conditions>
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
             <check_value value="@player.entity.$RRData.$pilotsToSwap.count gt 0" />
           </conditions>
           <actions>

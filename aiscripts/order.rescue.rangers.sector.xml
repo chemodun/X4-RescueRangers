@@ -29,8 +29,8 @@
       <param name="rescuePriorityByOxygenRemained" type="bool" default="false" text="{1972092402, 105}">
         <patch sinceversion="101" value="false" early="true" setvariable="true" comment="Set to false as new value" />
       </param>
-      <param name="returnThemBack" type="bool" default="false" text="{1972092402, 106}">
-        <patch sinceversion="105" value="player.gameversion ge 750" early="true" setvariable="true"
+      <param name="getThemBack" type="bool" default="false" text="{1972092402, 106}">
+        <patch sinceversion="105" value="player.gameversion gt 750" early="true" setvariable="true"
           comment="enable feature to return them on replacement ship" />
       </param>
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
@@ -49,6 +49,15 @@
   </order>
 
   <interrupts>
+    <library>
+      <actions name="GetThemBackRefresh">
+        <do_if value="player.gameversion ge 750">
+          <do_if value="@$getThemBack">
+            <set_value name="player.entity.$RRGetThemBackEnabled" exact="player.age" />
+          </do_if>
+        </do_if>
+      </actions>
+    </library>
     <handler ref="AttackHandler" />
     <handler ref="MissileLockHandler" />
     <handler ref="ScannedHandler" />
@@ -137,7 +146,7 @@
                 text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap"
                 object="this.assignedcontrolled" />
             </do_if>
-            <do_if value="@$returnThemBack">
+            <do_if value="@$getThemBack">
               <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
                 param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
             </do_if>
@@ -210,7 +219,7 @@
               text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap"
               object="this.assignedcontrolled" />
           </do_if>
-          <do_if value="@$returnThemBack">
+          <do_if value="@$getThemBack">
             <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
               param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
           </do_if>
@@ -424,6 +433,8 @@
     <set_value name="$targetSector" exact="null" />
 
     <set_value name="$isStartedByPlayer" exact="false" />
+
+    <include_interrupt_actions ref="GetThemBackRefresh" />
   </init>
   <patch sinceversion="103">
     <set_value name="$rescueMode" exact="'sector'" />
@@ -541,7 +552,7 @@
                 text="{1972092402, 1032}.[$textUnit, $textTargetPerson, $textTargetSector]" interaction="showonmap"
                 object="this.assignedcontrolled" />
             </do_if>
-            <do_if value="@$returnThemBack">
+            <do_if value="@$getThemBack">
               <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
                 param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
             </do_if>
@@ -573,6 +584,7 @@
           </do_else>
         </do_if>
         <wait min="150s" max="370s" />
+        <include_interrupt_actions ref="GetThemBackRefresh" />
         <do_if value="@this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
           <resume label="transferPeople" />
         </do_if>
@@ -937,7 +949,7 @@
             <set_value name="$unassignedList" exact="$shipDormitory.availablepeople.{entityrole.unassigned}.list" />
             <do_for_each name="$person" in="$peopleList">
               <do_if value="$unassignedList.indexof.{$person} gt 0">
-                <do_if value="@$returnThemBack">
+                <do_if value="@$getThemBack">
                   <signal_objects object="player.entity" param="'rr_entity_transfer'"
                     param2="$shipDormitory.availablepeople.{$person}.name"
                     param3="table[$container = $shipDormitory, $containerTag = 'dormitory']" />
