@@ -372,7 +372,7 @@
             <do_if value="player.entity.$RRData? and @player.entity.$RRData.$destroyed.count gt 0">
               <set_value name="$shipInfo" exact="null" />
               <do_for_each name="$info" in="player.entity.$RRData.$destroyed">
-                <do_if value="$info.$macro == $replacement.macro and $info.$commander.idCode == $commander.idcode">
+                <do_if value="$info.$macro == $replacement.macro and $info.$commander.idcode == $commander.idcode">
                   <set_value name="$shipInfo" exact="$info" />
                   <set_value name="$shipInfo.$replacement" exact="$replacement" />
                   <break />
