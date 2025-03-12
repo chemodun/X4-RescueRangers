@@ -467,9 +467,9 @@
               <create_list name="$dormitories" />
               <create_list name="$dormitoriesEntities" />
               <create_list name="$dormitoriesIndex" />
-              <set_value name="$index" exact="1" />
-              <do_while value="$index le $data.count">
-                <set_value name="$person" exact="$data.{$index}" />
+              <set_value name="$personIndex" exact="1" />
+              <do_while value="$personIndex le $data.count">
+                <set_value name="$person" exact="$data.{$personIndex}" />
                 <do_if value="@$person.$shipId == @$shipInfo.$id and @$person.$macro == $replacement.macro ">
                   <remove_from_list name="player.entity.$RRData.$data" exact="$person" />
                   <remove_from_list name="player.entity.$RRData.$index" exact="$person.$name" />
@@ -522,9 +522,11 @@
                   </do_else>
                 </do_if>
                 <do_else>
-                  <set_value name="$index" operation="add" />
+                  <set_value name="$personIndex" operation="add" />
                 </do_else>
+                <remove_value name="$person" />
               </do_while>
+              <remove_value name="$personIndex" />
               <debug_text text="'RR_GetThemBack - RecoveryCrew: Replacement crew count: %s'.[ $replacementCrew.count ]"
                 chance="100" />
               <do_if value="@$replacementCrew.count gt 0">
@@ -679,6 +681,8 @@
                     <set_value name="$crewDelta" operation="subtract" />
                   </do_while>
                 </do_if>
+                <remove_value name="$crewDelta" />
+                <remove_value name="$crewLocal" />
                 <do_for_each name="$dormitory" in="$dormitories" counter="$dormitoryIndex">
                   <debug_text
                     text="'RR_GetThemBack - RecoveryCrew on Dormitory: %s, Entities: %s, Count: %s'.
@@ -693,7 +697,7 @@
                     <debug_text text="'RR_GetThemBack - RecoveryCrew: Crew member to Transfer: %s'.[ $crewMember ]" chance="100" />
                     <append_to_list name="$crewToTransfer" exact="$crewMember.$id" />
                   </do_for_each>
-                  <do_while value="$crewToTransfer.count gt 0">
+                  <do_if value="$crewToTransfer.count gt 0">
                     <debug_text
                       text="'RR_GetThemBack - RecoveryCrew: Crew to transfer from Dormitory : %s, Entities: %s, Count: %s'.
                           [
@@ -715,13 +719,17 @@
                       <do_else>
                         <set_value name="$crewToTransferIndex" operation="add" />
                       </do_else>
+                      <remove_value name="$crewMember" />
                     </do_while>
+                    <remove_value name="$crewToTransferIndex" />
                     <debug_text
                       text="'RR_GetThemBack - RecoveryCrew: Crew transferred: %s. Count: %s. \nLeaved: %s. Count: %s.'.
                             [ $crewTransferred, $crewTransferred.count, $crewToTransfer, $crewToTransfer.count ]"
                       chance="100" />
-                  </do_while>
+                    <remove_value name="$crewTransferred" />
+                  </do_if>
                   <clear_list list="$dormitoriesEntities.{$dormitoryIndex}" />
+                  <remove_value name="$crewToTransfer" />
                 </do_for_each>
                 <clear_list list="$dormitories" />
                 <clear_list list="$dormitoriesEntities" />
@@ -739,9 +747,12 @@
                     <set_value name="$personIndex" operation="add" />
                   </do_else>
                 </do_while>
+                <remove_value name="$personIndex" />
+                <remove_value name="$unassignedList" />
+                <debug_text
+                  text="'RR_GetThemBack - RecoveryCrew: Replacement crew: Count: %s, Value: %s'.[ $replacementCrew.count, $replacementCrew ]"
+                  chance="100" />
                 <do_if value="$replacementCrew.count gt 0">
-                  <debug_text text="'RR_GetThemBack - RecoveryCrew: Replacement crew: %s'.[ $replacementCrew ]" chance="100" />
-
                   <debug_text
                     text="'RR_GetThemBack - RecoveryCrew: Current Pilot: %s. Skill: %s'.
                         [ $replacement.aipilot.knownname, $replacement.aipilot.skill.piloting ]"
@@ -796,27 +807,23 @@
                 <do_else>
                   <debug_text text="'RR_GetThemBack - RecoveryCrew: Nobody transferred to %s'.[ $replacement.debugname ]" chance="100" />
                 </do_else>
+                <remove_value name="$crewMember" />
               </do_if>
+              <do_else>
+                <debug_text text="'RR_GetThemBack - RecoveryCrew: No crew assigned'" chance="100" />
+              </do_else>
+              <remove_value name="$dormitories" />
+              <remove_value name="$dormitoriesEntities" />
+              <remove_value name="$dormitoriesIndex" />
+              <remove_value name="$replacementCrew" />
+              <remove_value name="$replacementCrewIndex" />
+              <remove_value name="$data" />
             </do_if>
             <do_else>
               <debug_text text="'RR_GetThemBack - RecoveryCrew: No data for recovery'" chance="100" />
             </do_else>
-            <remove_value name="$person" />
-            <remove_value name="$crewMember" />
-            <remove_value name="$dormitory" />
-            <remove_value name="$dormitoryIndex" />
-            <remove_value name="$dormitories" />
-            <remove_value name="$dormitoriesEntities" />
-            <remove_value name="$dormitoriesIndex" />
-            <remove_value name="$dormitoriesClasses" />
-            <remove_value name="$replacementCrew" />
-            <remove_value name="$replacementCrewIndex" />
-            <remove_value name="$data" />
-            <remove_value name="$replacementCrew" />
-            <remove_value name="$replacementCrewIndex" />
-            <remove_value name="$commanderIndex" />
-            <remove_value name="$commander" />
             <remove_value name="$replacement" />
+            <remove_value name="$commander" />
           </actions>
         </cue>
 
