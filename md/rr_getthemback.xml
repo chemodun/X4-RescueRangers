@@ -23,6 +23,18 @@
             <set_value name="$destroyTimestamp" exact="player.age" />
             <set_value name="$destroyedAt" exact="$destroyedShip.sector" />
             <include_actions ref="RRDataInit" />
+            <set_value name="$shipInfo" exact="table[$id = $destroyedShip.idcode, $countMax = 0, $updated = player.age]" />
+            <set_value name="$macroIndex" exact="player.entity.$RRData.$withoutCommandersIndex.indexof.{$destroyedShip.macro}" />
+            <do_if value="$macroIndex le 0">
+              <append_to_list name="player.entity.$RRData.$withoutCommanders"
+                exact="[$shipInfo]" />
+              <append_to_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$destroyedShip.macro" />
+              <set_value name="$macroIndex" exact="1" />
+            </do_if>
+            <do_else>
+              <append_to_list name="player.entity.$RRData.$withoutCommanders.{$macroIndex}"
+                exact="$shipInfo" />
+            </do_else>
             <debug_text
               text="'RR_GetThemBack - Collect SpaceSuits: Destroyed %s (class: %s, macro: %s, type: %s - %s) at %s(%s), timestamp: %s'.
               [
@@ -38,6 +50,7 @@
             <find_ship_by_true_owner name="$spacesuits" faction="faction.player" space="$destroyedAt" class="class.spacesuit" docked="false"
               checkoperational="true"
               multiple="true" />
+            <set_value name="$spacesuitsCount" exact="0" />
             <do_for_each name="$spacesuit" in="$spacesuits">
               <debug_text
                 text="'RR_GetThemBack - Collect SpaceSuits: item: %s, age %s, entity: %s '.[ $spacesuit, $spacesuit.age, $spacesuit.pilot.name]"
@@ -67,18 +80,9 @@
               <debug_text text="'RR_GetThemBack - Data Item: %s.'.[ $dataItem ]" chance="100" />
               <append_to_list name="player.entity.$RRData.$indexPre" exact="$spacesuit.pilot.name" />
               <append_to_list name="player.entity.$RRData.$dataPre" exact="$dataItem" />
+              <set_value name="$spacesuitsCount" operation="add" />
             </do_for_each>
-            <set_value name="$macroIndex" exact="player.entity.$RRData.$withoutCommandersIndex.indexof.{$destroyedShip.macro}" />
-            <do_if value="$macroIndex le 0">
-              <append_to_list name="player.entity.$RRData.$withoutCommanders"
-                exact="[table[$id = $destroyedShip.idcode, $countMax = $spacesuits.count, $updated = player.age]]" />
-              <append_to_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$destroyedShip.macro" />
-              <set_value name="$macroIndex" exact="1" />
-            </do_if>
-            <do_else>
-              <append_to_list name="player.entity.$RRData.$withoutCommanders.{$macroIndex}"
-                exact="table[$id = $destroyedShip.idcode, $countMax = $spacesuits.count, $updated = player.age]" />
-            </do_else>
+            <set_value name="$shipInfo.$countMax" exact="$spacesuitsCount" />
             <debug_text
               text="'RR_GetThemBack - Collect SpaceSuits: Without Commanders: Macro: %s. Data %s at %s'.
               [
@@ -87,13 +91,14 @@
                 $macroIndex
               ]"
             />
-            <remove_value name="$destroyedShip" />
+            <remove_value name="$macroIndex" />
             <remove_value name="$dataItem" />
-            <remove_value name="$spacesuit" />
+            <remove_value name="$spacesuitsCount" />
             <remove_value name="$spacesuits" />
-            <remove_value name="$destroyedShip" />
+            <remove_value name="$shipInfo" />
             <remove_value name="$destroyTimestamp" />
             <remove_value name="$destroyedAt" />
+            <remove_value name="$destroyedShip" />
           </actions>
         </cue>
 
