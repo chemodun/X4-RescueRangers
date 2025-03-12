@@ -24,15 +24,15 @@
             <set_value name="$destroyedAt" exact="$destroyedShip.sector" />
             <include_actions ref="RRDataInit" />
             <set_value name="$shipInfo" exact="table[$id = $destroyedShip.idcode, $countMax = 0, $updated = player.age]" />
-            <set_value name="$macroIndex" exact="player.entity.$RRData.$withoutCommandersIndex.indexof.{$destroyedShip.macro}" />
+            <set_value name="$macroIndex" exact="player.entity.$RRData.$destroyedIndex.indexof.{$destroyedShip.macro}" />
             <do_if value="$macroIndex le 0">
-              <append_to_list name="player.entity.$RRData.$withoutCommanders"
+              <append_to_list name="player.entity.$RRData.$destroyed"
                 exact="[$shipInfo]" />
-              <append_to_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$destroyedShip.macro" />
+              <append_to_list name="player.entity.$RRData.$destroyedIndex" exact="$destroyedShip.macro" />
               <set_value name="$macroIndex" exact="1" />
             </do_if>
             <do_else>
-              <append_to_list name="player.entity.$RRData.$withoutCommanders.{$macroIndex}"
+              <append_to_list name="player.entity.$RRData.$destroyed.{$macroIndex}"
                 exact="$shipInfo" />
             </do_else>
             <debug_text
@@ -84,10 +84,10 @@
             </do_for_each>
             <set_value name="$shipInfo.$countMax" exact="$spacesuitsCount" />
             <debug_text
-              text="'RR_GetThemBack - Collect SpaceSuits: Without Commanders: Macro: %s. Data %s at %s'.
+              text="'RR_GetThemBack - Collect SpaceSuits: Destroyed: Macro: %s. Data %s at %s'.
               [
                 $destroyedShip.macro,
-                player.entity.$RRData.$withoutCommanders.{$macroIndex},
+                player.entity.$RRData.$destroyed.{$macroIndex},
                 $macroIndex
               ]"
             />
@@ -115,8 +115,8 @@
                   $commandersIndex = [],
                   $commandersByShip = [],
                   $commandersByShipIndex = [],
-                  $withoutCommanders = [],
-                  $withoutCommandersIndex = [],
+                  $destroyed = [],
+                  $destroyedIndex = [],
                   $pilotsToSwap = []
                 ]" />
             </do_if>
@@ -142,22 +142,22 @@
               <debug_text
                 text="'RR_GetThemBack - FleetUnitsRequests: Commander: %s. FleetUnits Count: %s.'.[$commander.debugname, event.param3.count]"
                 chance="100" />
-              <do_if value="player.entity.$RRData? and @player.entity.$RRData.$withoutCommanders.count gt 0">
-                <set_value name="$data" exact="player.entity.$RRData.$withoutCommanders" />
-                <set_value name="$indexes" exact="player.entity.$RRData.$withoutCommandersIndex" />
+              <do_if value="player.entity.$RRData? and @player.entity.$RRData.$destroyed.count gt 0">
+                <set_value name="$data" exact="player.entity.$RRData.$destroyed" />
+                <set_value name="$indexes" exact="player.entity.$RRData.$destroyedIndex" />
                 <do_for_each name="$fleetUnit" in="event.param3">
                   <set_value name="$index" exact="$indexes.indexof.{$fleetUnit.macro}" />
                   <debug_text text="'RR_GetThemBack - FleetUnitsRequests: Macro: %s, Index: %s'.[$fleetUnit.macro, $index]"
                     chance="100" />
                   <do_if value="$index gt 0">
-                    <set_value name="$shipsInfo" exact="player.entity.$RRData.$withoutCommanders.{$index}" />
+                    <set_value name="$shipsInfo" exact="player.entity.$RRData.$destroyed.{$index}" />
                     <debug_text text="'RR_GetThemBack - FleetUnitsRequests: Ships Info Count: %s'.[ $shipsInfo.count ]" />
                     <do_if value="$shipsInfo.count gt 0">
                       <set_value name="$shipInfo" exact="$shipsInfo.{$shipsInfo.count}" />
                       <remove_from_list name="$shipsInfo" exact="$shipInfo" />
                       <do_if value="$shipsInfo.count == 0">
-                        <remove_from_list name="player.entity.$RRData.$withoutCommanders" exact="$shipsInfo" />
-                        <remove_from_list name="player.entity.$RRData.$withoutCommandersIndex" exact="$fleetUnit.macro" />
+                        <remove_from_list name="player.entity.$RRData.$destroyed" exact="$shipsInfo" />
+                        <remove_from_list name="player.entity.$RRData.$destroyedIndex" exact="$fleetUnit.macro" />
                       </do_if>
                       <debug_text text="'RR_GetThemBack - FleetUnitsRequests: Ship Id: %s'.[ $shipInfo.$id ]" />
                       <append_to_list name="player.entity.$RRData.$commandersByShipIndex" exact="$shipInfo.$id" />
@@ -343,7 +343,7 @@
                 </do_else>
               </do_while>
             </do_if>
-            <!-- TODO: Cleanup withoutCommander and Commanders -->
+            <!-- TODO: Cleanup destroyed and Commanders -->
             <remove_value name="$dataItem" />
             <remove_value name="$dataIndex" />
           </actions>
