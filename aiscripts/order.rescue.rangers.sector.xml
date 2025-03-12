@@ -787,7 +787,7 @@
             <do_if
               value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300"
               negate="true">
-              <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=$target.idcode]" />
+              <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=this.assignedcontrolled.idcode]" />
             </do_if>
             <do_else>
               <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
