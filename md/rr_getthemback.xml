@@ -265,8 +265,8 @@
                     chance="100" />
                 </do_if>
               </do_if>
-              <do_elseif value="$rescuedEntityContainerTag == 'dormitory' and @player.entity.$RRData.$dataIndex.count gt 0">
-                <set_value name="$dataIndex" exact="player.entity.$RRData.$dataIndex.indexof.{$rescuedEntity}" />
+              <do_elseif value="$rescuedEntityContainerTag == 'dormitory' and @player.entity.$RRData.$index.count gt 0">
+                <set_value name="$dataIndex" exact="player.entity.$RRData.$index.indexof.{$rescuedEntity}" />
                 <do_if value="$dataIndex gt 0">
                   <set_value name="player.entity.$RRData.$data.{$dataIndex}.$containerId" exact="$rescuedEntityContainer.idcode" />
                   <set_value name="player.entity.$RRData.$data.{$dataIndex}.$containerTag" exact="$rescuedEntityContainerTag" />
