@@ -822,7 +822,6 @@
 
         <cue name="SwapPilots" instantiate="true" checkinterval="5s" namespace="this">
           <conditions>
-            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
             <check_value value="@player.entity.$RRData.$pilotsToSwap.count gt 0" />
           </conditions>
           <actions>
