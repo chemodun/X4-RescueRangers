@@ -177,7 +177,7 @@
                         player.age,
                         $commander.debugname,
                         $shipInfo.$id,
-                        $shipInfo.macro,
+                        $shipInfo.$macro,
                         $shipInfo
                       ]"
                     />
