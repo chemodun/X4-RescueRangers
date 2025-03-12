@@ -35,12 +35,12 @@
               ]" />
             <set_value name="$shipIndex" exact="player.entity.$RRData.$destroyedIndex.indexof.{$destroyedShip.idcode}" />
             <do_if value="$shipIndex le 0">
-              <append_to_list name="player.entity.$RRData.$destroyed" exact="[$shipInfo]" />
+              <append_to_list name="player.entity.$RRData.$destroyed" exact="$shipInfo" />
               <append_to_list name="player.entity.$RRData.$destroyedIndex" exact="$destroyedShip.idcode" />
-              <set_value name="$shipIndex" exact="1" />
             </do_if>
             <do_else>
-              <append_to_list name="player.entity.$RRData.$destroyed.{$shipIndex}" exact="$shipInfo" />
+              <debug_text
+                text="'RR_GetThemBack - Collect Crew Info [%s]: Ship %s is already in the list'.[ player.age, $destroyedShip.debugname ]" />
             </do_else>
             <debug_text
               text="'RR_GetThemBack - Collect SpaceSuits [%s]: Destroyed %s (class: %s, macro: %s, type: %s - %s) at %s(%s), timestamp: %s'.
@@ -95,8 +95,8 @@
               [
                 player.age,
                 $destroyedShip.macro,
-                player.entity.$RRData.$destroyed.{$shipIndex},
-                $shipIndex
+                $shipInfo,
+                player.entity.$RRData.$destroyed.count
               ]"
             />
             <remove_value name="$shipIndex" />
@@ -133,7 +133,7 @@
             <!-- param2 = requester, param3 = [ships to be replaced] -->
             <event_object_signalled object="player.entity" param="'reconstitute_fleet'" />
             <debug_text
-              text="'RR_GetThemBack - Fleet_Reconstitution_Request condition [%s]: Commander: %s. FleetUnits Count: %s'.[player.count, @event.param2.debugname, @event.param3.count]"
+              text="'RR_GetThemBack - Fleet_Reconstitution_Request condition [%s]: Commander: %s. FleetUnits Count: %s'.[player.age, @event.param2.debugname, @event.param3.count]"
               chance="100" />
             <check_value value="event.param2.isoperational" />
             <check_value value="event.param2.isclass.controllable" />
@@ -142,7 +142,7 @@
           </conditions>
           <actions>
             <debug_text
-              text="'RR_GetThemBack - Fleet_Reconstitution_Request [%s]: Commander: %s. FleetUnits Count: %s'.[player.count, @event.param2.debugname, @event.param3.count]"
+              text="'RR_GetThemBack - Fleet_Reconstitution_Request [%s]: Commander: %s. FleetUnits Count: %s'.[player.age, @event.param2.debugname, @event.param3.count]"
               chance="100" />
             <!-- <signal_objects object="player.entity" param="'rr_reconstitute_fleet'" param2="event.param2" param3="event.param3"
             delay="10ms" /> -->
