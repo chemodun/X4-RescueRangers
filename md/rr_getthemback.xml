@@ -47,6 +47,11 @@
                   chance="100" />
                 <continue />
               </do_if>
+              <do_if value="player.entity.$RRData.$indexPre.indexof.{$spacesuit.pilot.name} gt 0">
+                <debug_text text="'RR_GetThemBack - Collect SpaceSuits: %s is already collected'.[ $spacesuit.pilot.name ]"
+                  chance="100" />
+                <continue />
+              </do_if>
               <set_value name="$dataItem"
                 exact="table[
                   $name = $spacesuit.pilot.knownname,
