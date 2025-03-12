@@ -609,7 +609,7 @@
                           $crewDelta,
                         ]"
                     chance="100" />
-                  <sort_list list="$crewLocal" sortbyvalue="$replacement.availablepeople.{loop.element.$id}.combinedskill"
+                  <sort_list list="$crewLocal" sortbyvalue="$replacement.availablepeople.{loop.element}.combinedskill"
                     sortdescending="false" />
                   <sort_list list="$replacementCrew"
                     sortbyvalue="@loop.element.$container.availablepeople.{loop.element.$id}.combinedskill"
