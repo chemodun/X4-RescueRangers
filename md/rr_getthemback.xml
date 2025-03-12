@@ -253,17 +253,23 @@
                   <do_if value="$destroyedIndex gt 0">
                     <set_value name="$shipInfo" exact="player.entity.$RRData.$destroyed.{$destroyedIndex}" />
                     <set_value name="$shipInfo.$count" operation="add" />
+                    <debug_text
+                      text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Ship Info Item updated: Ship: %s, Index: %s, Info: %s'.
+                      [
+                        player.age,
+                        $shipInfo.$id,
+                        $destroyedIndex,
+                        $shipInfo
+                      ]"
+                      chance="100" />
+                    <remove_value name="$shipInfo" />
                   </do_if>
-                  <debug_text
-                    text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Ship Info Item updated: Ship: %s, Index: %s, Info: %s'.
-                    [
-                      player.age,
-                      $shipInfo.$id,
-                      $destroyedIndex,
-                      $shipInfo
-                    ]"
-                    chance="100" />
-                  <remove_value name="$shipInfo" />
+                  <do_else>
+                    <debug_text
+                      text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Ship Info Item not found for %s'.
+                      [ player.age, $person.$shipId ]"
+                      chance="100" />
+                  </do_else>
                   <remove_value name="$person" />
                   <remove_value name="$destroyedIndex" />
                 </do_if>
