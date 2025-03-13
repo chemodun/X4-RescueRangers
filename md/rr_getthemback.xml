@@ -291,7 +291,7 @@
               <do_while value="$personInSpacesuitIndex le player.entity.$RRData.$dataPre.count">
                 <set_value name="$personInSpacesuit" exact="@player.entity.$RRData.$dataPre.{$personInSpacesuitIndex}" />
                 <do_if
-                  value="player.age gt ($personInSpacesuit.$updated + 1800) or not $personInSpacesuit.$container? or not @$personInSpacesuit.container.isoperational">
+                  value="player.age gt ($personInSpacesuit.$updated + 1800) or not $personInSpacesuit.$container? or not @$personInSpacesuit.$container.isoperational">
                   <remove_from_list name="player.entity.$RRData.$indexPre" exact="$personInSpacesuit.$name" />
                   <remove_from_list name="player.entity.$RRData.$dataPre" exact="$personInSpacesuit" />
                   <debug_text
