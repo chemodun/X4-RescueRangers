@@ -279,14 +279,14 @@
 
         <cue name="RefreshRRData" instantiate="true" checkinterval="60s" namespace="this">
           <conditions>
-            <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 7600 ge player.age" />
             <check_any>
               <check_value value="player.entity.$RRData.$data?" />
               <check_value value="player.entity.$RRData.$data?" />
             </check_any>
           </conditions>
           <actions>
-            <do_if value="player.entity.$RRData.$dataPre?">
+            <do_if value="player.entity.$RRData.$dataPre? and @player.entity.$RRData.$dataPre.count gt 0">
               <set_value name="$personInSpacesuitIndex" exact="1" />
               <do_while value="$personInSpacesuitIndex le player.entity.$RRData.$dataPre.count">
                 <set_value name="$personInSpacesuit" exact="@player.entity.$RRData.$dataPre.{$personInSpacesuitIndex}" />
@@ -304,12 +304,14 @@
                   <set_value name="$personInSpacesuitIndex" operation="add" />
                 </do_else>
               </do_while>
+              <remove_value name="$personInSpacesuit" />
+              <remove_value name="$personInSpacesuitIndex" />
             </do_if>
-            <do_if value="player.entity.$RRData.$data?">
+            <do_if value="player.entity.$RRData.$data? and @player.entity.$RRData.$data.count gt 0">
               <set_value name="$personIndex" exact="1" />
               <do_while value="$personIndex le player.entity.$RRData.$data.count">
                 <set_value name="$person" exact="@player.entity.$RRData.$data.{$personIndex}" />
-                <do_if value="player.age gt ($person.$updated + 7200)">
+                <do_if value="player.age gt ($person.$updated + 3600)">
                   <remove_from_list name="player.entity.$RRData.$index" exact="$person.$name" />
                   <remove_from_list name="player.entity.$RRData.$data" exact="$person" />
                   <debug_text text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Dormitories'.[ player.age, $person.$name ]" />
@@ -321,10 +323,49 @@
                   <set_value name="$personIndex" operation="add" />
                 </do_else>
               </do_while>
+              <remove_value name="$person" />
+              <remove_value name="$personIndex" />
             </do_if>
-            <!-- TODO: Cleanup destroyed and replacements -->
-            <remove_value name="$person" />
-            <remove_value name="$personIndex" />
+            <do_if value="player.entity.$RRData.$destroyed? and @player.entity.$RRData.$destroyed.count gt 0">
+              <set_value name="$destroyedIndex" exact="1" />
+              <do_while value="$destroyedIndex le player.entity.$RRData.$destroyed.count">
+                <set_value name="$destroyed" exact="@player.entity.$RRData.$destroyed.{$destroyedIndex}" />
+                <do_if value="player.age gt ($destroyed.$updated + 7200)">
+                  <remove_from_list name="player.entity.$RRData.$destroyedIndex" exact="$destroyed.$id" />
+                  <remove_from_list name="player.entity.$RRData.$destroyed" exact="$destroyed" />
+                  <debug_text
+                    text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Destroyed Ships'.[ player.age, $destroyed.$id ]" />
+                  <do_if value="$destroyedIndex == player.entity.$RRData.$destroyed.count">
+                    <break />
+                  </do_if>
+                </do_if>
+                <do_else>
+                  <set_value name="$destroyedIndex" operation="add" />
+                </do_else>
+              </do_while>
+              <remove_value name="$destroyed" />
+              <remove_value name="$destroyedIndex" />
+            </do_if>
+            <do_if value="player.entity.$RRData.$replacements? and @player.entity.$RRData.$replacements.count gt 0">
+              <set_value name="$replacementIndex" exact="1" />
+              <do_while value="$replacementIndex le player.entity.$RRData.$replacements.count">
+                <set_value name="$replacement" exact="@player.entity.$RRData.$replacements.{$replacementIndex}" />
+                <do_if value="player.age gt ($replacement.$updated + 7200)">
+                  <remove_from_list name="player.entity.$RRData.$replacementsIndex" exact="$replacement.$id" />
+                  <remove_from_list name="player.entity.$RRData.$replacements" exact="$replacement" />
+                  <debug_text
+                    text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Replacements'.[ player.age, $replacement.$id ]" />
+                  <do_if value="$replacementIndex == player.entity.$RRData.$replacements.count">
+                    <break />
+                  </do_if>
+                </do_if>
+                <do_else>
+                  <set_value name="$replacementIndex" operation="add" />
+                </do_else>
+              </do_while>
+              <remove_value name="$replacement" />
+              <remove_value name="$replacementIndex" />
+            </do_if>
           </actions>
         </cue>
 
