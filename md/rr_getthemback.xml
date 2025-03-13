@@ -27,6 +27,7 @@
               exact="table[
                 $id = $destroyedShip.idcode,
                 $macro = $destroyedShip.macro,
+                $sector = $destroyedAt,
                 $commander = null,
                 $replacement = null,
                 $updated = player.age
@@ -160,7 +161,9 @@
                   <debug_text
                     text="'RR_GetThemBack - FleetUnitsRequests [%s]: FleetUnit %s Macro: %s. Destroyed: Count: %s, Data: %s'.
                     [ player.age, $fleetUnitIndex, $fleetUnit.macro, player.entity.$RRData.$destroyed.count, player.entity.$RRData.$destroyed ]" />
-                  <do_for_each name="$info" in="player.entity.$RRData.$destroyed" counter="$infoIndex">
+                  <set_value name="$destroyedList" exact="player.entity.$RRData.$destroyed" />
+                  <sort_list list="$destroyedList" sortbyvalue="$commander.gatedistance.{loop.element.$sector}" sortdescending="false" />
+                  <do_for_each name="$info" in="$destroyedList" counter="$infoIndex">
                     <do_if value="$info.$macro == $fleetUnit.macro and $info.$commander == null">
                       <set_value name="$shipInfo" exact="$info" />
                       <set_value name="$shipInfo.$commander" exact="$commander" />
@@ -171,6 +174,7 @@
                       <break />
                     </do_if>
                   </do_for_each>
+                  <remove_value name="$destroyedList" />
                   <do_if value="$shipInfo != null">
                     <debug_text
                       text="'RR_GetThemBack - FleetUnitsRequests [%s]: Commander %s set for %s via Macro: %s. Record: %s.'.
