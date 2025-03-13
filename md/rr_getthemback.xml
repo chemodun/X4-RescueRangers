@@ -622,10 +622,11 @@
                         <create_list name="$crewToTransfer" />
                         <do_for_each name="$crewMember" in="$replacementCrew">
                           <do_if value="$dormitory.idcode == $crewMember.$container.idcode">
-                            <append_to_list name="$crewToTransfer" exact="$crewMember" />
+                            <append_to_list name="$crewToTransfer" exact="$crewMember.$id" />
                           </do_if>
                           <do_else>
                             <include_actions ref="TransferCrewFromDormitory" />
+                            <set_value name="$dormitory" exact="$crewMember.$container" />
                           </do_else>
                         </do_for_each>
                         <include_actions ref="TransferCrewFromDormitory" />
@@ -756,7 +757,6 @@
                 [ player.age, $dormitory.debugname ]"
                 chance="100" />
             </do_else>
-            <set_value name="$dormitory" exact="$crewMember.$container" />
             <clear_list list="$crewToTransfer" />
           </actions>
         </library>
