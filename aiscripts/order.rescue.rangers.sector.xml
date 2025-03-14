@@ -758,22 +758,64 @@
                 ]"
               output="true" append="true" />
             <do_if value="not $target.pilot.$toRescueBy? or $target.pilot.$toRescueBy.$id == this.assignedcontrolled.idcode">
+              <set_value name="$destinationIsWrong" exact="true" />
+              <do_for_each name="$order" in="$targetAssignedToDockOn.orders">
+                <do_if value="$order.id == this.assignedcontrolled.order.id">
+                  <set_value name="$destinationIsWrong" exact="false" />
+                  <break />
+                </do_if>
+              </do_for_each>
               <do_if
-                value="not $targetAssignedToDockOn.orders? or $targetAssignedToDockOn.orders.indexof.{this.assignedcontrolled.order} le 0">
-                <cancel_all_orders object="$target" />
-                <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-                  text="'[%s at %s, Mode: %s] - Target %s (person %s, age %s) trying to rescue right way. Order: %s. Orders: %s.'
-                    .[
-                      this.assignedcontrolled.debugname,
-                      this.assignedcontrolled.sector.knownname,
-                      @$rescueMode,
-                      $target.debugname,
-                      @$target.pilot.knownname,
-                      @$target.age,
-                      @$target.order,
-                      @$target.orders
-                    ]"
-                  output="true" append="true" />
+                value="$destinationIsWrong">
+                <do_if value="$target.order.id == 'DockAt'">
+                  <debug_to_file directory="'rescuerangers'"
+                    name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
+                    text="'[%s at %s, Mode: %s] - Target %s (person %s, age %s) trying to rescue right way. Order: %s. Orders: %s.'
+                      .[
+                        this.assignedcontrolled.debugname,
+                        this.assignedcontrolled.sector.knownname,
+                        @$rescueMode,
+                        $target.debugname,
+                        @$target.pilot.knownname,
+                        @$target.age,
+                        @$target.order,
+                        @$target.orders
+                      ]"
+                    output="true" append="true" />
+                  <abort_scripts entity="$target.pilot" />
+                  <debug_to_file directory="'rescuerangers'"
+                    name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
+                    text="'[%s at %s, Mode: %s] - Target %s (person %s, age %s) - stopped scripts. Order: %s. Destination: %s.'
+                      .[
+                        this.assignedcontrolled.debugname,
+                        this.assignedcontrolled.sector.knownname,
+                        @$rescueMode,
+                        $target.debugname,
+                        @$target.pilot.knownname,
+                        @$target.age,
+                        @$target.order.id,
+                        @$target.order.$destination
+                      ]"
+                    output="true" append="true" />
+                  <edit_order_param order="$target.order" param="'destination'" value="this.assignedcontrolled" />
+                  <debug_to_file directory="'rescuerangers'"
+                    name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
+                    text="'[%s at %s, Mode: %s] - Target %s (person %s, age %s) - params edit. Order: %s. Destination: %s.'
+                      .[
+                        this.assignedcontrolled.debugname,
+                        this.assignedcontrolled.sector.knownname,
+                        @$rescueMode,
+                        $target.debugname,
+                        @$target.pilot.knownname,
+                        @$target.age,
+                        @$target.order.id,
+                        @$target.order.$destination
+                      ]"
+                    output="true" append="true" />
+                </do_if>
+                <do_else>
+                  <set_value name="$target" exact="null" />
+                </do_else>
               </do_if>
               <do_else>
                 <set_value name="$target" exact="null" />
@@ -785,7 +827,7 @@
           </do_if>
           <do_if value="@$target">
             <do_if
-              value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300"
+              value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$id != this.assignedcontrolled.idcode and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300"
               negate="true">
               <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=this.assignedcontrolled.idcode]" />
             </do_if>
