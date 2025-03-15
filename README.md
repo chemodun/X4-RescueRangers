@@ -3,7 +3,7 @@
 This extension allows you to rescue crews' members from the destroyed ships in a designated sector.
 Always the closest possible spacesuit will be selected to rescue.
 
-## Compatibility
+## Compatibility 
 
 Compatible with `X4: Foundations 7.1`. At least it written and tested with this version.
 
