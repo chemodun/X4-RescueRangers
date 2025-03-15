@@ -6,7 +6,7 @@
 
 - Wrong error in non-Fleet mode if Rescue ship can't dock on Dormitory.
 
-## [1.03] - 2025-03-02 
+## [1.03] - 2025-03-02
 
 ### Added
 
