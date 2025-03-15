@@ -23,11 +23,11 @@ jobs:
 
       - name: Get all markdown files
         id: changed-markdown-files
-        uses: tj-actions/changed-files@v45
+        uses: chemodun/changed-files@0.1.0
         with:
           # Avoid using single or double quotes for multiline patterns
           files: |
-            *.md
+            .*\.md
 
       - name: Install python3
         if: steps.changed-markdown-files.outputs.any_changed == 'true'
