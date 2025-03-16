@@ -1,3 +1,4 @@
-# Ignore all XML Schema files
 *.xsd
-*.modified/*.xml
+*.original
+*.modified
+dist
