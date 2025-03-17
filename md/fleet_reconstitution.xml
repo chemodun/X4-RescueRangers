@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
-  <add sel="/mdscript/cues/cue[@name='Init']/cues/cue[@name='ProcessRequest']/actions" pos="prepend">
+  <add sel="/mdscript/cues/cue[@name='Init']/cues/cue[@name='ProcessRequest']/actions/do_if[@value='$shipstobereplaced.count']" pos="prepend">
     <include_actions ref="md.RR_GetThemBack.ForwardReconstituteRequest" />
   </add>
   <add sel="/mdscript/cues/cue[@name='Init']/cues/cue[@name='ProcessRequest']/cues/cue[@name='CheckShipyards']/cues/cue[@name='BuildFinished']/actions/do_if[@value='$buildtask.buildobject.isoperational']/do_if[@value='$replacement.fleetunit']/do_if[@value='$commander.isoperational']" pos="prepend">
