@@ -331,7 +331,7 @@
         <set_value name="$skipGoToDock" exact="true" />
         <set_value name="$crewFreeCount" exact="@this.assignedcontrolled.pilot.$rescueData.$crewFreeCount" />
         <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-          text="'[%s at %s, Mode: %s] - Found saved: target: %s, person: %s, text: %s, at %s, skipGoToDock: %s, crewFreeCount: %s, free: %s'
+          text="'[%s at %s, Mode: %s] - Found saved: target: %s, person: %s, text: %s, at %s, skipGoToDock: %s, crewFreeCount: %s, free: %s. Started by player: %s'
             .[
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
@@ -343,9 +343,11 @@
               $skipGoToDock,
               $crewFreeCount,
               this.assignedcontrolled.people.free,
+              $isStartedByPlayer,
             ]"
           output="true" append="true" />
       </do_if>
+      <set_value name="$isStartedByPlayer" exact="false" />
       <remove_value name="this.assignedcontrolled.pilot.$rescueData" />
     </do_if>
     <do_else>
@@ -431,7 +433,10 @@
 
     <!-- $targetSector is used to store the sector where our ship was destroyed, to limit search of spacesuits -->
     <set_value name="$targetSector" exact="null" />
-
+    <set_value name="$showAlerts" exact="$isStartedByPlayer" />
+    <do_if value="$isStartedByPlayer">
+      <remove_help all="true" />
+    </do_if>
     <set_value name="$isStartedByPlayer" exact="false" />
 
     <include_interrupt_actions ref="GetThemBackRefresh" />
@@ -451,6 +456,9 @@
             ]"
       output="true" append="true" />
   </patch>
+  <patch sinceversion="105">
+    <set_value name="$showAlerts" exact="false" />
+  </patch>
 
   <attention min="unknown">
     <actions>
@@ -469,8 +477,15 @@
               @$shipDormitory.dockingallowed.{this.assignedcontrolled},
             ]"
           output="true" append="true" />
-        <show_help custom="{1972092402, 2001}.[$textUnit, $textDormitoryNoColor]" log="false" position="1" force="true" duration="8s"
-          comment="No possible to dock" />
+        <do_if value="$showAlerts">
+          <show_help custom="{1972092402, 2001}.[$textUnit, $textDormitoryNoColor]" log="true" position="1" force="true" duration="8s"
+            comment="No possible to dock" />
+        </do_if>
+        <do_else>
+          <write_to_logbook category="general" title="$textTitle" text="{1972092402, 2001}.[$textUnit, $textDormitoryNoColor]"
+            interaction="showonmap"
+            object="this.assignedcontrolled" />
+        </do_else>
         <cancel_order order="this.assignedcontrolled.order" />
       </do_if>
 
@@ -1061,15 +1076,13 @@
       <label name="finish" />
 
       <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
-        text="'[%s at %s, Mode: %s] - Point after  finish. '
+        text="'[%s at %s, Mode: %s] - Point after finish. '
           .[
             this.assignedcontrolled.debugname,
             this.assignedcontrolled.sector.knownname,
             @$rescueMode,
           ]"
         output="true" append="true" />
-
-      <resume label="start" />
 
     </actions>
   </attention>
@@ -1084,5 +1097,16 @@
           this.assignedcontrolled.order.isrunning,
         ]"
       output="true" append="true" />
+    <do_if value="this.assignedcontrolled.order.id != 'RescueShip'">
+      <remove_value name="this.assignedcontrolled.pilot.$rescueData" />
+      <debug_to_file directory="'rescuerangers'" name="'debug_' + this.assignedcontrolled.idcode + '_' + this.assignedcontrolled"
+        text="'[%s at %s, Mode: %s] - Rescue data removed.'
+        .[
+          this.assignedcontrolled.debugname,
+          this.assignedcontrolled.sector.knownname,
+          @$rescueMode,
+        ]"
+        output="true" append="true" />
+    </do_if>
   </on_abort>
 </aiscript>
