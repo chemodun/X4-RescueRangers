@@ -13,7 +13,7 @@
           <conditions>
             <event_player_owned_destroyed />
             <check_value
-              value="event.param.isclass.defensible and not event.param.ismasstraffic and not event.param.isunit and not event.param.isdeployable and not event.param.isclass.ship_xs and not event.param.isclass.buildstorage" />
+              value="event.param.isclass.ship and not event.param.ismasstraffic and not event.param.isunit and not event.param.isdeployable and not event.param.isclass.ship_xs and not event.param.isclass.buildstorage" />
             <check_value value="event.param3 != killmethod.collected" />
             <check_value value="event.param3 != killmethod.removed" comment="spacesuit is removed" />
             <check_value value="@player.entity.$RRGetThemBackEnabled + 300 ge player.age" />
@@ -120,7 +120,8 @@
                   $replacements = [],
                   $replacementsIndex = [],
                   $replacementDelayed = [],
-                  $pilotsToSwap = []
+                  $pilotsToSwap = [],
+                  $commanderCheck = [],
                 ]" />
             </do_if>
           </actions>
@@ -132,7 +133,7 @@
               text="'RR_GetThemBack - ForwardFleetUnitsRequests [%s]: Commander: %s. FleetUnits Count: %s'.[player.age, @event.param2.debugname, @event.param3.count]"
               chance="100" />
             <create_list name="$fleetUnits" />
-            <append_list_elements name="$fleetUnits" other="@event.param3" />
+            <append_list_elements name="$fleetUnits" other="@$shipstobereplaced" />
             <signal_objects object="player.entity" param="'rr_reconstitute_fleet'" param2="event.param2" param3="$fleetUnits" delay="10ms" />
             <remove_value name="$fleetUnits" />
           </actions>
@@ -153,7 +154,7 @@
             <do_if value="$commander.commander">
               <set_value name="$commander" exact="$commander.toplevelcommander" />
             </do_if>
-            <do_if value="$commander.isclass.ship">
+            <do_if value="$commander.isoperational">
               <debug_text
                 text="'RR_GetThemBack - FleetUnitsRequests [%s]: Commander: %s. FleetUnits Count: %s.'.[ player.age, $commander.debugname, event.param3.count]"
                 chance="100" />
@@ -683,25 +684,43 @@
                           text="'RR_GetThemBack - RecoveryCrew [%s]: Nobody can be transferred to %s'.[ player.age, $replacement.debugname ]"
                           chance="100" />
                       </do_else>
-                      <debug_text
-                        text="'RR_GetThemBack - RecoveryCrew [%s]: Current Pilot: %s. Skill: %s'.
-                          [ player.age, $replacement.aipilot.knownname, $replacement.aipilot.skill.piloting ]"
-                        chance="100" />
                       <do_if value="$pilotRescued? and @$pilotRescued != null">
+                        <debug_text
+                          text="'RR_GetThemBack - RecoveryCrew [%s]: Going to swap pilots: Current: %s (Skill: %s). New One: %s (Skill: %s)'.
+                          [ player.age, $replacement.aipilot.name, $replacement.aipilot.skill.piloting, @$pilotRescued.$name, @$pilotRescued.$pilotSkill ]"
+                          chance="100" />
                         <do_if value="$pilotTransferred">
                           <assign_hired_actor actor="[$replacement, $pilotRescued.$id]" target="$replacement"
-                            post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
+                            post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" check="true" />
                           <debug_text
-                            text="'RR_GetThemBack - RecoveryCrew [%s]: Swap Pilots: Result: %s. Message: %s'.[ player.age, $pilotsSwappingResult, $pilotsSwappingMessage ]"
+                            text="'RR_GetThemBack - RecoveryCrew [%s]: Swap Pilots Check: Result: %s. Message: %s'.[ player.age, $pilotsSwappingResult, $pilotsSwappingMessage ]"
                             chance="100" />
+                          <set_value name="$currentCommander" exact="@$replacement.commander" />
+                          <set_value name="$currentGroupId" exact="@$replacement.subordinategroupid" />
+                          <do_if value="$pilotsSwappingResult">
+                            <debug_text
+                              text="'RR_GetThemBack - RecoveryCrew [%s]: Check passed. Swapping pilots: Current: %s (Skill: %s). New One: %s (Skill: %s)'.
+                              [ player.age, $replacement.aipilot.name, $replacement.aipilot.skill.piloting, @$pilotRescued.$name, @$pilotRescued.$pilotSkill ]"
+                              chance="100" />
+                            <assign_hired_actor actor="[$replacement, $pilotRescued.$id]" target="$replacement"
+                              post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
+                          </do_if>
                           <do_if value="$pilotsSwappingResult" negate="true">
                             <append_to_list name="player.entity.$RRData.$pilotsToSwap"
                               exact="table[$ship = $replacement, $shipId = $replacement.idcode, $pilot = $pilotRescued.$id, $updated = player.age]" />
                             <debug_text
                               text="'RR_GetThemBack - RecoveryCrew [%s]: Pilot to swap added: %s'.
-                                [ player.age,@player.entity.$RRData.$pilotsToSwap.last]"
+                                [player.age, @player.entity.$RRData.$pilotsToSwap.last]"
                               chance="100" />
                           </do_if>
+                          <do_else>
+                            <do_if value="$currentCommander != null and $currentGroupId != null">
+                              <append_to_list name="player.entity.$RRData.$commanderCheck"
+                                exact="table[$ship = @$replacement, $commander = $currentCommander, $groupId = $currentGroupId, $updated = player.age ]" />
+                            </do_if>
+                          </do_else>
+                          <remove_value name="$currentCommander" />
+                          <remove_value name="$currentGroupId" />
                         </do_if>
                         <do_else>
                           <debug_text
@@ -895,18 +914,33 @@
             <set_value name="$swapIndex" exact="1" />
             <do_while value="$swapIndex le @player.entity.$RRData.$pilotsToSwap.count">
               <set_value name="$swapInfo" exact="@player.entity.$RRData.$pilotsToSwap.{$swapIndex}" />
-              <debug_text text="'RR_GetThemBack - SwapPilots [%s]: Swapping pilots record %s'.
+              <debug_text
+                text="'RR_GetThemBack - SwapPilots [%s]: Go to swap pilots by record %s'.
                 [ player.age, $swapInfo ]"
                 chance="100" />
               <do_if value="@$swapInfo.$ship.isoperational">
                 <assign_hired_actor actor="[$swapInfo.$ship, $swapInfo.$pilot]" target="$swapInfo.$ship"
-                  post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
+                  post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" check="true" />
+                <set_value name="$currentCommander" exact="@$swapInfo.$ship.commander" />
+                <set_value name="$currentGroupId" exact="@$swapInfo.$ship.subordinategroupid" />
+                <do_if value="$pilotsSwappingResult">
+                  <debug_text
+                    text="'RR_GetThemBack - SwapPilots [%s]: Check passed. Swapping pilots by record %s'.
+                    [ player.age, $swapInfo ]"
+                    chance="100" />
+                  <assign_hired_actor actor="[$swapInfo.$ship, $swapInfo.$pilot]" target="$swapInfo.$ship"
+                    post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" />
+                </do_if>
                 <do_if value="$pilotsSwappingResult">
                   <debug_text
                     text="'RR_GetThemBack - SwapPilots [%s]: Pilot %s swapped on %s.'.
                     [ player.age, @$swapInfo.$ship.aipilot.knownname, $swapInfo.$ship.debugname ]"
                     chance="100" />
                   <remove_from_list name="@player.entity.$RRData.$pilotsToSwap" exact="$swapInfo" />
+                  <do_if value="$currentCommander != null and $currentGroupId != null">
+                    <append_to_list name="player.entity.$RRData.$commanderCheck"
+                      exact="table[$ship = @$swapInfo.$ship, $commander = $currentCommander, $groupId = $currentGroupId, $updated = player.age ]" />
+                  </do_if>
                 </do_if>
                 <do_else>
                   <debug_text
@@ -922,6 +956,8 @@
                     <set_value name="$swapIndex" operation="add" />
                   </do_else>
                 </do_else>
+                <remove_value name="$currentCommander" />
+                <remove_value name="$currentGroupId" />
               </do_if>
               <do_else>
                 <remove_from_list name="@player.entity.$RRData.$pilotsToSwap" exact="$swapInfo" />
@@ -937,6 +973,55 @@
             <remove_value name="$pilotsSwappingMessage" />
           </actions>
         </cue>
+
+        <cue name="CheckPossibleCommandersLost" instantiate="true" checkinterval="3s" namespace="this">
+          <conditions>
+            <check_value value="@player.entity.$RRData.$commanderCheck.count gt 0" />
+          </conditions>
+          <actions>
+            <set_value name="$checkIndex" exact="1" />
+            <do_while value="$checkIndex le @player.entity.$RRData.$commanderCheck.count">
+              <set_value name="$checkInfo" exact="@player.entity.$RRData.$commanderCheck.{$checkIndex}" />
+              <debug_text
+                text="'RR_GetThemBack - CheckPossibleCommandersLost [%s]: Go to check commander by record %s'.
+                [ player.age, $checkInfo ]"
+                chance="100" />
+              <do_if value="@$checkInfo.$ship.isoperational" negate="true">
+                <debug_text
+                  text="'RR_GetThemBack - CheckPossibleCommandersLost [%s]: Ship %s is not operational. Commander check record removed: %s'.
+                  [ player.age, @$checkInfo.$ship.debugname, $checkInfo ]"
+                  chance="100" />
+                <remove_from_list name="@player.entity.$RRData.$commanderCheck" exact="$checkInfo" />
+                <continue />
+              </do_if>
+              <do_if value="@$checkInfo.$ship.commander == null">
+                <debug_text
+                  text="'RR_GetThemBack - CheckPossibleCommandersLost [%s]: Commander is missing. Commander check record will be applied: %s'.
+                  [ player.age, $checkInfo ]"
+                  chance="100" />
+                <set_object_commander object="$checkInfo.$ship" commander="$checkInfo.$commander" subordinategroupid="$checkInfo.$groupId" />
+                <remove_from_list name="@player.entity.$RRData.$commanderCheck" exact="$checkInfo" />
+                <debug_text
+                  text="'RR_GetThemBack - CheckPossibleCommandersLost [%s]: Commander %s is set for: %s'.
+                [ player.age, @$checkInfo.$ship.commander.debugname,  @$checkInfo.$ship.debugname]"
+                  chance="100" />
+                <continue />
+              </do_if>
+              <do_elseif value="player.age - $checkInfo.$updated ge 16">
+                <debug_text
+                  text="'RR_GetThemBack - CheckPossibleCommandersLost [%s]: Commander %s for %s still exists long enough. Record will be removed: %s'.
+                  [ player.age, @$checkInfo.$ship.commander.debugname, @$checkInfo.$ship.debugname, $checkInfo ]"
+                  chance="100" />
+                <remove_from_list name="@player.entity.$RRData.$commanderCheck" exact="$checkInfo" />
+                <continue />
+              </do_elseif>
+              <set_value name="$checkIndex" operation="add" />
+            </do_while>
+            <remove_value name="$checkInfo" />
+            <remove_value name="$checkIndex" />
+          </actions>
+        </cue>
+
 
       </cues>
     </cue>
