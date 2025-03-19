@@ -30,7 +30,7 @@
         <patch sinceversion="101" value="false" early="true" setvariable="true" comment="Set to false as new value" />
       </param>
       <param name="getThemBack" type="bool" default="false" text="{1972092402, 106}">
-        <patch sinceversion="105" value="player.gameversion ge 750" early="true" setvariable="true"
+        <patch sinceversion="105" value="false" early="true" setvariable="true"
           comment="enable feature to return them on replacement ship" />
       </param>
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
