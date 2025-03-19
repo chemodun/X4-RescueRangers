@@ -301,7 +301,7 @@
           </actions>
         </cue>
 
-        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="60s" version="105">
+        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="105">
           <conditions>
             <check_value value="@player.entity.$RRGetThemBackEnabled + 7600 ge player.age" />
             <check_any>
@@ -319,7 +319,7 @@
                   <remove_from_list name="$personInSpaceIndex" exact="$personInSpacesuit.$name" />
                   <remove_from_list name="$personInSpaceList" exact="$personInSpacesuit" />
                   <debug_text
-                    text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Spacesuits'.[ player.age, $personInSpacesuit.$name ]" />
+                    text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Person in Space List'.[ player.age, $personInSpacesuit.$name ]" />
                   <do_if value="$personInSpacesuitIndex == $personInSpaceList.count">
                     <break />
                   </do_if>
