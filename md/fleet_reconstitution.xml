@@ -1,10 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
   <add sel="/mdscript/cues/cue[@name='Init']/cues/cue[@name='ProcessRequest']/actions/do_if[@value='$shipstobereplaced.count']" pos="prepend">
-    <include_actions ref="md.RR_GetThemBack.ForwardReconstituteRequest" />
+    <include_actions ref="md.RR_GetThemBack.ForwardReconstituteSignal" />
   </add>
   <add sel="/mdscript/cues/cue[@name='Init']/cues/cue[@name='ProcessRequest']/cues/cue[@name='CheckShipyards']/cues/cue[@name='BuildFinished']/actions/do_if[@value='$buildtask.buildobject.isoperational']/do_if[@value='$replacement.fleetunit']/do_if[@value='$commander.isoperational']" pos="prepend">
-    <debug_text text="'RR_GetThemBack - ReinstateFleetBuilded: %s ready to be joined to %s. Fleet Unit Macro: %s'.                             [$replacement.debugname, $commander.debugname, $replacement.fleetunit.macro]" chance="100" />
-    <signal_objects object="player.entity" param="'rr_reinstate_fleet_builded'" param2="$replacement" param3="$commander" />
+    <include_actions ref="md.RR_GetThemBack.SendBuildingFinishedSignal" />
   </add>
 </diff>
