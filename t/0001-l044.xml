@@ -2,7 +2,7 @@
 <!-- English -->
 <diff>
   <add sel="/language">
-    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector" >
+    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector">
       <t id="1">Rescue Rangers</t>
       <t id="2">Rescue Rangers: Rescue your crews in space</t>
       <t id="101">Home sector</t>
@@ -10,6 +10,7 @@
       <t id="103">Ship - "dormitory"</t>
       <t id="104">Max gate distance to rescue</t>
       <t id="105">Priority by oxygen remained</t>
+      <t id="106">Return them back on Replacement Ship</t>
       <t id="109">Record to logbook</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>

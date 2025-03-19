@@ -1,1 +1,4 @@
-aiscripts/aiscripts.xsd
+*.xsd
+*.original
+*.modified
+dist
