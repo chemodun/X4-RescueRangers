@@ -76,6 +76,8 @@ There is one, but "huge", limitation of this feature:
 [*] Currently it is impossible to identify the commander of the destroyed ship. And there is no relation between destroyed and replacement ships.
 [*] [b]That's why the rescued crew will be assigned on the Replacement Ship with the same model as the destroyed ship and for the Commander closest to the Sector where the ship was destroyed.[/b]
 [/list]
+[b]Important note[/b]: This feature is configured on each Rescue ship separately!
+
 [h3][b]Explanation video[/b][/h3]
 
 [previewyoutube=OaU6-RikfnI;full][/previewyoutube]
