@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.05] - 2025-03-20
+
+### Added
+
+- Added a new feature to "return" rescued crew on the Replacement Ship. Works in conjunction with the `Lost Ships Replacement` feature of 7.50 game version.
+
 ## [1.04] - 2025-03-05
 
 ### Fixed
