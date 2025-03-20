@@ -61,7 +61,24 @@ Please take into account - in the [b]Fleet support[/b] mode the "Dormitory" has 
 [h2]Priority by oxygen remained[/h2]
 
 [b]Disabled[/b] by default.
+
 This option allows you to select the priority of the rescue by the oxygen remaining in the spacesuit instead of the distance to the ship. If enabled, the ship will try to rescue the crews' members with the lowest oxygen remaining in the spacesuit.
+
+[h2]Return them back on Replacement Ship[/h2]
+
+[b]Disabled[/b] by default.
+
+If enabled, the rescued crew will be "returned" on the Replacement Ship, when it will rejoin to fleet.
+The [b]Lost Ships Replacement[/b] feature should be enabled for appropriate fleet commander or station. And for sure - the game version should be at least 7.50.
+
+There is one, but "huge", limitation of this feature:
+[list]
+[*] Currently it is impossible to identify the commander of the destroyed ship. And there is no relation between destroyed and replacement ships.
+[*] [b]That's why the rescued crew will be assigned on the Replacement Ship with the same model as the destroyed ship and for the Commander closest to the Sector where the ship was destroyed.[/b]
+[/list]
+[h3][b]Explanation video[/b][/h3]
+
+[previewyoutube=OaU6-RikfnI;full][/previewyoutube]
 
 [h2]Record to logbook[/h2]
 
