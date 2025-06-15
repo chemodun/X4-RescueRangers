@@ -1,5 +1,11 @@
 [size=140][u]Changelog[/u][/size]
 
+[size=130][u][1.06] - 2025-06-15[/u][/size]
+
+[size=125][u]Fixed[/u][/size]
+[list]
+[*] Fixed an unnecessary undocking on applying the order. Thanks [url=https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=132068]staeuber[/url] for the proposed solution.
+[/list]
 [size=130][u][1.05] - 2025-03-20[/u][/size]
 
 [size=125][u]Added[/u][/size]
