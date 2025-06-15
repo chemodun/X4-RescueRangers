@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.06] - 2025-06-15
+
+### Fixed
+
+- Fixed an unnecessary undocking on applying the order. Thanks [staeuber](https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=132068) for the proposed solution.
+
 ## [1.05] - 2025-03-20
 
 ### Added
