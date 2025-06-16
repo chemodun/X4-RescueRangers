@@ -1,10 +1,14 @@
 # Changelog
 
-## [1.06] - 2025-06-15
+## [1.06] - 2025-06-16
 
 ### Fixed
 
 - Fixed an unnecessary undocking on applying the order. Thanks [staeuber](https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=132068) for the proposed solution.
+
+### Changed
+
+- Debug logging get rid of separate files per ship and now uses a common game debug log file.
 
 ## [1.05] - 2025-03-20
 
