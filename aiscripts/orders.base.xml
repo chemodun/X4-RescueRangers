@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <diff>
   <add sel="/aiscript/attention[@min='unknown']/actions/do_if[@value='$undock?']" pos="before">
-    <do_if value="$undock and (($object.order.id == 'RescueRangers') or ($object.order.id == 'DockAndWait' and @$object.order.$callerid.id == 'RescueRangers'))">
+    <do_if value="$undock? and (($object.order.id == 'RescueRangers') or ($object.order.id == 'DockAndWait' and @$object.order.$callerid.id == 'RescueRangers'))">
       <remove_value name="$undock" />
-      <debug_text text="'RescueRangers: Preventing undock for custom order on ship: %s.'[$object.debugnname]" />
+      <debug_text text="'RescueRangers [%s at %s]: Preventing undock for custom order on ship.'.[@$object.debugname, @$object.sector.knownname]" />
     </do_if>
   </add>
 </diff>
