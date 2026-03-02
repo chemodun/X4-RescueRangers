@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="106"
   priority="1">
-  <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true">
+  <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true" allowinloop="false">
     <params>
       <param name="homeSector"
         default="if @this.ship.commanderentity.$config_subordinate_range then @this.ship.commanderentity.$config_subordinate_range
