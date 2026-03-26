@@ -94,7 +94,7 @@
           <check_value value="event.param != this.assignedcontrolled" />
           <check_any>
             <check_value value="event.param.sector == $homeSector" />
-            <check_value value="$sectorsList.indexof.{@event.param.sector} gt 0" />
+            <check_value value="@$sectorsList.indexof.{@event.param.sector} gt 0" />
           </check_any>
           <check_any>
             <check_all>
