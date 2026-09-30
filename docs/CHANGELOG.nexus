@@ -1,5 +1,31 @@
 [size=4][u]Changelog[/u][/size]
 
+[size=3][u][b][1.07] - 2026-09-??[/b][/u][/size]
+
+[size=3][u][i]Added[/i][/u][/size]
+[list]
+[*] New order option `Keep rescued on board as crew`: rescued crews' members join the Rescue ship as service crew or marines instead of going to the "Dormitory".
+[*] [b]Rescue Rangers[/b] page in the Extension Options, with [b]Extra max gate distance above the pilot skill limit[/b] (0 to 5) to allow a longer rescue range, and a [b]Debug Level[/b] setting.
+[*] Requires `Mod Support APIs`, [b]Options Helper[/b] and `Print Extension List`.
+[/list]
+[size=3][u][i]Changed[/i][/u][/size]
+[list]
+[*] Nothing is written to the game's debug log unless [b]Debug Level[/b] is set to [b]Debug[/b] or `Trace`.
+[*] When the Rescue ship and its "Dormitory" are both full, the Rescue ship no longer calls you every few minutes: it shows one on-screen notice (and one logbook entry) until there is free space again.
+[*] Workshop sync is off by default, as for other extensions.
+[/list]
+[size=3][u][i]Fixed[/i][/u][/size]
+[list]
+[*] A successful rescue was not recognized after the rescue flight: no "rescued" logbook entry, no pilot experience, and [b]Return them back[/b] never registered the person.
+[*] `Return them back`: a rescued person was often dropped from tracking between docking at the Rescue ship and being registered, so they never returned to the Replacement Ship.
+[*] Several Rescue ships in one area: a person picked by a Rescue ship that then failed, was destroyed or got other orders was skipped by all other Rescue ships for good.
+[*] Rescue ships whose order was started with version 1.00 ignored ship losses in their own sector.
+[*] With a [b]Max gate distance to rescue[/b] above 0, a Rescue ship that found nobody in one sector went home instead of checking the other sectors in range. Spacesuits left from losses during a rescue flight are now picked up too.
+[*] [b]Mimic[/b] subordinates always ran with [b]Return them back on Replacement Ship[/b] off.
+[*] [b]Return them back on Replacement Ship[/b] could stop tracking losses and replacements while all Rescue ships were busy for more than 5 minutes.
+[*] `Return them back on Replacement Ship`: rescued crew is now returned on the replacement of the very ship they were lost from. Before, any recent loss of the same model nearby could take its place, even one from a fleet without `Lost Ships Replacement`.
+[*] The order can no longer be added to a repeat orders loop.
+[/list]
 [size=3][u][b][1.06] - 2025-06-16[/b][/u][/size]
 
 [size=3][u][i]Fixed[/i][/u][/size]

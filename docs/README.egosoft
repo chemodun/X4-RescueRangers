@@ -5,8 +5,26 @@ Always the closest possible spacesuit will be selected to rescue.
 
 [size=130][u]Compatibility[/u][/size]
 
-Compatible with [b]X4: Foundations 7.1[/b]. At least it written and tested with this version.
+Compatible with `X4: Foundations 7.1`. At least it written and tested with this version.
 
+[size=130][u]Requirements[/u][/size]
+[list]
+[*] [b]Mod Support APIs[/b] by [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url] to be installed and enabled. Version [b]1.95[/b] and upper is required.
+[list]
+[*] It is available via Steam - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274]SirNukes Mod Support APIs[/url]
+[*] Or via the Nexus Mods - [url=https://www.nexusmods.com/x4foundations/mods/503]Mod Support APIs[/url]
+[/list]
+[*] `Options Helper`, to provide the in-game options page. Version [b]1.10[/b] and upper is required.
+[list]
+[*] It is available via Steam - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556]Options Helper[/url]
+[*] Or via the Nexus Mods - [url=https://www.nexusmods.com/x4foundations/mods/2089]Options Helper[/url]
+[/list]
+[*] `Print Extension List`, to record the game version and the enabled extensions in the log. Version [b]1.00[/b] and upper is required.
+[list]
+[*] It is available via Steam - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339]Print Extension List[/url]
+[*] Or via the Nexus Mods - [url=https://www.nexusmods.com/x4foundations/mods/2191]Print Extension List[/url]
+[/list]
+[/list]
 [size=130][u]Features[/u][/size]
 
 Several ships with one order can work in one sector or crossed sectors.
@@ -44,7 +62,11 @@ This is a sector where the ship will rescue the crew. You can select it from the
 [size=125][u]Max gate distance to rescue[/u][/size]
 
 This is a maximum distance from the Home Sector to the sector where the ship can rescue the crews' members. The ship will not react to ship destructions in the sectors further than this distance.
-Default value is [b]0[/b].
+Default value is `0`.
+
+The highest value you can select depends on the captain's [b]Pilot[/b] skill: [b]0[/b] for up to one star, [b]1[/b] for two stars, [b]2[/b] for three stars and [b]3[/b] for four or five stars. The [b]Extra max gate distance above the pilot skill limit[/b] setting in the Extension Options adds to it, see `Rescue Rangers options`.
+
+When the sector of a loss has no spacesuits left, the ship checks the other sectors in range, nearest first.
 
 [size=125][u]Home Station[/u][/size]
 
@@ -71,16 +93,21 @@ This option allows you to select the priority of the rescue by the oxygen remain
 If enabled, the rescued crew will be "returned" on the Replacement Ship, when it will rejoin to fleet.
 The [b]Lost Ships Replacement[/b] feature should be enabled for appropriate fleet commander or station. And for sure - the game version should be at least 7.50.
 
-There is one, but "huge", limitation of this feature:
-[list]
-[*] Currently it is impossible to identify the commander of the destroyed ship. And there is no relation between destroyed and replacement ships.
-[*] [b]That's why the rescued crew will be assigned on the Replacement Ship with the same model as the destroyed ship and for the Commander closest to the Sector where the ship was destroyed.[/b]
-[/list]
+The rescued crew is returned on the replacement of the very ship they were lost from. Ships lost outside a fleet with [b]Lost Ships Replacement[/b] get no replacement, so their rescued crew stays where the Rescue ship put it.
+
+There is one limitation: if one fleet lost several ships of the same model, their rescued crews can be returned on each other's replacements.
+
 [b]Important note[/b]: This feature is configured on each Rescue ship separately!
 
 [size=120][u]Explanation video[/u][/size]
 
 [url=https://youtube.com/watch?v=OaU6-RikfnI]Return them back on Replacement Ship[/url]
+
+[size=125][u]Keep rescued on board as crew[/u][/size]
+
+[b]Disabled[/b] by default.
+
+If enabled, the rescued crews' members join the Rescue ship's crew right away: as `Service crew`, or as [b]Marines[/b] when their boarding skill is higher than their engineering skill. They are not transferred to the "Dormitory" ship, so you can take them from the Rescue ship directly. When the Rescue ship has no free space left, it stops rescuing and tells you once, until you move some crew off it.
 
 [size=125][u]Record to logbook[/u][/size]
 
@@ -88,10 +115,26 @@ There is one, but "huge", limitation of this feature:
 
 If enabled, the ship will record the events to the logbook. I.e. starts, travel to desired sector, flying to the target, attacking the target, destroying the target, etc.
 
+[size=130][u]Rescue Rangers options[/u][/size]
+
+These options are on the [b]Rescue Rangers[/b] page of the [b]Extension options[/b] menu. They apply to all Rescue ships.
+
+[size=125][u]Extra max gate distance above the pilot skill limit[/u][/size]
+
+From [b]0[/b] (the default) to `5`. Raises the highest [b]Max gate distance to rescue[/b] you can select for any Rescue ship by this number. It changes only what the order menu lets you pick; set the distance on each Rescue ship as before.
+
+[size=125][u]Debug Level[/u][/size]
+
+Sets how much the extension writes to the game's debug log:
+[list]
+[*] [b]None[/b] - nothing, the default.
+[*] [b]Debug[/b] - one line per action: order start and settings, rescue target selected, rescue result, transfers to the "Dormitory", and the main steps of `Return them back on Replacement Ship`. Please use this level for a log attached to a problem report.
+[*] [b]Trace[/b] - in addition, every spacesuit checked, every loop of the order, and the vanilla docking and undocking details.
+[/list]
 [size=130][u]Situation when both ships are full[/u][/size]
 
-The ship's captain will periodically call to the player to inform about absence of the order. Additionally, if the Record to logbook is enabled - it will be recorded there as well.
+The Rescue ship shows an on-screen notice once, when it and the "Dormitory" ship run out of space. If the Record to logbook is enabled, the same notice goes to the logbook. It stays silent after that, until there is free space again. With [b]Keep rescued on board as crew[/b] enabled, the Rescue ship alone being full is enough for the notice.
 
 [size=130][u]Links[/u][/size]
 
-There is a thread on EgoSoft forum - [url=https://forum.egosoft.com/viewtopic.php?p=5260786][Mod/AIScript] Order "Rescue Rangers"[/url]. Feel free to ask any questions or report issues there.
+There is a thread on EgoSoft forum - [[url=https://forum.egosoft.com/viewtopic.php?p=5260786]Mod/AIScript] Order "Rescue Rangers"[/url]. Feel free to ask any questions or report issues there.
