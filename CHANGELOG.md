@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.07] - 2026-09-??
+
+### Added
+
+- New order option `Keep rescued on board as crew`: rescued crews' members join the Rescue ship as service crew or marines instead of going to the "Dormitory".
+- `Rescue Rangers` page in the Extension Options, with `Extra max gate distance above the pilot skill limit` (0 to 5) to allow a longer rescue range, and a `Debug Level` setting.
+- Requires `Mod Support APIs`, `Options Helper` and `Print Extension List`.
+
+### Changed
+
+- Nothing is written to the game's debug log unless `Debug Level` is set to `Debug` or `Trace`.
+
+- When the Rescue ship and its "Dormitory" are both full, the Rescue ship no longer calls you every few minutes: it shows one on-screen notice (and one logbook entry) until there is free space again.
+- Workshop sync is off by default, as for other extensions.
+
+### Fixed
+
+- A successful rescue was not recognized after the rescue flight: no "rescued" logbook entry, no pilot experience, and `Return them back` never registered the person.
+- `Return them back`: a rescued person was often dropped from tracking between docking at the Rescue ship and being registered, so they never returned to the Replacement Ship.
+- Several Rescue ships in one area: a person picked by a Rescue ship that then failed, was destroyed or got other orders was skipped by all other Rescue ships for good.
+- Rescue ships whose order was started with version 1.00 ignored ship losses in their own sector.
+- With a `Max gate distance to rescue` above 0, a Rescue ship that found nobody in one sector went home instead of checking the other sectors in range. Spacesuits left from losses during a rescue flight are now picked up too.
+- `Mimic` subordinates always ran with `Return them back on Replacement Ship` off.
+- `Return them back on Replacement Ship` could stop tracking losses and replacements while all Rescue ships were busy for more than 5 minutes.
+- `Return them back on Replacement Ship`: rescued crew is now returned on the replacement of the very ship they were lost from. Before, any recent loss of the same model nearby could take its place, even one from a fleet without `Lost Ships Replacement`.
+- The order can no longer be added to a repeat orders loop.
+
 ## [1.06] - 2025-06-16
 
 ### Fixed

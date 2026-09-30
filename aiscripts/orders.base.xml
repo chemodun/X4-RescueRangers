@@ -3,7 +3,8 @@
   <add sel="/aiscript/attention[@min='unknown']/actions/do_if[@value='$undock?']" pos="before">
     <do_if value="$undock? and (($object.order.id == 'RescueRangers') or ($object.order.id == 'DockAndWait' and @$object.order.$callerid.id == 'RescueRangers'))">
       <remove_value name="$undock" />
-      <debug_text text="'RescueRangers [%s at %s]: Preventing undock for custom order on ship.'.[@$object.debugname, @$object.sector.knownname]" />
+      <debug_text text="'RescueRangers [%s at %s]: Preventing undock for custom order on ship.'.[@$object.debugname, @$object.sector.knownname]"
+        chance="if @player.entity.$RescueRangersConfig.$debugLevel == 'debug' or @player.entity.$RescueRangersConfig.$debugLevel == 'trace' then 100 else 0" />
     </do_if>
   </add>
 </diff>

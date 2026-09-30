@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="106"
+<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="107"
   priority="1">
   <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true" allowinloop="false">
     <params>
@@ -15,7 +15,8 @@
         <input_param name="startvalue" value="0" />
         <input_param name="min" value="0" />
         <input_param name="max"
-          value="if @this.ship.pilot.skill.piloting lt 6 then 0 else if @this.ship.pilot.skill.piloting lt 9 then 1 else if @this.ship.pilot.skill.piloting lt 12 then 2 else 3" />
+          value="(if @this.ship.pilot.skill.piloting lt 6 then 0 else if @this.ship.pilot.skill.piloting lt 9 then 1 else if @this.ship.pilot.skill.piloting lt 12 then 2 else 3)
+            + (if @player.entity.$RescueRangersConfig.$extraRange gt 0 then player.entity.$RescueRangersConfig.$extraRange else 0)" />
         <input_param name="step" value="1" />
         <patch sinceversion="101" value="0" early="true" setvariable="true" comment="Set to 0 as new value" />
       </param>
@@ -32,6 +33,9 @@
       <param name="getThemBack" type="bool" default="false" text="{1972092402, 106}">
         <patch sinceversion="105" value="false" early="true" setvariable="true"
           comment="enable feature to return them on replacement ship" />
+      </param>
+      <param name="rescuedJoinCrew" type="bool" default="false" text="{1972092402, 107}">
+        <patch sinceversion="107" value="false" early="true" setvariable="true" />
       </param>
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
       <param name="isStartedByPlayer" type="internal" default="true" text="Started by Player" />
@@ -57,6 +61,45 @@
           </do_if>
         </do_if>
       </actions>
+      <actions name="ReadDebugChances">
+        <!-- Global level from Extension Options; the order's own debug switch counts as 'debug' -->
+        <set_value name="$debugLevel" exact="@player.entity.$RescueRangersConfig.$debugLevel" />
+        <set_value name="$debugChance" exact="if @$debugLevel == 'debug' or @$debugLevel == 'trace' or @$debugchance == 100 then 100 else 0" />
+        <set_value name="$traceChance" exact="if @$debugLevel == 'trace' then 100 else 0" />
+        <remove_value name="$debugLevel" />
+      </actions>
+      <actions name="AssignRescuedRoles">
+        <!-- Unassigned people on board become service crew, or marines when boarding is their better skill -->
+        <set_value name="$crewToAssign" exact="this.assignedcontrolled.availablepeople.{entityrole.unassigned}.list" />
+        <do_for_each name="$crewMember" in="$crewToAssign">
+          <do_if
+            value="this.assignedcontrolled.availablepeople.{$crewMember}.skill.engineering ge this.assignedcontrolled.availablepeople.{$crewMember}.skill.boarding">
+            <set_npc_template_role object="this.assignedcontrolled" template="$crewMember" role="entityrole.service" />
+          </do_if>
+          <do_else>
+            <set_npc_template_role object="this.assignedcontrolled" template="$crewMember" role="entityrole.marine" />
+          </do_else>
+        </do_for_each>
+        <do_if value="$crewToAssign.count gt 0">
+          <debug_text chance="$debugChance"
+            text="'RescueRangers [%s at %s, Mode: %s] - %s rescued joined the crew. Service: %s, marines: %s, unassigned: %s'
+              .[
+                this.assignedcontrolled.debugname,
+                this.assignedcontrolled.sector.knownname,
+                @$rescueMode,
+                $crewToAssign.count,
+                this.assignedcontrolled.people.{entityrole.service}.count,
+                this.assignedcontrolled.people.{entityrole.marine}.count,
+                this.assignedcontrolled.people.{entityrole.unassigned}.count,
+              ]" />
+        </do_if>
+        <remove_value name="$crewMember" />
+        <remove_value name="$crewToAssign" />
+      </actions>
+      <actions name="SetShipTypesToExclude">
+        <set_value name="$shipTypesToExclude"
+          exact="[shiptype.xsdrone, shiptype.distressdrone, shiptype.smalldrone, shiptype.personalvehicle, shiptype.escapepod]" />
+      </actions>
     </library>
     <handler ref="AttackHandler" />
     <handler ref="MissileLockHandler" />
@@ -69,14 +112,13 @@
       <conditions>
         <check_all>
           <event_game_loaded />
-          <debug_text
+          <debug_text chance="if @player.entity.$RescueRangersConfig.$debugLevel == 'trace' then 100 else 0"
             text="'RescueRangers [%s at %s]. Game loaded with version %s'.
             [
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
               @$scriptVersion,
-            ]"
-            debugchance="100" />
+            ]" />
           <check_any>
             <check_value value="@$scriptVersion lt 101" />
           </check_any>
@@ -114,7 +156,7 @@
         </check_all>
       </conditions>
       <actions>
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - %s, our : %s (class: %s, macro: %s, type: %s - %s) in sector: %s. Killer: %s {%s}, method: %s. Spacesuit docked: %s. Crew free: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -156,7 +198,7 @@
           <apply_experience entity="this" experience="'rescue_rangers'" chance="45" />
         </do_else>
         <do_if value="this.assignedcontrolled.people.free gt 0">
-          <debug_text
+          <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s, Mode: %s] - Going to search spacesuits. Crew free: %s'
               .[
                 this.assignedcontrolled.debugname,
@@ -170,7 +212,7 @@
           <abort_called_scripts resume="findSpacesuits" />
         </do_if>
         <do_else>
-          <debug_text
+          <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s, Mode: %s] - Going to transfer persons. Crew free: %s'
               .[
                 this.assignedcontrolled.debugname,
@@ -192,7 +234,7 @@
         </check_all>
       </conditions>
       <actions>
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - %s, our : %s {%s} in sector: %s, docked at: %s. Free before: %s, after: %s.'
             .[
               this.assignedcontrolled.debugname,
@@ -241,7 +283,7 @@
         </check_all>
       </conditions>
       <actions>
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - Event %s : %s {%s} status: iswreck: %s, isoperational: %s,  pilot: %s (%s), param: %s {%s}, , param2: %s {%s}, target: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -286,7 +328,7 @@
           <set_value name="$listOfSectorsIsActual" exact="false" />
           <do_if
             value="(this.assignedcontrolled.dock.container == $parkingAt) or (this.assignedcontrolled.parkedat and ((this.assignedcontrolled.parkedat == $parkingAt) or this.assignedcontrolled.parkedat.hascontext.{$parkingAt}))">
-            <debug_text
+            <debug_text chance="$debugChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Dormitory %s moved to sector %s. Aborting to start as docked now.'
                 .[
                   this.assignedcontrolled.debugname,
@@ -299,7 +341,7 @@
             <abort_called_scripts resume="start" />
           </do_if>
           <do_else>
-            <debug_text
+            <debug_text chance="$debugChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Dormitory %s moved to sector %s. Will continue to work with mark to update sectors list.'
             .[
               this.assignedcontrolled.debugname,
@@ -315,11 +357,17 @@
     </handler>
   </interrupts>
   <init>
-    <set_value name="$scriptVersion" exact="106" />
+    <set_value name="$scriptVersion" exact="107" />
+    <include_interrupt_actions ref="ReadDebugChances" />
 
     <set_value name="$rescueMode" exact="if $homeStation == null then 'fleet' else 'sector'" />
 
     <set_value name="$target" exact="null" />
+    <set_value name="$skipGoToDock" exact="false" />
+    <set_value name="$targetPerson" exact="''" />
+    <set_value name="$textTargetPerson" exact="''" />
+    <set_value name="$textTargetSector" exact="''" />
+    <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
 
     <do_if value="this.assignedcontrolled.pilot.$rescueData?">
       <do_if value="@this.assignedcontrolled.pilot.$rescueData.$timeStamp ge (player.age - 300)">
@@ -329,7 +377,7 @@
         <set_value name="$textTargetSector" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetSector" />
         <set_value name="$skipGoToDock" exact="true" />
         <set_value name="$crewFreeCount" exact="@this.assignedcontrolled.pilot.$rescueData.$crewFreeCount" />
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - Found saved: target: %s, person: %s, text: %s, at %s, skipGoToDock: %s, crewFreeCount: %s, free: %s. Started by player: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -349,14 +397,6 @@
       <set_value name="$isStartedByPlayer" exact="false" />
       <remove_value name="this.assignedcontrolled.pilot.$rescueData" />
     </do_if>
-    <do_else>
-      <set_value name="$skipGoToDock" exact="false" />
-      <set_value name="$targetPerson" exact="''" />
-      <set_value name="$textTargetPerson" exact="''" />
-      <set_value name="$textTargetSector" exact="''" />
-    </do_else>
-
-    <set_value name="$debugChance" exact="100" />
 
     <do_if value="$rescueMode == 'fleet'">
       <set_value name="$homeSector" exact="@$shipDormitory.sector" />
@@ -390,7 +430,7 @@
 
     <set_value name="$skipDockingMessageAfterScriptUpdate" exact="not $isStartedByPlayer" />
 
-    <debug_text
+    <debug_text chance="$debugChance"
       text="'RescueRangers [%s at %s, Mode: %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nParking At: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s. \nDock: [%s at %s], parked at: [%s at %s], has context: %s. Skip docking message: %s'
         .[
           this.assignedcontrolled.debugname,
@@ -419,16 +459,12 @@
         ]"
     />
 
-
-    <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
-
     <do_if value="$isStartedByPlayer and not $skipGoToDock">
       <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1021}.[$textUnit, $textHomeSector]" interaction="showonmap"
         object="this.assignedcontrolled" />
     </do_if>
 
-    <set_value name="$shipTypesToExclude"
-      exact="[shiptype.xsdrone, shiptype.distressdrone, shiptype.smalldrone, shiptype.personalvehicle, shiptype.escapepod]" />
+    <include_interrupt_actions ref="SetShipTypesToExclude" />
 
     <!-- $targetSector is used to store the sector where our ship was destroyed, to limit search of spacesuits -->
     <set_value name="$targetSector" exact="null" />
@@ -445,7 +481,7 @@
     <set_value name="$parkingAt" exact="$homeStation" />
     <set_value name="$textDormitoryNoColor" exact="{1972092402, 1010}.[$shipDormitory.name, $shipDormitory.idcode]" />
     <set_value name="$listOfSectorsIsActual" exact="true" />
-    <debug_text
+    <debug_text chance="$debugChance"
       text="'RescueRangers [%s at %s, Mode: %s] - Patched to version 1.03. Parking At: %s'.
             [
               this.assignedcontrolled.debugname,
@@ -463,13 +499,39 @@
   <patch sinceversion="106">
     <set_value name="$scriptVersion" exact="106" />
   </patch>
+  <patch sinceversion="107" comment="Orders started under 1.00 lack variables added to init later">
+    <include_interrupt_actions ref="ReadDebugChances" />
+    <do_if value="$sectorsList?" negate="true">
+      <create_list name="$sectorsList" />
+    </do_if>
+    <do_if value="@$homeSector and $sectorsList.indexof.{$homeSector} le 0">
+      <append_to_list name="$sectorsList" exact="$homeSector" />
+    </do_if>
+    <set_value name="$listOfSectorsIsActual" exact="false" />
+    <do_if value="$shipTypesToExclude?" negate="true">
+      <include_interrupt_actions ref="SetShipTypesToExclude" />
+    </do_if>
+    <do_if value="$targetSector?" negate="true">
+      <set_value name="$targetSector" exact="null" />
+    </do_if>
+    <do_if value="$targetPerson?" negate="true">
+      <set_value name="$targetPerson" exact="''" />
+    </do_if>
+    <do_if value="$textTargetSector?" negate="true">
+      <set_value name="$textTargetSector" exact="''" />
+    </do_if>
+    <do_if value="$skipDockingMessageAfterScriptUpdate?" negate="true">
+      <set_value name="$skipDockingMessageAfterScriptUpdate" exact="true" />
+    </do_if>
+    <set_value name="$scriptVersion" exact="107" />
+  </patch>
 
   <attention min="unknown">
     <actions>
 
       <do_if value="@$rescueMode == 'sector' or @$shipDormitory.dockingenabled and @$shipDormitory.dockingallowed.{this.assignedcontrolled}"
         negate="true">
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - Configuration check not passed: %s, home ship: %s, home ship docking enabled: %s, home ship allowed: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -494,13 +556,14 @@
       </do_if>
 
       <label name="start" />
+      <include_interrupt_actions ref="ReadDebugChances" />
 
       <do_if value="$listOfSectorsIsActual" negate="true">
         <run_script name="'lib.find.sectors.inrange'" result="$sectorsList" sinceversion="5">
           <param name="refobject" value="$homeSector" />
           <param name="mingatedistance" value="0" />
           <param name="maxgatedistance" value="$maxDistanceAround" />
-          <param name="debugchance" value="$debugChance" />
+          <param name="debugchance" value="$traceChance" />
         </run_script>
         <do_if value="$sectorsList?" negate="true">
           <create_list name="$sectorsList" />
@@ -508,7 +571,7 @@
         <do_if value="$sectorsList.indexof.{$homeSector} gt 0" negate="true">
           <append_to_list name="$sectorsList" exact="$homeSector" />
         </do_if>
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - Sectors list refreshed. Sector: %s. Distance: %s. Sectors: %s.'
             .[
               this.assignedcontrolled.debugname,
@@ -522,7 +585,7 @@
         <set_value name="$listOfSectorsIsActual" exact="true" />
       </do_if>
 
-      <debug_text
+      <debug_text chance="$traceChance"
         text="'RescueRangers [%s at %s, Mode: %s] - This ship: free: %s, unassigned: %s. Dormitory ship: free: %s, unassigned: %s. Parking At: %s at %s. Target: %s, crewFreeCount: %s, skipGoToDock: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -549,7 +612,7 @@
       <do_if
         value="$skipGoToDock or (this.assignedcontrolled.dock and (this.assignedcontrolled.dock.container == $parkingAt)) or (this.assignedcontrolled.parkedat and ((this.assignedcontrolled.parkedat == $parkingAt) or this.assignedcontrolled.parkedat.hascontext.{$parkingAt}))">
         <do_if value="$target != null">
-          <debug_text
+          <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s, Mode: %s] - Previously saved person: %s (%s) at %s. Crew free: %s, previous free: %s. Wait for event 3s.'
               .[
                 this.assignedcontrolled.debugname,
@@ -577,9 +640,12 @@
             </do_if>
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
+          <do_if value="@$target.pilot.$toRescueBy.$id == this.assignedcontrolled.idcode">
+            <remove_value name="$target.pilot.$toRescueBy" />
+          </do_if>
           <set_value name="$target" exact="null" />
           <do_if value="this.assignedcontrolled.people.free gt 0">
-            <debug_text
+            <debug_text chance="$debugChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Going to search spacesuits. Crew free: %s'
                 .[
                   this.assignedcontrolled.debugname,
@@ -591,7 +657,7 @@
             <resume label="findSpacesuits" />
           </do_if>
           <do_else>
-            <debug_text
+            <debug_text chance="$debugChance"
               text="'RescueRangers [%s at %s] - Going to transfer persons. Crew free: %s'
                 .[
                   this.assignedcontrolled.debugname,
@@ -609,7 +675,7 @@
         </do_if>
       </do_if>
       <do_else>
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - going to dock : %s at %s. Is docked now: %s?'
             .[
               this.assignedcontrolled.debugname,
@@ -623,7 +689,7 @@
         <do_if value="this.assignedcontrolled.dock">
           <do_if
             value="this.assignedcontrolled.dock.container == $parkingAt or (this.assignedcontrolled.parkedat and ((this.assignedcontrolled.parkedat == $parkingAt) or this.assignedcontrolled.parkedat.hascontext.{$parkingAt}))">
-            <debug_text
+            <debug_text chance="$traceChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Already docked where is needed'
               .[
                 this.assignedcontrolled.debugname,
@@ -635,10 +701,10 @@
           </do_if>
           <do_else>
             <run_script name="'move.undock'" result="$undocked">
-              <param name="debugchance" value="$debugChance" />
+              <param name="debugchance" value="$traceChance" />
               <param name="skipwait" value="true" />
             </run_script>
-            <debug_text
+            <debug_text chance="$traceChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Undocked result: %s'
                 .[
                   this.assignedcontrolled.debugname,
@@ -664,12 +730,13 @@
         <do_else>
           <set_value name="$skipDockingMessageAfterScriptUpdate" exact="false" />
         </do_else>
+        <include_interrupt_actions ref="GetThemBackRefresh" />
         <run_script name="'order.dock'" result="$docked">
           <param name="destination" value="$parkingAt" />
           <!-- <param name="abouttofinish" value="true"/> -->
-          <param name="debugchance" value="$debugChance" />
+          <param name="debugchance" value="$traceChance" />
         </run_script>
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - Docking result: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -691,6 +758,10 @@
       <label name="findSpacesuits" />
 
       <set_value name="$skipGoToDock" exact="false" />
+      <set_value name="$noSpaceNotified" exact="false" />
+      <do_if value="@$rescuedJoinCrew">
+        <include_interrupt_actions ref="AssignRescuedRoles" />
+      </do_if>
 
       <do_if value="$target == null">
 
@@ -712,9 +783,9 @@
         <find_ship_by_true_owner faction="faction.player" name="$spacesuits" space="$whereToFind" class="class.spacesuit" docked="false"
           checkoperational="true" multiple="true" sortbydistanceto="this.assignedcontrolled" />
 
-        <!-- If nothing found in one sector - will try to do it in all of them-->
+        <!-- Nothing in that sector: take the nearest other sector in range that has spacesuits -->
         <do_if value="@$spacesuits.count == 0 and $sectorsList.count gt 1">
-          <debug_text
+          <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s, Mode: %s] - No spacesuits found to rescue in selected one sector %s. Going to search in other sectors'
               .[
                 this.assignedcontrolled.debugname,
@@ -723,7 +794,21 @@
                 $whereToFind.knownname,
               ]"
           />
-          <resume label="start" />
+          <set_value name="$sectorsToSearch" exact="$sectorsList.clone" />
+          <sort_list list="$sectorsToSearch"
+            sortbyvalue="if this.assignedcontrolled.gatedistance.{loop.element} lt 0 then 1000 else this.assignedcontrolled.gatedistance.{loop.element}" />
+          <do_for_each name="$sectorToSearch" in="$sectorsToSearch">
+            <do_if value="$sectorToSearch != $whereToFind">
+              <find_ship_by_true_owner faction="faction.player" name="$spacesuits" space="$sectorToSearch" class="class.spacesuit" docked="false"
+                checkoperational="true" multiple="true" sortbydistanceto="this.assignedcontrolled" />
+              <do_if value="$spacesuits.count gt 0">
+                <set_value name="$whereToFind" exact="$sectorToSearch" />
+                <break />
+              </do_if>
+            </do_if>
+          </do_for_each>
+          <remove_value name="$sectorToSearch" />
+          <remove_value name="$sectorsToSearch" />
         </do_if>
 
         <!-- Clear $targetSector for future interactions -->
@@ -733,7 +818,7 @@
           <sort_list list="$spacesuits" sortbyvalue="loop.element.oxygentimeremaining" sortdescending="false" />
         </do_if>
 
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - Spacesuits: found: %s, list: %s. Sectors: primary %s, list: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -751,6 +836,19 @@
         <do_while value="$target == null and $spacesuitsIndex le $spacesuits.count">
           <set_value name="$target" exact="$spacesuits.{$spacesuitsIndex}" />
 
+          <!-- A claim holds only while its ranger flies RescueShip to this suit; claims from 1.06 fall back to 300 s -->
+          <set_value name="$claim" exact="@$target.pilot.$toRescueBy" />
+          <set_value name="$claimedByOther" exact="false" />
+          <do_if value="$claim != null and @$claim.$id != this.assignedcontrolled.idcode">
+            <do_if value="$claim.$ranger?">
+              <set_value name="$claimedByOther"
+                exact="@$claim.$ranger.order.id == 'RescueShip' and @$claim.$ranger.pilot.$rescueData.$target == $target" />
+            </do_if>
+            <do_else>
+              <set_value name="$claimedByOther" exact="player.age - @$claim.$timestamp le 300" />
+            </do_else>
+          </do_if>
+
           <do_if
             value="($target.assigneddock and $target.assigneddock.controllable != this.assignedcontrolled) or (@$target.order.id == 'DockAt' and $target.order.$destination != this.assignedcontrolled)">
             <do_if value="$target.assigneddock and $target.assigneddock.controllable != this.assignedcontrolled">
@@ -760,7 +858,7 @@
               <set_value name="$targetAssignedToDockOn" exact="$target.order.$destination" />
             </do_else>
             <!-- TODO: break docking not on RR Ships -->
-            <debug_text
+            <debug_text chance="$traceChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Target %s (person %s, age %s) is already assigned to dock at %s, marked by %s. Order: %s. Orders: %s. Destination orders: %s'
                 .[
                   this.assignedcontrolled.debugname,
@@ -776,7 +874,7 @@
                   @$targetAssignedToDockOn.orders
                 ]"
             />
-            <do_if value="not $target.pilot.$toRescueBy? or $target.pilot.$toRescueBy.$id == this.assignedcontrolled.idcode">
+            <do_if value="not $claimedByOther">
               <set_value name="$destinationIsWrong" exact="true" />
               <do_for_each name="$order" in="$targetAssignedToDockOn.orders">
                 <do_if value="$order.id == this.assignedcontrolled.order.id">
@@ -787,7 +885,7 @@
               <do_if
                 value="$destinationIsWrong">
                 <do_if value="$target.order.id == 'DockAt'">
-                  <debug_text
+                  <debug_text chance="$debugChance"
                     text="'RescueRangers [%s at %s, Mode: %s] - Target %s (person %s, age %s) trying to rescue right way. Order: %s. Orders: %s.'
                       .[
                         this.assignedcontrolled.debugname,
@@ -801,7 +899,7 @@
                       ]"
                   />
                   <abort_scripts entity="$target.pilot" />
-                  <debug_text
+                  <debug_text chance="$traceChance"
                     text="'RescueRangers [%s at %s, Mode: %s] - Target %s (person %s, age %s) - stopped scripts. Order: %s. Destination: %s.'
                       .[
                         this.assignedcontrolled.debugname,
@@ -815,7 +913,7 @@
                       ]"
                   />
                   <edit_order_param order="$target.order" param="'destination'" value="this.assignedcontrolled" />
-                  <debug_text
+                  <debug_text chance="$traceChance"
                     text="'RescueRangers [%s at %s, Mode: %s] - Target %s (person %s, age %s) - params edit. Order: %s. Destination: %s.'
                       .[
                         this.assignedcontrolled.debugname,
@@ -842,13 +940,12 @@
             </do_else>
           </do_if>
           <do_if value="@$target">
-            <do_if
-              value="$target.pilot.$toRescueBy? and $target.pilot.$toRescueBy.$id != this.assignedcontrolled.idcode and $target.pilot.$toRescueBy.$timestamp? and @$target.pilot.$toRescueBy.$timestamp - player.age le 300"
-              negate="true">
-              <set_value name="$target.pilot.$toRescueBy" exact="table[$timestamp = player.age, $id=this.assignedcontrolled.idcode]" />
+            <do_if value="not $claimedByOther">
+              <set_value name="$target.pilot.$toRescueBy"
+                exact="table[$timestamp = player.age, $id = this.assignedcontrolled.idcode, $ranger = this.assignedcontrolled]" />
             </do_if>
             <do_else>
-              <debug_text
+              <debug_text chance="$traceChance"
                 text="'RescueRangers [%s at %s, Mode: %s] - Person to rescue: %s, spacesuit: %s (age %s) at %s, already marked to be rescued: %s'
                   .[
                     this.assignedcontrolled.debugname,
@@ -857,7 +954,7 @@
                     @$target.pilot.knownname,
                     @$target.debugname,
                     @$target.age,
-                    @target.sector.knownname,
+                    @$target.sector.knownname,
                     @$target.pilot.$toRescueBy,
                   ]"
               />
@@ -868,7 +965,7 @@
         </do_while>
 
         <do_if value="$target == null">
-          <debug_text
+          <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s] - No spacesuits found to rescue'
               .[
                 this.assignedcontrolled.debugname,
@@ -878,7 +975,7 @@
           <resume label="start" />
         </do_if>
         <do_else>
-          <debug_text
+          <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s, Mode: %s] - Found person to rescue: %s, spacesuit: %s at %s, will be rescued by: %s'
               .[
                 this.assignedcontrolled.debugname,
@@ -908,12 +1005,13 @@
             $textTargetSector = $textTargetSector,
             $crewFreeCount = $crewFreeCount,
           ]" />
+          <include_interrupt_actions ref="GetThemBackRefresh" />
           <create_order id="'RescueShip'" object="this.assignedcontrolled" immediate="true">
             <param name="target" value="$target" />
             <!-- <param name="internalorder" value="true"/> -->
-            <param name="debugchance" value="$debugChance" />
+            <param name="debugchance" value="$traceChance" />
           </create_order>
-          <debug_text
+          <debug_text chance="$traceChance"
             text="'RescueRangers [%s at %s, Mode: %s] - After run script or order call: %s at %s. Dock: %s. Free crew: previous: %s, now: %s. No space left: %s. rescueData: %s'
               .[
                 this.assignedcontrolled.debugname,
@@ -941,7 +1039,7 @@
 
       <set_value name="$skipGoToDock" exact="false" />
 
-      <debug_text
+      <debug_text chance="$traceChance"
         text="'RescueRangers [%s at %s, Mode: %s] - This ship people: free: %s, total: %s, capacity: %s, service: %s, marine: %s, unassigned: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -956,8 +1054,12 @@
             ]"
       />
 
+      <do_if value="@$rescuedJoinCrew">
+        <include_interrupt_actions ref="AssignRescuedRoles" />
+      </do_if>
+
       <do_if value="this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
-        <debug_text
+        <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - This ship rescued people: %s, and plan to transfer them to dormitory: %s at %s, with free %s and unassigned: %s'
             .[
               this.assignedcontrolled.debugname,
@@ -978,7 +1080,7 @@
               interaction="showonmap" object="this.assignedcontrolled" />
           </do_if>
 
-          <debug_text
+          <debug_text chance="$traceChance"
             text="'RescueRangers [%s at %s, Mode: %s] - Ready to transfer rescued people to dormitory: %s at %s, with unassigned: %s'
               .[
                 this.assignedcontrolled.debugname,
@@ -1014,7 +1116,7 @@
                 </do_if>
               </do_if>
             </do_for_each>
-            <debug_text
+            <debug_text chance="$debugChance"
               text="'RescueRangers [%s at %s, Mode: %s] - Transferred %s persons to dormitory: %s at %s. Now free: %s, unassigned: %s, on dormitory: free: %s, unassigned: %s'
                 .[
                   this.assignedcontrolled.debugname,
@@ -1037,35 +1139,41 @@
             <resume label="findSpacesuits" />
           </do_if>
         </do_if>
-        <do_if
-          value="this.assignedcontrolled.people.free le 0 and ($shipDormitory == null or not $shipDormitory.isoperational or $shipDormitory.people.free le 0)">
-          <debug_text
-            text="'RescueRangers [%s at %s, Mode: %s] - No space left to rescue people, on this ship (%s) and on dormitory (%s). '
-              .[
-                this.assignedcontrolled.debugname,
-                this.assignedcontrolled.sector.knownname,
-                @$rescueMode,
-                this.assignedcontrolled.people.free,
-                @$shipDormitory.people.free,
-              ]"
-          />
+      </do_if>
+
+      <!-- Rescued kept as crew never move to the dormitory, so a full ship alone stops the rescue -->
+      <do_if
+        value="this.assignedcontrolled.people.free le 0 and (@$rescuedJoinCrew or $shipDormitory == null or not $shipDormitory.isoperational or $shipDormitory.people.free le 0)">
+        <debug_text chance="$debugChance"
+          text="'RescueRangers [%s at %s, Mode: %s] - No space left to rescue people, on this ship (%s) and on dormitory (%s). Rescued join the crew: %s'
+            .[
+              this.assignedcontrolled.debugname,
+              this.assignedcontrolled.sector.knownname,
+              @$rescueMode,
+              this.assignedcontrolled.people.free,
+              @$shipDormitory.people.free,
+              @$rescuedJoinCrew,
+            ]"
+        />
+        <do_if value="not @$noSpaceNotified">
+          <set_value name="$noSpaceNotified" exact="true" />
           <do_if value="$recordActionsToLogBook">
-            <write_to_logbook category="general" title="$textTitle" text="{1972092402, 1091}.[$textUnit, $textDormitory]"
+            <write_to_logbook category="general" title="$textTitle"
+              text="if @$rescuedJoinCrew then {1972092402, 1092}.[$textUnit] else {1972092402, 1091}.[$textUnit, $textDormitory]"
               interaction="showonmap" object="this.assignedcontrolled" />
           </do_if>
-          <set_value name="$speakline" exact="10304" comment="Awaiting orders." />
-          <run_script name="'player.interaction'">
-            <param name="Line" value="$speakline" />
-            <param name="MaxQueueDelay" value="10s" />
-            <param name="caption" value="{1016, 6}.[this.assignedcontrolled.knownname, this.assignedcontrolled.idcode]" />
-            <param name="interactive" value="false" />
-          </run_script>
+          <show_help
+            custom="if @$rescuedJoinCrew then {1972092402, 1092}.[$textUnit] else {1972092402, 1091}.[$textUnit, $textDormitoryNoColor]"
+            log="true" position="1" force="true" duration="8s" />
         </do_if>
       </do_if>
+      <do_else>
+        <set_value name="$noSpaceNotified" exact="false" />
+      </do_else>
 
       <resume label="start" />
 
-      <debug_text
+      <debug_text chance="$traceChance"
         text="'RescueRangers [%s at %s, Mode: %s] - Point before finish. '
           .[
             this.assignedcontrolled.debugname,
@@ -1076,7 +1184,7 @@
 
       <label name="finish" />
 
-      <debug_text
+      <debug_text chance="$traceChance"
         text="'RescueRangers [%s at %s, Mode: %s] - Point after finish. '
           .[
             this.assignedcontrolled.debugname,
@@ -1088,7 +1196,7 @@
     </actions>
   </attention>
   <on_abort>
-    <debug_text
+    <debug_text chance="$debugChance"
       text="'RescueRangers [%s at %s, Mode: %s] - Aborted Base Order. Order: %s, is running: %s. '
         .[
           this.assignedcontrolled.debugname,
@@ -1100,7 +1208,7 @@
     />
     <do_if value="this.assignedcontrolled.order.id != 'RescueShip'">
       <remove_value name="this.assignedcontrolled.pilot.$rescueData" />
-      <debug_text
+      <debug_text chance="$traceChance"
         text="'RescueRangers [%s at %s, Mode: %s] - Rescue data removed.'
         .[
           this.assignedcontrolled.debugname,

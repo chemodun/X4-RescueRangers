@@ -11,6 +11,7 @@
       <t id="104">Distanza massima del portale per il salvataggio</t>
       <t id="105">Priorità per ossigeno rimanente</t>
       <t id="106">Riportali sulla nave di sostituzione</t>
+      <t id="107">Tieni i salvati a bordo come equipaggio</t>
       <t id="109">Registra nel diario di bordo</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -25,7 +26,15 @@
       <t id="1041">%s: in arrivo per trasferire i membri dell'equipaggio salvati a %s</t>
       <t id="1042">%s: trasferiti %s membri dell'equipaggio salvati a %s</t>
       <t id="1091">%s: \033RImpossibile salvare i membri dell'equipaggio\033X - nessuno spazio libero per i membri dell'equipaggio e su %s - anche!</t>
+      <t id="1092">%s: \033RImpossibile salvare i membri dell'equipaggio\033X - nessuno spazio libero a bordo!</t>
       <t id="2001">{1972092402,1} problema: l'attracco su %s per %s non è possibile! Annullamento!</t>
+      <t id="90100">Raggio di salvataggio</t>
+      <t id="90110">Distanza massima del portale aggiuntiva oltre il limite di abilità del pilota</t>
+      <t id="90900">Debug</t>
+      <t id="90910">Livello di debug</t>
+      <t id="90911">Nessuno</t>
+      <t id="90912">Debug</t>
+      <t id="90913">Traccia</t>
     </page>
   </add>
 </diff>

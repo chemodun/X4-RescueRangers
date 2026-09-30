@@ -11,6 +11,7 @@
       <t id="104">Distância máxima da porta para resgate</t>
       <t id="105">Prioridade por oxigênio restante</t>
       <t id="106">Devolvê-los de volta na Nave de Substituição</t>
+      <t id="107">Manter os resgatados a bordo como tripulação</t>
       <t id="109">Registrar no diário de bordo</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -25,7 +26,15 @@
       <t id="1041">%s: indo transferir membros da tripulação salvos para %s</t>
       <t id="1042">%s: transferiu %s membros da tripulação salvos para %s</t>
       <t id="1091">%s: \033RNão pode salvar membros da tripulação\033X - sem espaço livre para membros da tripulação e em %s - também!</t>
+      <t id="1092">%s: \033RNão pode salvar membros da tripulação\033X - sem espaço livre a bordo!</t>
       <t id="2001">{1972092402,1} problema: atracar em %s para %s não é possível! Abortando!</t>
+      <t id="90100">Alcance de resgate</t>
+      <t id="90110">Distância máxima da porta adicional acima do limite de habilidade do piloto</t>
+      <t id="90900">Depuração</t>
+      <t id="90910">Nível de depuração</t>
+      <t id="90911">Nenhum</t>
+      <t id="90912">Depuração</t>
+      <t id="90913">Rastreamento</t>
     </page>
   </add>
 </diff>

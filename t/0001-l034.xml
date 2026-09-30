@@ -11,6 +11,7 @@
       <t id="104">Distancia máxima de puerta para rescatar</t>
       <t id="105">Prioridad por oxígeno restante</t>
       <t id="106">Devuélvelos a la Nave de Reemplazo</t>
+      <t id="107">Mantener a los rescatados a bordo como tripulación</t>
       <t id="109">Registrar en el diario</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -25,7 +26,15 @@
       <t id="1041">%s: yendo a transferir miembros de tripulación salvados a %s</t>
       <t id="1042">%s: transfirió %s miembros de tripulación salvados a %s</t>
       <t id="1091">%s: \033RNo puede salvar a los miembros de la tripulación\033X - no hay espacio libre para los miembros de la tripulación y en %s - ¡también!</t>
+      <t id="1092">%s: \033RNo puede salvar a los miembros de la tripulación\033X - ¡no hay espacio libre a bordo!</t>
       <t id="2001">{1972092402,1} problema: ¡no es posible acoplar en %s para %s! ¡Abortando!</t>
+      <t id="90100">Alcance de rescate</t>
+      <t id="90110">Distancia máxima de puerta adicional sobre el límite de habilidad del piloto</t>
+      <t id="90900">Depuración</t>
+      <t id="90910">Nivel de depuración</t>
+      <t id="90911">Ninguno</t>
+      <t id="90912">Depuración</t>
+      <t id="90913">Rastreo</t>
     </page>
   </add>
 </diff>

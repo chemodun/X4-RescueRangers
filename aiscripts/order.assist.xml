@@ -10,7 +10,8 @@
           <param name="homeStation" value="$orderdef.$homeStation" />
           <param name="shipDormitory" value="$orderdef.$shipDormitory" />
           <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
-          <param name="returnThemBack" value="$orderdef.$returnThemBack" />
+          <param name="getThemBack" value="$orderdef.$getThemBack" />
+          <param name="rescuedJoinCrew" value="$orderdef.$rescuedJoinCrew" />
           <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
         </create_order>
       </do_if>
@@ -20,7 +21,8 @@
         <set_value name="$orderdef.$homeStation" exact="$order.$homeStation" />
         <set_value name="$orderdef.$shipDormitory" exact="$order.$shipDormitory" />
         <set_value name="$orderdef.$rescuePriorityByOxygenRemained" exact="$order.$rescuePriorityByOxygenRemained" />
-        <set_value name="$orderdef.$returnThemBack" exact="$order.$returnThemBack" />
+        <set_value name="$orderdef.$getThemBack" exact="$order.$getThemBack" />
+        <set_value name="$orderdef.$rescuedJoinCrew" exact="@$order.$rescuedJoinCrew" />
         <set_value name="$orderdef.$recordActionsToLogBook" exact="$order.$recordActionsToLogBook" />
         <run_script name="$scriptname">
           <param name="homeSector" value="$orderdef.$homeSector" />
@@ -28,7 +30,8 @@
           <param name="homeStation" value="$orderdef.$homeStation" />
           <param name="shipDormitory" value="$orderdef.$shipDormitory" />
           <param name="rescuePriorityByOxygenRemained" value="$orderdef.$rescuePriorityByOxygenRemained" />
-          <param name="returnThemBack" value="$orderdef.$returnThemBack" />
+          <param name="getThemBack" value="$orderdef.$getThemBack" />
+          <param name="rescuedJoinCrew" value="$orderdef.$rescuedJoinCrew" />
           <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
         </run_script>
       </do_else>

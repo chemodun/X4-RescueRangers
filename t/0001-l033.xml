@@ -11,6 +11,7 @@
       <t id="104">Distance maximale de la porte pour le sauvetage</t>
       <t id="105">Priorité par oxygène restant</t>
       <t id="106">Ramenez-les sur le vaisseau de remplacement</t>
+      <t id="107">Garder les rescapés à bord comme équipage</t>
       <t id="109">Enregistrer dans le journal de bord</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -25,7 +26,15 @@
       <t id="1041">%s : va transférer les membres d'équipage sauvés à %s</t>
       <t id="1042">%s : a transféré %s membres d'équipage sauvés à %s</t>
       <t id="1091">%s : \033RImpossible de sauver les membres d'équipage\033X - pas de place libre pour les membres d'équipage et sur %s - aussi !</t>
+      <t id="1092">%s : \033RImpossible de sauver les membres d'équipage\033X - pas de place libre à bord !</t>
       <t id="2001">{1972092402,1} problème : l'amarrage sur %s pour %s n'est pas possible ! Abandon !</t>
+      <t id="90100">Portée de sauvetage</t>
+      <t id="90110">Distance maximale de la porte en plus de la limite de compétence du pilote</t>
+      <t id="90900">Débogage</t>
+      <t id="90910">Niveau de débogage</t>
+      <t id="90911">Aucun</t>
+      <t id="90912">Débogage</t>
+      <t id="90913">Trace</t>
     </page>
   </add>
 </diff>

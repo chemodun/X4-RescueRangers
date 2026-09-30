@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="RR_Options" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+  <cues>
+    <cue name="Main" version="107">
+      <cues>
+
+        <library name="Defaults" version="107">
+          <actions>
+            <set_value name="$cfg" exact="table[
+              $debugLevel = 'none',
+              $extraRange = 0,
+            ]" />
+          </actions>
+        </library>
+
+        <cue name="RegisterMenu" instantiate="true" version="107">
+          <conditions>
+            <event_cue_signalled cue="md.Simple_Menu_API.Reloaded" />
+          </conditions>
+          <actions>
+            <include_actions ref="Defaults" />
+            <do_if value="not player.entity.$RescueRangersConfig?">
+              <set_value name="player.entity.$RescueRangersConfig" exact="$cfg" />
+            </do_if>
+            <do_else>
+              <do_for_each name="$key" in="$cfg">
+                <do_if value="not player.entity.$RescueRangersConfig.{$key}?">
+                  <set_value name="player.entity.$RescueRangersConfig.{$key}" exact="$cfg.{$key}" />
+                </do_if>
+              </do_for_each>
+              <remove_value name="$key" />
+            </do_else>
+            <remove_value name="$cfg" />
+
+            <signal_cue_instantly cue="md.Simple_Menu_API.Register_Options_Menu"
+              param="table[
+                $id      = 'rescue_rangers_options_menu',
+                $columns = 12,
+                $title   = {1972092402, 1},
+                $onOpen  = OptionsMenu,
+              ]" />
+          </actions>
+        </cue>
+
+        <cue name="OptionsMenu" instantiate="true" version="107">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <do_if value="player.entity.$RescueRangersConfig?">
+              <set_value name="$cfg" exact="player.entity.$RescueRangersConfig" />
+
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092402, 1}" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092402, 90100}" />
+              </run_actions>
+              <run_actions ref="md.Options_Helper.Add_Slider">
+                <param name="id" value="'extraRange'" />
+                <param name="text" value="{1972092402, 90110}" />
+                <param name="colSpan" value="12" />
+                <param name="min" value="0" />
+                <param name="max" value="5" />
+                <param name="step" value="1" />
+                <param name="data" value="$cfg" />
+                <param name="handle" value="HandleSlider" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092402, 90900}" />
+              </run_actions>
+
+              <set_value name="$debugLevelOptions" exact="[
+                table[$text = {1972092402, 90911}, $value = 'none'],
+                table[$text = {1972092402, 90912}, $value = 'debug'],
+                table[$text = {1972092402, 90913}, $value = 'trace']
+              ]" />
+              <set_value name="$debugLevelIndex" exact="['none', 'debug', 'trace'].indexof.{@$cfg.$debugLevel}" />
+              <do_if value="$debugLevelIndex == 0">
+                <set_value name="$debugLevelIndex" exact="1" />
+              </do_if>
+              <run_actions ref="md.Options_Helper.Add_Dropdown">
+                <param name="id" value="'debugLevel'" />
+                <param name="options" value="$debugLevelOptions" />
+                <param name="currentIndex" value="$debugLevelIndex" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="6" />
+                <param name="text" value="{1972092402, 90910}" />
+                <param name="dropdownColSpan" value="6" />
+                <param name="handle" value="HandleDropdown" />
+              </run_actions>
+
+              <remove_value name="$debugLevelOptions" />
+              <remove_value name="$debugLevelIndex" />
+              <remove_value name="$cfg" />
+            </do_if>
+          </actions>
+        </cue>
+
+        <cue name="HandleSlider" instantiate="true" version="107">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <set_value name="$resultTable" exact="player.entity.$RescueRangersConfig" />
+            <include_actions ref="md.Options_Helper.Process_Slider_Changed" />
+            <remove_value name="$resultTable" />
+            <!-- The slider reports a float; the order's gate distance is an integer -->
+            <set_value name="player.entity.$RescueRangersConfig.$extraRange" exact="(player.entity.$RescueRangersConfig.$extraRange)i" />
+          </actions>
+        </cue>
+
+        <cue name="HandleDropdown" instantiate="true" version="107">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <set_value name="$resultTable" exact="player.entity.$RescueRangersConfig" />
+            <include_actions ref="md.Options_Helper.Process_Dropdown_Changed" />
+            <remove_value name="$resultTable" />
+          </actions>
+        </cue>
+
+      </cues>
+    </cue>
+  </cues>
+</mdscript>

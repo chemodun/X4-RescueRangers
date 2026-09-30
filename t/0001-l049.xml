@@ -11,6 +11,7 @@
       <t id="104">Maximale Tor-Distanz für Rettung</t>
       <t id="105">Priorität nach verbleibendem Sauerstoff</t>
       <t id="106">Zurückbringen auf Ersatzschiff</t>
+      <t id="107">Gerettete als Crew an Bord behalten</t>
       <t id="109">Im Logbuch vermerken</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -25,7 +26,15 @@
       <t id="1041">%s: geht, um gerettete Crew-Mitglieder zu %s zu transferieren</t>
       <t id="1042">%s: hat %s gerettete Crew-Mitglieder zu %s transferiert</t>
       <t id="1091">%s: \033RKann keine Crew-Mitglieder retten\033X - kein freier Platz für Crew-Mitglieder und auf %s - auch nicht!</t>
+      <t id="1092">%s: \033RKann keine Crew-Mitglieder retten\033X - kein freier Platz an Bord!</t>
       <t id="2001">{1972092402,1} Problem: Andocken an %s für %s ist nicht möglich! Abbruch!</t>
+      <t id="90100">Rettungsreichweite</t>
+      <t id="90110">Zusätzliche maximale Tor-Distanz über dem Limit der Pilotenfähigkeit</t>
+      <t id="90900">Debug</t>
+      <t id="90910">Debug-Stufe</t>
+      <t id="90911">Keine</t>
+      <t id="90912">Debug</t>
+      <t id="90913">Ablaufverfolgung</t>
     </page>
   </add>
 </diff>
