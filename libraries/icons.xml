@@ -7,4 +7,7 @@
   <add sel="/icons" if="/icons/icon[@name='order_rescueship' and @texture='assets\fx\gui\textures\order\order_rescueship.tga']">
     <icon name="order_rescuerangers" texture="assets\fx\gui\textures\order\order_rescueship.tga" height="32" width="32"></icon>
   </add>
+  <add sel="/icons">
+    <icon name="tlt_rescuerangers" texture="extensions\rescuerangers\assets\fx\gui\textures\top_level_tabs\tlt_rescuerangers.tga" height="128" width="128"></icon>
+  </add>
 </diff>

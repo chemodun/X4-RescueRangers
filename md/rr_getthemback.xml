@@ -188,7 +188,7 @@
           </actions>
         </cue>
 
-        <cue name="ProcessCrewAccountingRequest" instantiate="true" version="107">
+        <cue name="ProcessCrewAccountingRequest" instantiate="true" version="200">
           <conditions>
             <!-- param2 = requester, param3 = [ships to be replaced] -->
             <event_object_signalled object="player.entity" param="'rr_entity_transfer'" />
@@ -260,7 +260,7 @@
                 </do_if>
                 <remove_value name="$personIndex" />
               </do_if>
-              <do_elseif value="$personRescuedContainerTag == 'dormitory' and @$personRescuedList.count gt 0">
+              <do_elseif value="($personRescuedContainerTag == 'dormitory' or $personRescuedContainerTag == 'stasis') and @$personRescuedList.count gt 0">
                 <set_value name="$personIndex" exact="0" />
                 <do_if value="$personKey">
                   <set_value name="$personIndex" exact="$personRescuedIndex.indexof.{$personKey}" />
@@ -511,7 +511,7 @@
           </actions>
         </cue>
 
-        <library name="ProcessRecoveryCrew" version="107">
+        <library name="ProcessRecoveryCrew" version="200">
           <actions>
             <set_value name="$commander" exact="@$replacement.commander" />
             <do_if value="@$replacement.toplevelcommander">
@@ -573,13 +573,20 @@
                     <create_list name="$rescuedCrew" />
                     <set_value name="$personIndex" exact="1" />
                     <do_for_each name="$person" in="$data">
-                      <do_if value="@$person.$shipId == @$shipInfo.$id">
+                      <!-- Gone from its container: assigned or dismissed by the player meanwhile -->
+                      <do_if value="@$person.$shipId == @$shipInfo.$id and not @$person.$container.people.{$person.$id}.exists">
+                        <debug_text
+                          chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: %s is no longer on %s (%s), skipped'.
+                          [ player.age, $person.$name, @$person.$container.debugname, @$person.$containerTag ]"
+                        />
+                      </do_if>
+                      <do_elseif value="@$person.$shipId == @$shipInfo.$id">
                         <append_to_list name="$rescuedCrew" exact="$person" />
                         <debug_text
                           chance="$traceChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Person added to Rescued Crew: %s. Current Count: %s'.
                           [ player.age, $person, $rescuedCrew.count ]"
                         />
-                      </do_if>
+                      </do_elseif>
                     </do_for_each>
                     <debug_text
                       chance="$traceChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Rescued Crew count: %s'.[ player.age, $rescuedCrew.count ]"
@@ -725,6 +732,7 @@
                         <sort_list list="$rescuedCrew" sortbyvalue="@loop.element.$skillCombined" sortdescending="true" />
                         <create_list name="$crewToTransfer" />
                         <set_value name="$returnedCount" exact="0" />
+                        <create_list name="$returnedFromStasis" />
                         <do_for_each name="$newCrewMember" in="$rescuedCrew">
                           <set_value name="$person" exact="$newCrewMember" />
                           <debug_text
@@ -743,12 +751,20 @@
                             <set_value name="$pilotTransferred" exact="true" />
                           </do_if>
                           <set_value name="$returnedCount" operation="add" exact="$personTransferred.count" />
+                          <do_if value="$person.$containerTag == 'stasis' and $personTransferred.count == 1">
+                            <append_to_list name="$returnedFromStasis" exact="$person.$id" />
+                          </do_if>
                           <clear_list list="$personTransferred" />
                         </do_for_each>
                         <do_if value="$returnedCount gt 0">
                           <signal_objects object="player.entity" param="'rr_stats'"
                             param2="table[$kind = 'returned', $count = $returnedCount, $sector = $replacement.sector, $other = $replacement]" />
                         </do_if>
+                        <do_if value="$returnedFromStasis.count gt 0">
+                          <signal_objects object="player.entity" param="'rr_stasis_out'"
+                            param2="table[$templates = $returnedFromStasis, $target = $replacement]" />
+                        </do_if>
+                        <remove_value name="$returnedFromStasis" />
                         <remove_value name="$returnedCount" />
                       </do_if>
                       <do_else>
@@ -989,6 +1005,24 @@
           </actions>
         </cue>
 
+        <cue name="SwapPilotRequest" instantiate="true" version="200">
+          <conditions>
+            <!-- param2 = table[$ship, $pilot]; the sender has moved $pilot onto $ship already -->
+            <event_object_signalled object="player.entity" param="'rr_swap_pilot'" />
+            <check_value value="typeof event.param2 == datatype.table" />
+            <check_value value="@event.param2.$ship.isclass.ship" />
+            <check_value value="@event.param2.$ship.people.{event.param2.$pilot}.exists" />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <append_to_list name="$pilotsToSwap"
+              exact="table[$ship = event.param2.$ship, $shipId = event.param2.$ship.idcode, $pilot = event.param2.$pilot, $updated = player.age]" />
+            <debug_text
+              chance="$debugChance" text="'RR_GetThemBack - SwapPilotRequest [%s]: Pilot to swap added: %s'.
+              [ player.age, @$pilotsToSwap.last ]"
+            />
+          </actions>
+        </cue>
 
         <cue name="SwapPilots" instantiate="true" checkinterval="5s" version="107">
           <conditions>

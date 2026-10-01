@@ -1,19 +1,20 @@
 # Changelog
 
-## [1.07] - 2026-09-??
+## [2.00] - 2026-10-??
 
 ### Added
 
-- New order option `Keep rescued on board as crew`: rescued crews' members join the Rescue ship as service crew or marines instead of going to the "Dormitory".
-- `Rescue Rangers` page in the Extension Options, with `Extra max gate distance above the pilot skill limit` (0 to 5) to allow a longer rescue range, and a `Debug Level` setting.
-- `Rescue Rangers` overview in the top menu, right after the map, with three tabs: `Rescue ships` (every Rescue ship and its Mimics with mode, location, home, crew, "Dormitory" load and current state), `Statistics` (crew ejected, rescued, died in space, moved to "Dormitories", joined crews, returned on Replacement Ships, per Rescue ship, and the recent events) and `Settings` (each Rescue ship's range and options, changed in place). The top menu entry can be switched off in the Extension Options.
+- Order option `Keep rescued on board as crew`.
+- `Rescue Rangers` page in the Extension Options: extra rescue range, Stasis defaults, top menu entry, `Debug Level`.
+- `Rescue Rangers` overview in the top menu: Rescue ships, statistics, Stasis and per-ship settings.
+- Stasis: rescued people kept on your stations or on space rented on NPC stations, managed from the overview's `Stasis` tab, and returned on Replacement Ships too.
 - Requires `Mod Support APIs`, `Options Helper` and `Print Extension List`.
+- Czech, Polish, Turkish and Bulgarian translations.
 
 ### Changed
 
 - Nothing is written to the game's debug log unless `Debug Level` is set to `Debug` or `Trace`.
-
-- When the Rescue ship and its "Dormitory" are both full, the Rescue ship no longer calls you every few minutes: it shows one on-screen notice (and one logbook entry) until there is free space again.
+- A full Rescue ship and "Dormitory" no longer call you every few minutes: one notice until there is free space again.
 - Workshop sync is off by default, as for other extensions.
 
 ### Fixed
@@ -30,6 +31,10 @@
 - `Return them back on Replacement Ship`: crew members were tracked by name, so two people with the same name could be skipped or mixed up. They are tracked one by one now; a save from an older version is converted on load.
 - The order can no longer be added to a repeat orders loop.
 - A Rescue ship destroyed while on the order wrote errors to the game's debug log.
+- A Rescue ship undocking from a station other than its Home Station wrote an error to the game's debug log.
+- The Traditional Chinese translation showed Bengali text in several places.
+- Japanese, Korean and Simplified Chinese: some logbook messages put the person, sector, count or destination in the wrong place, or left one out.
+- The "cannot dock" message named the Rescue ship and the "dormitory" ship the wrong way round.
 
 ## [1.06] - 2025-06-16
 

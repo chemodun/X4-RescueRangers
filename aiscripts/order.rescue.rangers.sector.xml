@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="107"
+<aiscript name="order.rescue.rangers.sector" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="200"
   priority="1">
   <order id="RescueRangers" name="{1972092402, 1}" description="{1972092402, 2}" category="navigation" infinite="true" allowinloop="false">
     <params>
@@ -38,6 +38,14 @@
         <patch sinceversion="107" value="false" early="true" setvariable="true" />
       </param>
       <param name="recordActionsToLogBook" type="bool" default="true" text="{1972092402, 109}" />
+      <!-- 0 = the Options default, 1 = off, 2 = overflow, 3 = instead of the Dormitory; kept after the params the overview reads by position -->
+      <param name="stasisMode" type="number" default="0" text="{1972092402, 108}">
+        <input_param name="startvalue" value="0" />
+        <input_param name="min" value="0" />
+        <input_param name="max" value="3" />
+        <input_param name="step" value="1" />
+        <patch sinceversion="200" value="0" early="true" setvariable="true" />
+      </param>
       <param name="isStartedByPlayer" type="internal" default="true" text="Started by Player" />
       <param name="debugchance" type="bool" default="0" advanced="true" text="{1041, 10086}" comment="Print debug output">
         <input_param name="truevalue" value="100" />
@@ -101,6 +109,113 @@
       <actions name="SetShipTypesToExclude">
         <set_value name="$shipTypesToExclude"
           exact="[shiptype.xsdrone, shiptype.distressdrone, shiptype.smalldrone, shiptype.personalvehicle, shiptype.escapepod]" />
+      </actions>
+      <actions name="ResolveStasisMode">
+        <set_value name="$stasisNow"
+          exact="if @$stasisMode == 1 then 'off' else if @$stasisMode == 2 then 'overflow' else if @$stasisMode == 3 then 'instead'
+            else @player.entity.$RescueRangersConfig.$stasisMode" />
+        <do_if value="$stasisNow != 'overflow' and $stasisNow != 'instead'">
+          <set_value name="$stasisNow" exact="'off'" />
+          <remove_value name="this.assignedcontrolled.pilot.$rescueRangersStasisNoPlace" />
+        </do_if>
+      </actions>
+      <actions name="FindStasisPlace">
+        <!-- In: $stasisNeed. Out: $stasisPlace, a station or null. MD FindPlace's order, plus this ship's blacklists and docks -->
+        <set_value name="$stasisPlace" exact="null" />
+        <do_if value="not $stasisFailed?">
+          <create_list name="$stasisFailed" />
+        </do_if>
+        <create_list name="$stasisFailedKept" />
+        <create_list name="$stasisSkip" />
+        <do_for_each name="$stasisEntry" in="$stasisFailed">
+          <do_if value="@$stasisEntry.$station.exists and player.age lt $stasisEntry.$at + 3600">
+            <append_to_list name="$stasisFailedKept" exact="$stasisEntry" />
+            <append_to_list name="$stasisSkip" exact="$stasisEntry.$station" />
+          </do_if>
+        </do_for_each>
+        <set_value name="$stasisFailed" exact="$stasisFailedKept" />
+        <include_interrupt_actions ref="GetBlacklistgroup" />
+        <set_value name="$stasisFriendJumps"
+          exact="if player.entity.$RescueRangersConfig? and player.entity.$RescueRangersConfig.$stasisFriendJumps? then player.entity.$RescueRangersConfig.$stasisFriendJumps else 2" />
+        <set_value name="$stasisDockSize" exact="this.assignedcontrolled.docksize" />
+        <create_list name="$stasisCandidates" />
+        <set_value name="$stasisPlaces" exact="@player.entity.$RescueRangersStasis.$places" />
+        <do_if value="typeof $stasisPlaces == datatype.list">
+          <do_for_each name="$stasisEntry" in="$stasisPlaces">
+            <set_value name="$stasisStation" exact="@$stasisEntry.$station" />
+            <do_if value="not @$stasisStation.isoperational or $stasisStation.people.free le 0 or $stasisSkip.indexof.{$stasisStation} gt 0">
+              <continue />
+            </do_if>
+            <do_if value="not $stasisStation.dockingenabled or not $stasisStation.dockingallowed.{this.assignedcontrolled}
+              or not @$stasisStation.dock.{$stasisDockSize}.isdockingallowed or @$stasisStation.dock.{$stasisDockSize}.todockpos == null">
+              <debug_text chance="$traceChance"
+                text="'RescueRangers [%s at %s, Mode: %s] - Stasis place %s skipped, no dock: enabled %s, allowed %s, dock %s, dock allowed %s'
+                  .[
+                    this.assignedcontrolled.debugname,
+                    this.assignedcontrolled.sector.knownname,
+                    @$rescueMode,
+                    $stasisStation.debugname,
+                    $stasisStation.dockingenabled,
+                    $stasisStation.dockingallowed.{this.assignedcontrolled},
+                    @$stasisStation.dock.{$stasisDockSize},
+                    @$stasisStation.dock.{$stasisDockSize}.isdockingallowed,
+                  ]" />
+              <continue />
+            </do_if>
+            <do_if value="$stasisStation.isblacklisted.{blacklisttype.objectactivity}.{$blacklistgroup}.{this.assignedcontrolled}
+              or $stasisStation.sector.isblacklisted.{blacklisttype.sectoractivity}.{$blacklistgroup}.{this.assignedcontrolled}
+              or $stasisStation.sector.isblacklisted.{blacklisttype.sectortravel}.{$blacklistgroup}.{this.assignedcontrolled}">
+              <debug_text chance="$traceChance"
+                text="'RescueRangers [%s at %s, Mode: %s] - Stasis place %s skipped: blacklisted for %s'
+                  .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, $stasisStation.debugname, $blacklistgroup]" />
+              <continue />
+            </do_if>
+            <set_value name="$stasisDistance" exact="this.assignedcontrolled.gatedistance.{$stasisStation}.{$blacklistgroup}.{this.assignedcontrolled}" />
+            <do_if value="$stasisDistance lt 0">
+              <debug_text chance="$traceChance"
+                text="'RescueRangers [%s at %s, Mode: %s] - Stasis place %s skipped: no path for %s'
+                  .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, $stasisStation.debugname, $blacklistgroup]" />
+              <continue />
+            </do_if>
+            <!-- Player stations first; a friend's lease wins unless a dock-only one is more than $stasisFriendJumps closer -->
+            <append_to_list name="$stasisCandidates"
+              exact="table[$station = $stasisStation, $free = $stasisStation.people.free,
+                $order = $stasisDistance + (if @$stasisEntry.$isLease then 1000 else 0) + (if @$stasisEntry.$friend then 0 else $stasisFriendJumps + 0.5)]" />
+          </do_for_each>
+        </do_if>
+        <sort_list list="$stasisCandidates" sortbyvalue="loop.element.$order" />
+        <do_for_each name="$stasisCandidate" in="$stasisCandidates">
+          <do_if value="$stasisCandidate.$free ge $stasisNeed">
+            <set_value name="$stasisPlace" exact="$stasisCandidate.$station" />
+            <break />
+          </do_if>
+        </do_for_each>
+        <do_if value="$stasisPlace == null and $stasisCandidates.count gt 0">
+          <set_value name="$stasisPlace" exact="$stasisCandidates.{1}.$station" />
+        </do_if>
+        <debug_text chance="$debugChance"
+          text="'RescueRangers [%s at %s, Mode: %s] - Stasis place for %s: %s of %s places fit, picked %s (free %s), skipped as failed: %s'
+            .[
+              this.assignedcontrolled.debugname,
+              this.assignedcontrolled.sector.knownname,
+              @$rescueMode,
+              $stasisNeed,
+              $stasisCandidates.count,
+              if typeof $stasisPlaces == datatype.list then $stasisPlaces.count else 0,
+              @$stasisPlace.debugname,
+              @$stasisPlace.people.free,
+              $stasisSkip.count,
+            ]" />
+        <remove_value name="$stasisCandidate" />
+        <remove_value name="$stasisCandidates" />
+        <remove_value name="$stasisDistance" />
+        <remove_value name="$stasisStation" />
+        <remove_value name="$stasisEntry" />
+        <remove_value name="$stasisPlaces" />
+        <remove_value name="$stasisDockSize" />
+        <remove_value name="$stasisFriendJumps" />
+        <remove_value name="$stasisSkip" />
+        <remove_value name="$stasisFailedKept" />
       </actions>
     </library>
     <handler ref="AttackHandler" />
@@ -325,6 +440,21 @@
     </handler>
     <handler>
       <conditions>
+        <event_object_signalled object="this.assignedcontrolled" param="'RescueRangersRestart'" />
+        <check_value
+          value="this.assignedcontrolled.order == this.assignedcontrolled.defaultorder and (@this.assignedcontrolled.order.id == 'RescueRangers' or @this.assignedcontrolled.order.id == 'Assist')" />
+      </conditions>
+      <actions>
+        <debug_text chance="$debugChance"
+          text="'RescueRangers [%s at %s, Mode: %s] - Restarting after the update from version %s, order %s'
+            .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, @$scriptVersion, @this.assignedcontrolled.order.id]" />
+        <!-- the default order (Assist after its wait) re-runs this script from init; the flag skips init's "started" logbook entry -->
+        <set_value name="this.assignedcontrolled.pilot.$rescueRangersRestartAt" exact="player.age" />
+        <abort_called_scripts resume="finish" />
+      </actions>
+    </handler>
+    <handler>
+      <conditions>
         <event_object_changed_sector object="@$shipDormitory" />
       </conditions>
       <actions>
@@ -363,7 +493,7 @@
     </handler>
   </interrupts>
   <init>
-    <set_value name="$scriptVersion" exact="107" />
+    <set_value name="$scriptVersion" exact="200" />
     <include_interrupt_actions ref="ReadDebugChances" />
 
     <set_value name="$rescueMode" exact="if $homeStation == null then 'fleet' else 'sector'" />
@@ -375,6 +505,12 @@
     <set_value name="$textTargetPerson" exact="''" />
     <set_value name="$textTargetSector" exact="''" />
     <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
+
+    <!-- set by the restart on load; the re-run is not a player start -->
+    <do_if value="@this.assignedcontrolled.pilot.$rescueRangersRestartAt">
+      <set_value name="$isStartedByPlayer" exact="false" />
+      <remove_value name="this.assignedcontrolled.pilot.$rescueRangersRestartAt" />
+    </do_if>
 
     <do_if value="this.assignedcontrolled.pilot.$rescueData?">
       <do_if value="@this.assignedcontrolled.pilot.$rescueData.$timeStamp ge (player.age - 300)">
@@ -536,6 +672,10 @@
       <set_value name="$skipDockingMessageAfterScriptUpdate" exact="true" />
     </do_if>
     <set_value name="$scriptVersion" exact="107" />
+  </patch>
+  <patch sinceversion="200">
+    <!-- resume and abort_called_scripts are not allowed in a patch; init sets everything on the restart -->
+    <signal_objects object="this.assignedcontrolled" param="'RescueRangersRestart'" />
   </patch>
 
   <attention min="unknown">
@@ -714,17 +854,17 @@
             <resume label="start" />
           </do_if>
           <do_else>
-            <run_script name="'move.undock'" result="$undocked">
+            <run_script name="'move.undock'">
               <param name="debugchance" value="$traceChance" />
               <param name="skipwait" value="true" />
             </run_script>
             <debug_text chance="$traceChance"
-              text="'RescueRangers [%s at %s, Mode: %s] - Undocked result: %s'
+              text="'RescueRangers [%s at %s, Mode: %s] - Undocked: %s'
                 .[
                   this.assignedcontrolled.debugname,
                   this.assignedcontrolled.sector.knownname,
                   @$rescueMode,
-                  @$undocked,
+                  not this.assignedcontrolled.dock,
                 ]"
             />
           </do_else>
@@ -1074,6 +1214,16 @@
         <include_interrupt_actions ref="AssignRescuedRoles" />
       </do_if>
 
+      <include_interrupt_actions ref="ResolveStasisMode" />
+      <do_if value="@$stasisUnavailable">
+        <!-- toStasis found no place: this pass goes the Dormitory way -->
+        <set_value name="$stasisNow" exact="'off'" />
+        <set_value name="$stasisUnavailable" exact="false" />
+      </do_if>
+      <do_if value="$stasisNow == 'instead' and this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
+        <resume label="toStasis" />
+      </do_if>
+
       <do_if value="this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
         <debug_text chance="$debugChance"
           text="'RescueRangers [%s at %s, Mode: %s] - This ship rescued people: %s, and plan to transfer them to dormitory: %s at %s, with free %s and unassigned: %s'
@@ -1159,6 +1309,10 @@
         </do_if>
       </do_if>
 
+      <do_if value="$stasisNow == 'overflow' and this.assignedcontrolled.people.free le 0 and this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
+        <resume label="toStasis" />
+      </do_if>
+
       <!-- Rescued kept as crew never move to the dormitory, so a full ship alone stops the rescue -->
       <do_if
         value="this.assignedcontrolled.people.free le 0 and (@$rescuedJoinCrew or $shipDormitory == null or not $shipDormitory.isoperational or $shipDormitory.people.free le 0)">
@@ -1189,6 +1343,120 @@
         <set_value name="$noSpaceNotified" exact="false" />
       </do_else>
 
+      <resume label="start" />
+
+      <label name="toStasis" />
+
+      <set_value name="$stasisNeed" exact="this.assignedcontrolled.people.{entityrole.unassigned}.count" />
+      <do_if value="$stasisNeed le 0">
+        <resume label="start" />
+      </do_if>
+      <include_interrupt_actions ref="FindStasisPlace" />
+      <do_if value="$stasisPlace == null">
+        <debug_text chance="$debugChance"
+          text="'RescueRangers [%s at %s, Mode: %s] - No Stasis place for %s rescued (Stasis: %s), the Dormitory way takes them'
+            .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, $stasisNeed, $stasisNow]" />
+        <signal_objects object="player.entity" param="'rr_stasis_need'" param2="table[$ranger = this.assignedcontrolled, $need = $stasisNeed]" />
+        <!-- on the pilot: survives the restart after every rescue; the overview reads it -->
+        <do_if value="not @this.assignedcontrolled.pilot.$rescueRangersStasisNoPlace and $recordActionsToLogBook">
+          <write_to_logbook category="general" title="$textTitle" text="{1972092402, 4062}.[$textUnit, $stasisNeed]"
+            interaction="showonmap" object="this.assignedcontrolled" />
+        </do_if>
+        <set_value name="this.assignedcontrolled.pilot.$rescueRangersStasisNoPlace" exact="$stasisNeed" />
+        <set_value name="$stasisUnavailable" exact="true" />
+        <resume label="transferPeople" />
+      </do_if>
+      <remove_value name="this.assignedcontrolled.pilot.$rescueRangersStasisNoPlace" />
+      <set_value name="$textStasis" exact="{1972092402, 1011}.[$stasisPlace.knownname, $stasisPlace.idcode]" />
+
+      <do_if
+        value="(this.assignedcontrolled.dock and this.assignedcontrolled.dock.container == $stasisPlace) or (this.assignedcontrolled.parkedat and (this.assignedcontrolled.parkedat == $stasisPlace or this.assignedcontrolled.parkedat.hascontext.{$stasisPlace}))"
+        negate="true">
+        <do_if value="$recordActionsToLogBook">
+          <write_to_logbook category="general" title="$textTitle" text="{1972092402, 4060}.[$textUnit, $textStasis, $stasisNeed]"
+            interaction="showonmap" object="this.assignedcontrolled" />
+        </do_if>
+        <do_if value="this.assignedcontrolled.dock">
+          <run_script name="'move.undock'">
+            <param name="debugchance" value="$traceChance" />
+            <param name="skipwait" value="true" />
+          </run_script>
+        </do_if>
+        <include_interrupt_actions ref="GetThemBackRefresh" />
+        <!-- internalorder: the flight honours the blacklists the pick used -->
+        <run_script name="'order.dock'" result="$docked">
+          <param name="destination" value="$stasisPlace" />
+          <param name="internalorder" value="true" />
+          <param name="debugchance" value="$traceChance" />
+        </run_script>
+        <include_interrupt_actions ref="GetThemBackRefresh" />
+      </do_if>
+
+      <do_if
+        value="(this.assignedcontrolled.dock and this.assignedcontrolled.dock.container == $stasisPlace) or (this.assignedcontrolled.parkedat and (this.assignedcontrolled.parkedat == $stasisPlace or this.assignedcontrolled.parkedat.hascontext.{$stasisPlace}))"
+        negate="true">
+        <debug_text chance="$debugChance"
+          text="'RescueRangers [%s at %s, Mode: %s] - Not docked at Stasis place %s (result %s, dock %s), skipped for an hour'
+            .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, @$stasisPlace.debugname, @$docked, @this.assignedcontrolled.dock.container.debugname]" />
+        <append_to_list name="$stasisFailed" exact="table[$station = $stasisPlace, $at = player.age]" />
+        <resume label="transferPeople" />
+      </do_if>
+
+      <set_value name="$stasisRoom" exact="[this.assignedcontrolled.people.{entityrole.unassigned}.count, $stasisPlace.people.free].min" />
+      <create_list name="$peopleList" />
+      <set_value name="$unassignedList" exact="this.assignedcontrolled.availablepeople.{entityrole.unassigned}.list" />
+      <do_for_each name="$person" in="$unassignedList">
+        <do_if value="$peopleList.count ge $stasisRoom">
+          <break />
+        </do_if>
+        <append_to_list name="$peopleList" exact="$person" />
+      </do_for_each>
+      <do_if value="$peopleList.count gt 0">
+        <transfer_people result="$personsTransferred" object="$stasisPlace" otherobject="this.assignedcontrolled" receiveworkforce="false">
+          <existing_people people="$peopleList" />
+        </transfer_people>
+      </do_if>
+      <create_list name="$stasisMoved" />
+      <do_for_each name="$person" in="$peopleList">
+        <do_if value="@$stasisPlace.people.{$person}.exists">
+          <append_to_list name="$stasisMoved" exact="$person" />
+        </do_if>
+      </do_for_each>
+      <debug_text chance="$debugChance"
+        text="'RescueRangers [%s at %s, Mode: %s] - Stasis: %s of %s rescued moved to %s (room %s). Left on board: %s, station free: %s'
+          .[
+            this.assignedcontrolled.debugname,
+            this.assignedcontrolled.sector.knownname,
+            @$rescueMode,
+            $stasisMoved.count,
+            $stasisNeed,
+            $stasisPlace.debugname,
+            $stasisRoom,
+            this.assignedcontrolled.people.{entityrole.unassigned}.count,
+            $stasisPlace.people.free,
+          ]" />
+      <do_if value="$stasisMoved.count gt 0">
+        <signal_objects object="player.entity" param="'rr_stasis_in'"
+          param2="table[$station = $stasisPlace, $ranger = this.assignedcontrolled, $templates = $stasisMoved]" />
+        <do_if value="@$getThemBack">
+          <do_for_each name="$person" in="$stasisMoved">
+            <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$stasisPlace.people.{$person}.name"
+              param3="table[$container = $stasisPlace, $containerTag = 'stasis', $template = $person]" />
+          </do_for_each>
+        </do_if>
+        <do_if value="$recordActionsToLogBook">
+          <write_to_logbook category="general" title="$textTitle" text="{1972092402, 4061}.[$textUnit, $textStasis, $stasisMoved.count]"
+            interaction="showonmap" object="this.assignedcontrolled" />
+        </do_if>
+      </do_if>
+      <do_elseif value="$stasisRoom gt 0">
+        <append_to_list name="$stasisFailed" exact="table[$station = $stasisPlace, $at = player.age]" />
+      </do_elseif>
+      <remove_value name="$stasisMoved" />
+      <remove_value name="$stasisRoom" />
+      <do_if value="this.assignedcontrolled.people.{entityrole.unassigned}.count gt 0">
+        <resume label="transferPeople" />
+      </do_if>
       <resume label="start" />
 
       <debug_text chance="$traceChance"

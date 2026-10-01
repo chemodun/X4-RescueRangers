@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- France -->
+<!-- French -->
 <diff>
   <add sel="/language">
-    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector" >
+    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector">
       <t id="1">Rangers de Sauvetage</t>
       <t id="2">Rangers de Sauvetage : Sauvez vos équipages dans l'espace</t>
       <t id="101">Secteur d'origine</t>
@@ -12,6 +12,7 @@
       <t id="105">Priorité par oxygène restant</t>
       <t id="106">Ramenez-les sur le vaisseau de remplacement</t>
       <t id="107">Garder les rescapés à bord comme équipage</t>
+      <t id="108">Stase : 0 selon les Options, 1 désactivée, 2 si plein, 3 à la place du Dortoir</t>
       <t id="109">Enregistrer dans le journal de bord</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -27,7 +28,7 @@
       <t id="1042">%s : a transféré %s membres d'équipage sauvés à %s</t>
       <t id="1091">%s : \033RImpossible de sauver les membres d'équipage\033X - pas de place libre pour les membres d'équipage et sur %s - aussi !</t>
       <t id="1092">%s : \033RImpossible de sauver les membres d'équipage\033X - pas de place libre à bord !</t>
-      <t id="2001">{1972092402,1} problème : l'amarrage sur %s pour %s n'est pas possible ! Abandon !</t>
+      <t id="2001">{1972092402,1} problème : %s ne peut pas s'amarrer à %s ! Abandon !</t>
       <t id="3000">Vaisseaux de sauvetage : leur état, leurs statistiques et les paramètres de leur ordre</t>
       <t id="3001">Vaisseaux de sauvetage</t>
       <t id="3010">Mode</t>
@@ -39,6 +40,7 @@
       <t id="3016">Intégrés à l'équipage</t>
       <t id="3017">Suit les paramètres de %s</t>
       <t id="3018">La compétence du pilote ne permet pas une plus grande portée</t>
+      <t id="3019">Tous les vaisseaux de sauvetage</t>
       <t id="3030">Sauvetage en cours</t>
       <t id="3031">En route</t>
       <t id="3040">Équipage éjecté des vaisseaux perdus</t>
@@ -63,10 +65,81 @@
       <t id="3059">Rien d'enregistré pour l'instant.</t>
       <t id="3061">il y a %s</t>
       <t id="3062">Par heure de jeu, les dernières 24 heures</t>
+      <t id="3063">Une modification s'applique à chaque vaisseau de sauvetage dont les paramètres diffèrent et redémarre son ordre Rangers de Sauvetage. La portée est plafonnée par la compétence de chaque pilote ; les vaisseaux en mode Imite suivent leur commandant.</t>
+      <t id="3064">Transférés en Stase</t>
+      <t id="3065">%s a transféré %s rescapés en Stase sur %s</t>
+      <t id="3066">Vers la Stase</t>
+      <t id="3067">Aucune place en Stase</t>
+      <t id="3068">Rescapés en attente d'une place en Stase : %s. Voir l'onglet Stase.</t>
+      <t id="4000">Stase</t>
+      <t id="4001">\033O{1972092402, 1} : {1972092402, 4000}\033X</t>
+      <t id="4010">Espace loué pour les personnes en Stase sur %s pour %s {1001,101} par jour</t>
+      <t id="4011">Loyer de la Stase sur %s payé : %s {1001,101}</t>
+      <t id="4012">Pas assez d'argent pour le loyer de la Stase sur %s : dette %s {1001,101}</t>
+      <t id="4013">Dette de Stase pour %s payée : %s {1001,101}</t>
+      <t id="4014">Location de l'espace de Stase sur %s terminée</t>
+      <t id="4015">Espace loué automatiquement pour les personnes en Stase sur %s pour %s {1001,101} par jour</t>
+      <t id="4020">Personnes transférées de la Stase sur %s vers %s : %s</t>
+      <t id="4021">La relation avec %s est trop faible pour garder des personnes en Stase sur %s</t>
+      <t id="4022">Personnes en Stase sur %s sans place ailleurs : %s. Elles restent, et l'endroit n'accepte plus de nouveaux arrivants</t>
+      <t id="4023">Perte de %s, et des personnes qui s'y trouvaient en Stase : %s</t>
+      <t id="4024">Le loyer de la Stase sur %s est impayé : dette %s {1001,101}</t>
+      <t id="4030">Impossible de louer un espace de Stase sur %s : %s {1001,101} nécessaires</t>
+      <t id="4031">Impossible de louer un espace de Stase sur %s : vos vaisseaux n'ont pas le droit de s'y amarrer</t>
+      <t id="4032">Impossible de louer un espace de Stase sur %s : pas d'espace libre pour des personnes</t>
+      <t id="4033">Impossible de mettre fin à la location sur %s. Personnes sans place ailleurs : %s</t>
+      <t id="4040">Personnes de la Stase affectées à %s : %s</t>
+      <t id="4041">Personne de la Stase n'a pu être affecté à %s : pas d'espace libre pour l'équipage</t>
+      <t id="4042">Personnes de la Stase renvoyées : %s</t>
+      <t id="4043">%s est désormais le gestionnaire de %s ; %s, l'ancien gestionnaire, y est en Stase</t>
+      <t id="4044">%s n'a pas pu devenir le gestionnaire de %s et reste en Stase</t>
+      <t id="4050">Quand le vaisseau et le Dortoir sont pleins</t>
+      <t id="4051">À la place du Dortoir</t>
+      <t id="4060">%s : en route vers la Stase sur %s avec des rescapés : %s</t>
+      <t id="4061">%s : rescapés placés en Stase sur %s : %s</t>
+      <t id="4062">%s : pas de place en Stase pour les rescapés : %s</t>
+      <t id="4100">Personne en Stase pour l'instant.</t>
+      <t id="4101">Vaisseau perdu</t>
+      <t id="4102">Placé en Stase</t>
+      <t id="4103">Sauvé par</t>
+      <t id="4104">Lieux de Stase</t>
+      <t id="4105">Libre</t>
+      <t id="4106">Personne ne correspond au filtre.</t>
+      <t id="4107">Payé pour %s</t>
+      <t id="4108">Dette : %s {1001,101}</t>
+      <t id="4109">Relation trop faible : les personnes partent ailleurs</t>
+      <t id="4110">Fin une fois la dette payée</t>
+      <t id="4111">Amarrage interdit : n'accepte plus de nouveaux arrivants</t>
+      <t id="4112">Vide : mettez fin à la location pour cesser de payer le loyer</t>
+      <t id="4113">Un jour de loyer ici dépasse votre limite de location automatique : il reste facturé, la limite ne s'applique qu'aux nouvelles locations</t>
+      <t id="4114">Mettre fin à la location</t>
+      <t id="4115">Louer de l'espace sur des stations PNJ</t>
+      <t id="4116">Loyer : %s {1001,101} par jour pour l'espace libre d'une station</t>
+      <t id="4117">Location automatique : quand un jour de loyer représente au plus %s%% de votre argent</t>
+      <t id="4118">Location automatique : désactivée, voir "Extension Options"</t>
+      <t id="4119">Louer</t>
+      <t id="4120">Trouver des stations</t>
+      <t id="4121">%s - %s, %s, sauts : %s, libre : %s</t>
+      <t id="4122">Aucune station à louer trouvée pour l'instant : appuyez sur Trouver des stations</t>
+      <t id="4123">%s a besoin d'espace de Stase pour des rescapés : %s. Proposé : %s</t>
+      <t id="4124">Aucun lieu de Stase pour l'instant : les stations du joueur avec de l'espace libre sont utilisées, les stations PNJ une fois louées.</t>
+      <t id="4125">Renvoyer définitivement de la Stase les personnes sélectionnées ? Sélectionnées : %s</t>
+      <t id="4126">Tout sélectionner</t>
+      <t id="4127">Vaisseau, ou station pour un gestionnaire, où affecter les personnes sélectionnées</t>
+      <t id="4128">Aucun vaisseau avec de l'espace libre pour l'équipage</t>
+      <t id="4129">Aucune station avec de l'espace libre</t>
+      <t id="4130">%s, libre : %s</t>
+      <t id="4131">Affecter comme</t>
+      <t id="4132">Aptitude</t>
+      <t id="4133">%s, libre : %s, gestionnaire : %s %s</t>
+      <t id="4134">La station dont la personne sélectionnée deviendra le gestionnaire ; le gestionnaire en place passe alors en Stase sur cette station</t>
       <t id="90100">Portée de sauvetage</t>
       <t id="90110">Distance maximale de la porte en plus de la limite de compétence du pilote</t>
       <t id="90200">Vue d'ensemble</t>
       <t id="90210">Afficher la vue d'ensemble Rangers de Sauvetage dans le menu supérieur</t>
+      <t id="90310">Transférer les rescapés en Stase</t>
+      <t id="90320">Nombre de sauts supplémentaires dont un emplacement loué sur une station amicale peut être plus éloigné qu'un emplacement sur une station neutre</t>
+      <t id="90330">Louer automatiquement un emplacement sur une station PNJ si un jour de loyer représente au plus ce pourcentage de votre argent \(0 : jamais\)</t>
       <t id="90900">Débogage</t>
       <t id="90910">Niveau de débogage</t>
       <t id="90911">Aucun</t>

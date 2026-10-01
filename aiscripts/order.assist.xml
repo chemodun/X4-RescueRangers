@@ -13,6 +13,7 @@
           <param name="getThemBack" value="$orderdef.$getThemBack" />
           <param name="rescuedJoinCrew" value="$orderdef.$rescuedJoinCrew" />
           <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
+          <param name="stasisMode" value="if @$orderdef.$stasisMode then $orderdef.$stasisMode else 0" />
         </create_order>
       </do_if>
       <do_else>
@@ -24,6 +25,7 @@
         <set_value name="$orderdef.$getThemBack" exact="$order.$getThemBack" />
         <set_value name="$orderdef.$rescuedJoinCrew" exact="@$order.$rescuedJoinCrew" />
         <set_value name="$orderdef.$recordActionsToLogBook" exact="$order.$recordActionsToLogBook" />
+        <set_value name="$orderdef.$stasisMode" exact="@$order.$stasisMode" />
         <run_script name="$scriptname">
           <param name="homeSector" value="$orderdef.$homeSector" />
           <param name="maxDistanceAround" value="$orderdef.$maxDistanceAround" />
@@ -33,6 +35,7 @@
           <param name="getThemBack" value="$orderdef.$getThemBack" />
           <param name="rescuedJoinCrew" value="$orderdef.$rescuedJoinCrew" />
           <param name="recordActionsToLogBook" value="$orderdef.$recordActionsToLogBook" />
+          <param name="stasisMode" value="if @$orderdef.$stasisMode then $orderdef.$stasisMode else 0" />
         </run_script>
       </do_else>
     </do_elseif>

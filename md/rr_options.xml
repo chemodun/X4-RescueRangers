@@ -4,17 +4,20 @@
     <cue name="Main" version="107">
       <cues>
 
-        <library name="Defaults" version="107">
+        <library name="Defaults" version="200">
           <actions>
             <set_value name="$cfg" exact="table[
               $debugLevel = 'none',
               $extraRange = 0,
               $topMenuIcon = 1,
+              $stasisMode = 'off',
+              $stasisFriendJumps = 2,
+              $stasisAutoRentPercent = 0,
             ]" />
           </actions>
         </library>
 
-        <cue name="RegisterMenu" instantiate="true" version="107">
+        <cue name="RegisterMenu" instantiate="true" version="200">
           <conditions>
             <event_cue_signalled cue="md.Simple_Menu_API.Reloaded" />
           </conditions>
@@ -43,7 +46,7 @@
           </actions>
         </cue>
 
-        <cue name="OptionsMenu" instantiate="true" version="107">
+        <cue name="OptionsMenu" instantiate="true" version="200">
           <conditions>
             <event_cue_signalled />
           </conditions>
@@ -65,6 +68,52 @@
                 <param name="colSpan" value="12" />
                 <param name="min" value="0" />
                 <param name="max" value="5" />
+                <param name="step" value="1" />
+                <param name="data" value="$cfg" />
+                <param name="handle" value="HandleSlider" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092402, 4000}" />
+              </run_actions>
+              <set_value name="$stasisModeOptions" exact="[
+                table[$text = {1001, 7726}, $value = 'off'],
+                table[$text = {1972092402, 4050}, $value = 'overflow'],
+                table[$text = {1972092402, 4051}, $value = 'instead']
+              ]" />
+              <set_value name="$stasisModeIndex" exact="['off', 'overflow', 'instead'].indexof.{@$cfg.$stasisMode}" />
+              <do_if value="$stasisModeIndex == 0">
+                <set_value name="$stasisModeIndex" exact="1" />
+              </do_if>
+              <run_actions ref="md.Options_Helper.Add_Dropdown">
+                <param name="id" value="'stasisMode'" />
+                <param name="options" value="$stasisModeOptions" />
+                <param name="currentIndex" value="$stasisModeIndex" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="6" />
+                <param name="text" value="{1972092402, 90310}" />
+                <param name="dropdownColSpan" value="6" />
+                <param name="handle" value="HandleDropdown" />
+              </run_actions>
+              <remove_value name="$stasisModeOptions" />
+              <remove_value name="$stasisModeIndex" />
+              <run_actions ref="md.Options_Helper.Add_Slider">
+                <param name="id" value="'stasisFriendJumps'" />
+                <param name="text" value="{1972092402, 90320}" />
+                <param name="colSpan" value="12" />
+                <param name="min" value="0" />
+                <param name="max" value="5" />
+                <param name="step" value="1" />
+                <param name="data" value="$cfg" />
+                <param name="handle" value="HandleSlider" />
+              </run_actions>
+              <run_actions ref="md.Options_Helper.Add_Slider">
+                <param name="id" value="'stasisAutoRentPercent'" />
+                <param name="text" value="{1972092402, 90330}" />
+                <param name="colSpan" value="12" />
+                <param name="min" value="0" />
+                <param name="max" value="100" />
                 <param name="step" value="1" />
                 <param name="data" value="$cfg" />
                 <param name="handle" value="HandleSlider" />
@@ -115,7 +164,7 @@
           </actions>
         </cue>
 
-        <cue name="HandleSlider" instantiate="true" version="107">
+        <cue name="HandleSlider" instantiate="true" version="200">
           <conditions>
             <event_cue_signalled />
           </conditions>
@@ -123,8 +172,10 @@
             <set_value name="$resultTable" exact="player.entity.$RescueRangersConfig" />
             <include_actions ref="md.Options_Helper.Process_Slider_Changed" />
             <remove_value name="$resultTable" />
-            <!-- The slider reports a float; the order's gate distance is an integer -->
-            <set_value name="player.entity.$RescueRangersConfig.$extraRange" exact="(player.entity.$RescueRangersConfig.$extraRange)i" />
+            <!-- The slider reports a float; every slider here holds an integer -->
+            <set_value name="$valueId" exact="event.param.$echo.$valueId" />
+            <set_value name="player.entity.$RescueRangersConfig.{$valueId}" exact="(player.entity.$RescueRangersConfig.{$valueId})i" />
+            <remove_value name="$valueId" />
           </actions>
         </cue>
 

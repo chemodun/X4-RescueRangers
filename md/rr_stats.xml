@@ -8,7 +8,7 @@
       <cues>
 
         <!-- player.entity.$RescueRangersStats holds strings and numbers only: ui/rr_overview.lua reads it from the blackboard -->
-        <library name="EnsureStats" version="107">
+        <library name="EnsureStats" version="200">
           <actions>
             <do_if value="not player.entity.$RescueRangersStats?">
               <set_value name="player.entity.$RescueRangersStats"
@@ -18,6 +18,7 @@
                   $rescued = 0,
                   $lost = 0,
                   $toDormitory = 0,
+                  $toStasis = 0,
                   $joinedCrew = 0,
                   $returned = 0,
                   $rangers = [],
@@ -25,6 +26,9 @@
                   $hours = []
                 ]" />
             </do_if>
+            <do_elseif value="not player.entity.$RescueRangersStats.$toStasis?">
+              <set_value name="player.entity.$RescueRangersStats.$toStasis" exact="0" />
+            </do_elseif>
           </actions>
         </library>
 
@@ -38,7 +42,7 @@
         </library>
 
         <!-- In: $event = table[$kind, $count, $ranger, $person, $sector, $other]; $kind is one of the counter names -->
-        <library name="Record" version="107">
+        <library name="Record" version="200">
           <actions>
             <include_actions ref="EnsureStats" />
             <set_value name="$stats" exact="player.entity.$RescueRangersStats" />
@@ -69,9 +73,12 @@
                 </do_if>
               </do_for_each>
               <do_if value="$rangerStats == null">
-                <set_value name="$rangerStats" exact="table[$id = $event.$ranger.idcode, $rescued = 0, $toDormitory = 0, $joinedCrew = 0, $last = 0]" />
+                <set_value name="$rangerStats" exact="table[$id = $event.$ranger.idcode, $rescued = 0, $toDormitory = 0, $toStasis = 0, $joinedCrew = 0, $last = 0]" />
                 <append_to_list name="$stats.$rangers" exact="$rangerStats" />
               </do_if>
+              <do_elseif value="not $rangerStats.$toStasis?">
+                <set_value name="$rangerStats.$toStasis" exact="0" />
+              </do_elseif>
               <set_value name="$rangerStats.$name" exact="$event.$ranger.knownname" />
               <do_if value="$rangerStats.{$key}?">
                 <set_value name="$rangerStats.{$key}" operation="add" exact="$count" />
@@ -97,9 +104,9 @@
               <remove_value name="$stats.$events.{1}" />
             </do_if>
             <debug_text chance="$debugChance"
-              text="'RR_Stats [%s]: %s x%s, ranger %s, person %s, sector %s, other %s. Totals: ejected %s, rescued %s, lost %s, dormitory %s, crew %s, returned %s'.[
+              text="'RR_Stats [%s]: %s x%s, ranger %s, person %s, sector %s, other %s. Totals: ejected %s, rescued %s, lost %s, dormitory %s, stasis %s, crew %s, returned %s'.[
                 player.age, $event.$kind, $count, @$event.$ranger.debugname, @$event.$person, @$event.$sector.knownname, @$event.$other.debugname,
-                $stats.$ejected, $stats.$rescued, $stats.$lost, $stats.$toDormitory, $stats.$joinedCrew, $stats.$returned]" />
+                $stats.$ejected, $stats.$rescued, $stats.$lost, $stats.$toDormitory, $stats.$toStasis, $stats.$joinedCrew, $stats.$returned]" />
             <remove_value name="$bucket" />
             <remove_value name="$hour" />
             <remove_value name="$count" />

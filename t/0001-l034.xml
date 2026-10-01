@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Spain -->
+<!-- Spanish -->
 <diff>
   <add sel="/language">
-    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector" >
+    <page id="1972092402" voice="no" title="Rescue Rangers" descr="Rescue Rangers in Sector">
       <t id="1">Rescatadores</t>
       <t id="2">Rescatadores: Rescata a tus tripulaciones en el espacio</t>
       <t id="101">Sector de origen</t>
@@ -12,6 +12,7 @@
       <t id="105">Prioridad por oxígeno restante</t>
       <t id="106">Devuélvelos a la Nave de Reemplazo</t>
       <t id="107">Mantener a los rescatados a bordo como tripulación</t>
+      <t id="108">Estasis: 0 según las Opciones, 1 desactivada, 2 si está lleno, 3 en lugar del Dormitorio</t>
       <t id="109">Registrar en el diario</t>
       <t id="1000">\033O{1972092402, 1}\033X</t>
       <t id="1003">\033Y%s\033X</t>
@@ -27,7 +28,7 @@
       <t id="1042">%s: transfirió %s miembros de tripulación salvados a %s</t>
       <t id="1091">%s: \033RNo puede salvar a los miembros de la tripulación\033X - no hay espacio libre para los miembros de la tripulación y en %s - ¡también!</t>
       <t id="1092">%s: \033RNo puede salvar a los miembros de la tripulación\033X - ¡no hay espacio libre a bordo!</t>
-      <t id="2001">{1972092402,1} problema: ¡no es posible acoplar en %s para %s! ¡Abortando!</t>
+      <t id="2001">{1972092402,1} problema: ¡%s no puede atracar en %s! ¡Abortando!</t>
       <t id="3000">Naves de rescate: su estado, estadísticas y ajustes de la orden</t>
       <t id="3001">Naves de rescate</t>
       <t id="3010">Modo</t>
@@ -39,6 +40,7 @@
       <t id="3016">Unidos a la tripulación</t>
       <t id="3017">Sigue los ajustes de %s</t>
       <t id="3018">La habilidad del piloto no permite un alcance mayor</t>
+      <t id="3019">Todas las naves de rescate</t>
       <t id="3030">Rescatando</t>
       <t id="3031">En ruta</t>
       <t id="3040">Tripulación eyectada de naves perdidas</t>
@@ -63,10 +65,81 @@
       <t id="3059">Aún no hay nada registrado.</t>
       <t id="3061">hace %s</t>
       <t id="3062">Por hora de juego, las últimas 24 horas</t>
+      <t id="3063">Un cambio se aplica a cada nave de rescate cuyos ajustes difieran y reinicia su orden Rescatadores. El alcance está limitado por la habilidad de cada piloto; los Imitadores siguen a sus comandantes.</t>
+      <t id="3064">Trasladados a Estasis</t>
+      <t id="3065">%s trasladó %s rescatados a Estasis en %s</t>
+      <t id="3066">A Estasis</t>
+      <t id="3067">Sin sitio en Estasis</t>
+      <t id="3068">Rescatados esperando un sitio en Estasis: %s. Consulta la pestaña Estasis.</t>
+      <t id="4000">Estasis</t>
+      <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
+      <t id="4010">Espacio alquilado para personas en Estasis en %s por %s {1001,101} al día</t>
+      <t id="4011">Alquiler de Estasis en %s pagado: %s {1001,101}</t>
+      <t id="4012">No hay suficiente dinero para el alquiler de Estasis en %s: deuda %s {1001,101}</t>
+      <t id="4013">Deuda de Estasis de %s pagada: %s {1001,101}</t>
+      <t id="4014">Alquiler del espacio de Estasis en %s finalizado</t>
+      <t id="4015">Espacio alquilado automáticamente para personas en Estasis en %s por %s {1001,101} al día</t>
+      <t id="4020">Personas trasladadas de Estasis en %s a %s: %s</t>
+      <t id="4021">La relación con %s es demasiado baja para mantener personas en Estasis en %s</t>
+      <t id="4022">Personas en Estasis en %s sin sitio en otro lugar: %s. Se quedan, y el lugar no acepta más recién llegados</t>
+      <t id="4023">Se ha perdido %s, y con ello las personas que había allí en Estasis: %s</t>
+      <t id="4024">El alquiler de Estasis en %s está impagado: deuda %s {1001,101}</t>
+      <t id="4030">No se puede alquilar espacio de Estasis en %s: se necesitan %s {1001,101}</t>
+      <t id="4031">No se puede alquilar espacio de Estasis en %s: tus naves no pueden atracar allí</t>
+      <t id="4032">No se puede alquilar espacio de Estasis en %s: no hay espacio libre para personas</t>
+      <t id="4033">No se puede terminar el alquiler en %s. Personas sin sitio en otro lugar: %s</t>
+      <t id="4040">Personas de Estasis asignadas a %s: %s</t>
+      <t id="4041">Nadie de Estasis pudo ser asignado a %s: no hay espacio libre para la tripulación</t>
+      <t id="4042">Personas de Estasis despedidas: %s</t>
+      <t id="4043">%s es ahora el administrador de %s; %s, el administrador anterior, está en Estasis allí</t>
+      <t id="4044">%s no pudo convertirse en el administrador de %s y permanece en Estasis</t>
+      <t id="4050">Cuando la nave y el Dormitorio estén llenos</t>
+      <t id="4051">En lugar del Dormitorio</t>
+      <t id="4060">%s: yendo a Estasis en %s con personas rescatadas: %s</t>
+      <t id="4061">%s: personas rescatadas puestas en Estasis en %s: %s</t>
+      <t id="4062">%s: no hay sitio en Estasis para las personas rescatadas: %s</t>
+      <t id="4100">Aún no hay nadie en Estasis.</t>
+      <t id="4101">Nave perdida</t>
+      <t id="4102">Puesto en Estasis</t>
+      <t id="4103">Rescatado por</t>
+      <t id="4104">Lugares de Estasis</t>
+      <t id="4105">Libre</t>
+      <t id="4106">Nadie coincide con el filtro.</t>
+      <t id="4107">Pagado por %s</t>
+      <t id="4108">Deuda: %s {1001,101}</t>
+      <t id="4109">Relación demasiado baja: las personas se trasladan a otro lugar</t>
+      <t id="4110">Finaliza una vez pagada la deuda</t>
+      <t id="4111">Atraque no permitido: no acepta recién llegados</t>
+      <t id="4112">Vacío: termina el alquiler para dejar de pagar</t>
+      <t id="4113">Un día de alquiler aquí supera tu límite de alquiler automático: se sigue cobrando, el límite solo se aplica a nuevos alquileres</t>
+      <t id="4114">Terminar alquiler</t>
+      <t id="4115">Alquilar espacio en estaciones NPC</t>
+      <t id="4116">Alquiler: %s {1001,101} al día por el espacio libre de una estación</t>
+      <t id="4117">Alquiler automático: cuando un día de alquiler sea como máximo el %s%% de tu dinero</t>
+      <t id="4118">Alquiler automático: desactivado, consulta "Extension Options"</t>
+      <t id="4119">Alquilar</t>
+      <t id="4120">Buscar estaciones</t>
+      <t id="4121">%s - %s, %s, saltos: %s, libre: %s</t>
+      <t id="4122">Aún no se ha encontrado ninguna estación para alquilar: pulsa Buscar estaciones</t>
+      <t id="4123">%s necesita espacio de Estasis para rescatados: %s. Propuesta: %s</t>
+      <t id="4124">Aún no hay lugares de Estasis: se usan las estaciones del jugador con espacio libre, y las estaciones NPC una vez alquiladas.</t>
+      <t id="4125">¿Despedir definitivamente de Estasis a las personas seleccionadas? Seleccionadas: %s</t>
+      <t id="4126">Seleccionar todo</t>
+      <t id="4127">Nave, o estación para un administrador, a la que asignar a las personas seleccionadas</t>
+      <t id="4128">Ninguna nave con espacio libre para la tripulación</t>
+      <t id="4129">Ninguna estación con espacio libre</t>
+      <t id="4130">%s, libre: %s</t>
+      <t id="4131">Asignar como</t>
+      <t id="4132">Idoneidad</t>
+      <t id="4133">%s, libre: %s, administrador: %s %s</t>
+      <t id="4134">La estación de la que la persona seleccionada será administrador; el administrador actual pasa a Estasis en ella</t>
       <t id="90100">Alcance de rescate</t>
       <t id="90110">Distancia máxima de puerta adicional sobre el límite de habilidad del piloto</t>
       <t id="90200">Vista General</t>
       <t id="90210">Mostrar la vista general de Rescatadores en el menú superior</t>
+      <t id="90310">Trasladar a las personas rescatadas a Estasis</t>
+      <t id="90320">Saltos extra que un lugar alquilado en una estación amistosa puede estar más lejos que uno en una estación neutral</t>
+      <t id="90330">Alquilar automáticamente un lugar en una estación NPC si un día de alquiler es como máximo este porcentaje de tu dinero \(0: nunca\)</t>
       <t id="90900">Depuración</t>
       <t id="90910">Nivel de depuración</t>
       <t id="90911">Ninguno</t>

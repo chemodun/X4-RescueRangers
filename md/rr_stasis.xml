@@ -1,0 +1,1129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="RR_Stasis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+  <cues>
+    <cue name="Main" version="200">
+      <actions>
+        <include_actions ref="Prepare" />
+        <include_actions ref="RefreshPlaces" />
+        <include_actions ref="Publish" />
+      </actions>
+      <cues>
+
+        <!-- $people records and $leases are what Lua reads; npctemplates stay in $templates, keyed by the record's $key -->
+        <library name="Prepare" version="200">
+          <actions>
+            <set_value name="$debugLevel" exact="@player.entity.$RescueRangersConfig.$debugLevel" />
+            <set_value name="$debugChance" exact="if @$debugLevel == 'debug' or @$debugLevel == 'trace' then 100 else 0" />
+            <set_value name="$traceChance" exact="if @$debugLevel == 'trace' then 100 else 0" />
+            <remove_value name="$debugLevel" />
+            <!-- Vanilla's hiring fee, random within a few hundred Cr, so fixed once; kept as int Cr for Lua -->
+            <do_if value="not $rentFee?">
+              <run_actions ref="md.NPC_Instantiation.HiringFeeFromCombinedSkill" result="$rentFeeMoney">
+                <param name="combinedskill" value="40" />
+              </run_actions>
+              <set_value name="$rentFee" exact="($rentFeeMoney / 1Cr)i" />
+              <remove_value name="$rentFeeMoney" />
+            </do_if>
+            <set_value name="$rentPeriod" exact="86400" />
+            <set_value name="$friendJumps" exact="if player.entity.$RescueRangersConfig.$stasisFriendJumps? then player.entity.$RescueRangersConfig.$stasisFriendJumps else 2" />
+            <do_if value="not $people?">
+              <create_list name="$people" />
+            </do_if>
+            <do_if value="not $templates?">
+              <set_value name="$templates" exact="table[]" />
+            </do_if>
+            <do_if value="not $leases?">
+              <create_list name="$leases" />
+            </do_if>
+            <do_if value="not $places?">
+              <create_list name="$places" />
+            </do_if>
+            <do_if value="not $nextKey?">
+              <set_value name="$nextKey" exact="1" />
+            </do_if>
+            <do_if value="not $proposals?">
+              <create_list name="$proposals" />
+            </do_if>
+            <do_if value="not $candidates?">
+              <create_list name="$candidates" />
+              <set_value name="$candidatesAt" exact="-1" />
+            </do_if>
+            <do_if value="not $autoRentedAt?">
+              <set_value name="$autoRentedAt" exact="table[]" />
+            </do_if>
+          </actions>
+        </library>
+
+        <library name="Publish" version="200">
+          <actions>
+            <set_value name="player.entity.$RescueRangersStasis"
+              exact="table[
+                $people = $people,
+                $leases = $leases,
+                $places = $places,
+                $proposals = $proposals,
+                $candidates = $candidates,
+                $candidatesAt = $candidatesAt,
+                $rentFee = $rentFee,
+                $rentPeriod = $rentPeriod,
+                $updated = player.age
+              ]" />
+          </actions>
+        </library>
+
+        <library name="Notify" purpose="run_actions" version="200">
+          <params>
+            <param name="text" />
+            <param name="object" default="null" />
+            <param name="money" default="0" />
+            <param name="warning" default="false" />
+          </params>
+          <actions>
+            <set_value name="$title" exact="{1972092402, 4001}" />
+            <do_if value="$warning">
+              <show_notification text="'%s\n%s'.[$title, $text]" priority="2" sound="notification_warning" timeout="15s" />
+            </do_if>
+            <do_if value="@$object.isoperational and $money != 0">
+              <write_to_logbook category="upkeep" title="$title" text="$text" interaction="showonmap" object="$object" money="($money)Cr"
+                highlighted="$warning" />
+            </do_if>
+            <do_elseif value="@$object.isoperational">
+              <write_to_logbook category="general" title="$title" text="$text" interaction="showonmap" object="$object" highlighted="$warning" />
+            </do_elseif>
+            <do_else>
+              <write_to_logbook category="general" title="$title" text="$text" highlighted="$warning" />
+            </do_else>
+          </actions>
+        </library>
+
+        <!-- In: $record, $template -->
+        <library name="ReadSkills" version="200">
+          <actions>
+            <set_value name="$record.$name" exact="$record.$station.people.{$template}.name" />
+            <set_value name="$record.$piloting" exact="$record.$station.people.{$template}.skill.piloting" />
+            <set_value name="$record.$engineering" exact="$record.$station.people.{$template}.skill.engineering" />
+            <set_value name="$record.$boarding" exact="$record.$station.people.{$template}.skill.boarding" />
+            <set_value name="$record.$management" exact="$record.$station.people.{$template}.skill.management" />
+            <set_value name="$record.$morale" exact="$record.$station.people.{$template}.skill.morale" />
+            <set_value name="$record.$asPilot" exact="$record.$station.people.{$template}.potentialskill.{controlpost.aipilot}" />
+            <set_value name="$record.$asManager" exact="$record.$station.people.{$template}.potentialskill.{controlpost.manager}" />
+            <set_value name="$record.$asService" exact="$record.$station.people.{$template}.potentialskill.{entityrole.service}" />
+            <set_value name="$record.$asMarine" exact="$record.$station.people.{$template}.potentialskill.{entityrole.marine}" />
+          </actions>
+        </library>
+
+        <!-- Player stations first, then leases that take newcomers -->
+        <library name="RefreshPlaces" version="200">
+          <actions>
+            <create_list name="$places" />
+            <find_station_by_true_owner name="$placeStations" faction="faction.player" space="player.galaxy" multiple="true" />
+            <do_for_each name="$placeStation" in="$placeStations">
+              <do_if value="$placeStation.people.free gt 0">
+                <append_to_list name="$places" exact="table[$station = $placeStation, $free = $placeStation.people.free, $isLease = false, $friend = true]" />
+              </do_if>
+            </do_for_each>
+            <do_for_each name="$placeLease" in="$leases">
+              <do_if value="not $placeLease.$blocked and not $placeLease.$closing and @$placeLease.$station.isoperational and $placeLease.$station.people.free gt 0
+                and $placeLease.$station.dockingenabled and $placeLease.$station.hasrelation.dock.{faction.player}">
+                <append_to_list name="$places" exact="table[$station = $placeLease.$station, $free = $placeLease.$station.people.free, $isLease = true,
+                  $friend = $placeLease.$station.hasrelation.friend.{faction.player}]" />
+              </do_if>
+            </do_for_each>
+            <remove_value name="$placeLease" />
+            <remove_value name="$placeStation" />
+            <remove_value name="$placeStations" />
+          </actions>
+        </library>
+
+        <!-- In: $placeFrom, $placeNeed, $placeExclude. Out: $place, an entry of $places or null -->
+        <library name="FindPlace" version="200">
+          <actions>
+            <set_value name="$place" exact="null" />
+            <create_list name="$placeCandidates" />
+            <do_for_each name="$placeEntry" in="$places">
+              <do_if value="$placeEntry.$station != $placeExclude and @$placeEntry.$station.isoperational and $placeEntry.$station.people.free gt 0">
+                <set_value name="$placeDistance" exact="$placeFrom.gatedistance.{$placeEntry.$station}" />
+                <do_if value="$placeDistance ge 0">
+                  <!-- Player stations first; a lease with a friend owner wins unless a dock-only one is more than $friendJumps closer -->
+                  <append_to_list name="$placeCandidates"
+                    exact="table[$entry = $placeEntry, $order = $placeDistance + (if $placeEntry.$isLease then 1000 else 0) + (if $placeEntry.$friend then 0 else $friendJumps + 0.5)]" />
+                </do_if>
+              </do_if>
+            </do_for_each>
+            <sort_list list="$placeCandidates" sortbyvalue="loop.element.$order" />
+            <do_for_each name="$placeCandidate" in="$placeCandidates">
+              <do_if value="$placeCandidate.$entry.$station.people.free ge $placeNeed">
+                <set_value name="$place" exact="$placeCandidate.$entry" />
+                <break />
+              </do_if>
+            </do_for_each>
+            <do_if value="$place == null and $placeCandidates.count gt 0">
+              <set_value name="$place" exact="$placeCandidates.{1}.$entry" />
+            </do_if>
+            <remove_value name="$placeCandidate" />
+            <remove_value name="$placeCandidates" />
+            <remove_value name="$placeDistance" />
+            <remove_value name="$placeEntry" />
+          </actions>
+        </library>
+
+        <!-- In: $relocateFrom. Out: $relocateMoved, $relocateLeft -->
+        <library name="Relocate" version="201">
+          <actions>
+            <include_actions ref="RefreshPlaces" />
+            <create_list name="$relocateTemplates" />
+            <do_for_each name="$relocateRecord" in="$people">
+              <do_if value="$relocateRecord.$station == $relocateFrom">
+                <append_to_list name="$relocateTemplates" exact="$templates.{$relocateRecord.$key}" />
+              </do_if>
+            </do_for_each>
+            <set_value name="$relocateMoved" exact="0" />
+            <do_while value="$relocateTemplates.count gt 0">
+              <set_value name="$placeFrom" exact="$relocateFrom" />
+              <set_value name="$placeNeed" exact="$relocateTemplates.count" />
+              <set_value name="$placeExclude" exact="$relocateFrom" />
+              <include_actions ref="FindPlace" />
+              <do_if value="$place == null">
+                <break />
+              </do_if>
+              <set_value name="$relocateTo" exact="$place.$station" />
+              <!-- Every tried place is dropped: it is full now or refused -->
+              <remove_from_list name="$places" exact="$place" />
+              <set_value name="$relocateRoom" exact="[$relocateTo.people.free, $relocateTemplates.count].min" />
+              <create_list name="$relocateBatch" />
+              <do_for_each name="$relocateTemplate" in="$relocateTemplates">
+                <do_if value="$relocateBatch.count ge $relocateRoom">
+                  <break />
+                </do_if>
+                <append_to_list name="$relocateBatch" exact="$relocateTemplate" />
+              </do_for_each>
+              <transfer_people result="$relocateResult" object="$relocateTo" otherobject="$relocateFrom" receiveworkforce="false">
+                <existing_people people="$relocateBatch" />
+              </transfer_people>
+              <set_value name="$relocateBatchMoved" exact="0" />
+              <do_for_each name="$relocateTemplate" in="$relocateBatch">
+                <do_if value="@$relocateTo.people.{$relocateTemplate}.exists">
+                  <remove_from_list name="$relocateTemplates" exact="$relocateTemplate" />
+                  <do_for_each name="$relocateRecord" in="$people">
+                    <do_if value="$templates.{$relocateRecord.$key} == $relocateTemplate">
+                      <set_value name="$relocateRecord.$station" exact="$relocateTo" />
+                      <set_value name="$relocateRecord.$stationName" exact="{1972092402, 1010}.[$relocateTo.knownname, $relocateTo.idcode]" />
+                      <break />
+                    </do_if>
+                  </do_for_each>
+                  <!-- Get-Them-Back returns from the new station -->
+                  <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$relocateTo.people.{$relocateTemplate}.name"
+                    param3="table[$container = $relocateTo, $containerTag = 'stasis', $template = $relocateTemplate]" />
+                  <set_value name="$relocateBatchMoved" operation="add" />
+                </do_if>
+              </do_for_each>
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Relocate [%s]: %s of %s moved from %s to %s, %s left'.[
+                  player.age, $relocateBatchMoved, $relocateBatch.count, $relocateFrom.debugname, $relocateTo.debugname, $relocateTemplates.count]" />
+              <do_if value="$relocateBatchMoved gt 0">
+                <set_value name="$relocateMoved" operation="add" exact="$relocateBatchMoved" />
+                <run_actions ref="Notify">
+                  <param name="text" value="{1972092402, 4020}.[$relocateFrom.knownname, $relocateTo.knownname, $relocateBatchMoved]" />
+                  <param name="object" value="$relocateTo" />
+                </run_actions>
+              </do_if>
+            </do_while>
+            <set_value name="$relocateLeft" exact="$relocateTemplates.count" />
+            <remove_value name="$relocateBatchMoved" />
+            <remove_value name="$relocateResult" />
+            <remove_value name="$relocateTemplate" />
+            <remove_value name="$relocateBatch" />
+            <remove_value name="$relocateRoom" />
+            <remove_value name="$relocateTo" />
+            <remove_value name="$relocateRecord" />
+            <remove_value name="$relocateTemplates" />
+            <remove_value name="$place" />
+            <remove_value name="$placeFrom" />
+            <remove_value name="$placeNeed" />
+            <remove_value name="$placeExclude" />
+          </actions>
+        </library>
+
+        <!-- In: $inStation, $inRanger (or null), $inTemplate already on $inStation. Out: $record, appended to $people -->
+        <library name="AddRecord" version="200">
+          <actions>
+            <do_for_each name="$inOld" in="$people" reverse="true">
+              <do_if value="$templates.{$inOld.$key} == $inTemplate">
+                <set_value name="$removeRecord" exact="$inOld" />
+                <include_actions ref="RemoveRecord" />
+              </do_if>
+            </do_for_each>
+            <set_value name="$record"
+              exact="table[
+                $key = $nextKey,
+                $station = $inStation,
+                $stationName = {1972092402, 1010}.[$inStation.knownname, $inStation.idcode],
+                $since = player.age,
+                $ranger = @$inRanger.idcode,
+                $rangerName = @$inRanger.knownname,
+                $lostShip = ''
+              ]" />
+            <set_value name="$templates.{$nextKey}" exact="$inTemplate" />
+            <set_value name="$nextKey" operation="add" />
+            <set_value name="$inIndex" exact="@md.RR_GetThemBack.Main.$personRescuedIndex.indexof.{$inTemplate}" />
+            <do_if value="$inIndex gt 0">
+              <set_value name="$record.$lostShip" exact="@md.RR_GetThemBack.Main.$personRescuedList.{$inIndex}.$shipId" />
+            </do_if>
+            <set_value name="$template" exact="$inTemplate" />
+            <include_actions ref="ReadSkills" />
+            <append_to_list name="$people" exact="$record" />
+            <remove_value name="$template" />
+            <remove_value name="$removeRecord" />
+            <remove_value name="$inIndex" />
+            <remove_value name="$inOld" />
+          </actions>
+        </library>
+
+        <!-- In: $removeRecord -->
+        <library name="RemoveRecord" version="200">
+          <actions>
+            <remove_value name="$templates.{$removeRecord.$key}" />
+            <remove_from_list name="$people" exact="$removeRecord" />
+          </actions>
+        </library>
+
+        <!-- In: $findKey. Out: $foundRecord or null -->
+        <library name="FindRecord" version="200">
+          <actions>
+            <set_value name="$foundRecord" exact="null" />
+            <do_for_each name="$findEntry" in="$people">
+              <do_if value="$findEntry.$key == $findKey">
+                <set_value name="$foundRecord" exact="$findEntry" />
+                <break />
+              </do_if>
+            </do_for_each>
+            <remove_value name="$findEntry" />
+          </actions>
+        </library>
+
+        <!-- In: $countStation. Out: $countAtStation -->
+        <library name="CountAtStation" version="200">
+          <actions>
+            <set_value name="$countAtStation" exact="0" />
+            <do_for_each name="$countEntry" in="$people">
+              <do_if value="$countEntry.$station == $countStation">
+                <set_value name="$countAtStation" operation="add" />
+              </do_if>
+            </do_for_each>
+            <remove_value name="$countEntry" />
+          </actions>
+        </library>
+
+        <!-- NPC stations to rent on. In: $candFrom (sectors or ships, nearest counts), $candRanger (or null: its blacklists and docks). Out: $candList -->
+        <library name="BuildCandidates" version="200">
+          <actions>
+            <create_list name="$candList" />
+            <do_if value="$candRanger">
+              <set_value name="$candGroup"
+                exact="if $candRanger.primarypurpose == purpose.fight or $candRanger.primarypurpose == purpose.auxiliary then blacklistgroup.military else blacklistgroup.civilian" />
+              <set_value name="$candDockSize" exact="$candRanger.docksize" />
+            </do_if>
+            <do_elseif value="$candFrom.count == 0 and @player.sector">
+              <set_value name="$candFrom" exact="[player.sector]" />
+            </do_elseif>
+            <find_station name="$candStations" space="player.galaxy" known="true" multiple="true" />
+            <do_for_each name="$candStation" in="$candStations">
+              <do_if value="$candStation.owner == faction.player or not $candStation.isoperational or not $candStation.dockingenabled
+                or not $candStation.hasrelation.dock.{faction.player} or $candStation.people.free le 0">
+                <continue />
+              </do_if>
+              <set_value name="$candLeased" exact="false" />
+              <do_for_each name="$candLease" in="$leases">
+                <do_if value="$candLease.$station == $candStation">
+                  <set_value name="$candLeased" exact="true" />
+                  <break />
+                </do_if>
+              </do_for_each>
+              <do_if value="$candLeased">
+                <continue />
+              </do_if>
+              <set_value name="$candDistance" exact="-1" />
+              <do_if value="$candRanger">
+                <do_if value="$candStation.dockingallowed.{$candRanger} and @$candStation.dock.{$candDockSize}.isdockingallowed
+                  and @$candStation.dock.{$candDockSize}.todockpos != null
+                  and not $candStation.isblacklisted.{blacklisttype.objectactivity}.{$candGroup}.{$candRanger}
+                  and not $candStation.sector.isblacklisted.{blacklisttype.sectoractivity}.{$candGroup}.{$candRanger}
+                  and not $candStation.sector.isblacklisted.{blacklisttype.sectortravel}.{$candGroup}.{$candRanger}">
+                  <set_value name="$candDistance" exact="$candRanger.gatedistance.{$candStation}.{$candGroup}.{$candRanger}" />
+                </do_if>
+              </do_if>
+              <do_else>
+                <do_for_each name="$candRef" in="$candFrom">
+                  <do_if value="@$candRef.exists">
+                    <set_value name="$candRefDistance" exact="$candRef.gatedistance.{$candStation}" />
+                    <do_if value="$candRefDistance ge 0 and ($candDistance lt 0 or $candRefDistance lt $candDistance)">
+                      <set_value name="$candDistance" exact="$candRefDistance" />
+                    </do_if>
+                  </do_if>
+                </do_for_each>
+              </do_else>
+              <do_if value="$candDistance ge 0">
+                <set_value name="$candFriend" exact="$candStation.hasrelation.friend.{faction.player}" />
+                <append_to_list name="$candList"
+                  exact="table[
+                    $station = $candStation,
+                    $stationName = {1972092402, 1010}.[$candStation.knownname, $candStation.idcode],
+                    $ownerName = $candStation.owner.knownname,
+                    $sectorName = $candStation.sector.knownname,
+                    $free = $candStation.people.free,
+                    $friend = $candFriend,
+                    $distance = $candDistance,
+                    $order = $candDistance + (if $candFriend then 0 else $friendJumps + 0.5)
+                  ]" />
+              </do_if>
+            </do_for_each>
+            <sort_list list="$candList" sortbyvalue="loop.element.$order" />
+            <do_while value="$candList.count gt 40">
+              <remove_value name="$candList.{$candList.count}" />
+            </do_while>
+            <debug_text chance="$traceChance"
+              text="'RR_Stasis - Candidates [%s]: %s of %s known stations fit, from %s, ranger %s'.[player.age, $candList.count, $candStations.count, $candFrom, @$candRanger.debugname]" />
+            <remove_value name="$candFriend" />
+            <remove_value name="$candRefDistance" />
+            <remove_value name="$candRef" />
+            <remove_value name="$candDistance" />
+            <remove_value name="$candLeased" />
+            <remove_value name="$candLease" />
+            <remove_value name="$candStation" />
+            <remove_value name="$candStations" />
+            <remove_value name="$candDockSize" />
+            <remove_value name="$candGroup" />
+          </actions>
+        </library>
+
+        <!-- In: $rentStation, $rentAuto. Out: $rentOk -->
+        <library name="DoRent" version="200">
+          <actions>
+            <set_value name="$rentOk" exact="false" />
+            <set_value name="$rentLeased" exact="false" />
+            <do_for_each name="$rentLease" in="$leases">
+              <do_if value="$rentLease.$station == $rentStation">
+                <set_value name="$rentLeased" exact="true" />
+              </do_if>
+            </do_for_each>
+            <do_if value="$rentLeased or not $rentStation.isoperational or $rentStation.owner == faction.player">
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Rent [%s]: %s ignored: leased %s, operational %s, owner %s'.[
+                  player.age, $rentStation.debugname, $rentLeased, $rentStation.isoperational, $rentStation.owner]" />
+            </do_if>
+            <do_elseif value="not $rentStation.dockingenabled or not $rentStation.hasrelation.dock.{faction.player}">
+              <run_actions ref="Notify">
+                <param name="text" value="{1972092402, 4031}.[$rentStation.knownname]" />
+                <param name="object" value="$rentStation" />
+                <param name="warning" value="true" />
+              </run_actions>
+            </do_elseif>
+            <do_elseif value="$rentStation.people.free le 0">
+              <run_actions ref="Notify">
+                <param name="text" value="{1972092402, 4032}.[$rentStation.knownname]" />
+                <param name="object" value="$rentStation" />
+                <param name="warning" value="true" />
+              </run_actions>
+            </do_elseif>
+            <do_elseif value="player.money lt ($rentFee)Cr">
+              <run_actions ref="Notify">
+                <param name="text" value="{1972092402, 4030}.[$rentStation.knownname, (($rentFee)Cr).formatted.default]" />
+                <param name="object" value="$rentStation" />
+                <param name="warning" value="true" />
+              </run_actions>
+            </do_elseif>
+            <do_else>
+              <reward_player money="-($rentFee)Cr" />
+              <append_to_list name="$leases"
+                exact="table[
+                  $station = $rentStation,
+                  $stationName = {1972092402, 1010}.[$rentStation.knownname, $rentStation.idcode],
+                  $ownerId = $rentStation.owner.id,
+                  $ownerName = $rentStation.owner.knownname,
+                  $rentedAt = player.age,
+                  $paidUntil = player.age + $rentPeriod,
+                  $fee = $rentFee,
+                  $debt = 0,
+                  $blocked = false,
+                  $docking = true,
+                  $reason = '',
+                  $closing = false,
+                  $auto = $rentAuto,
+                  $warnedAt = 0
+                ]" />
+              <set_value name="$rentText" exact="if $rentAuto then {1972092402, 4015} else {1972092402, 4010}" />
+              <run_actions ref="Notify">
+                <param name="text" value="$rentText.[$rentStation.knownname, (($rentFee)Cr).formatted.default]" />
+                <param name="object" value="$rentStation" />
+                <param name="money" value="-$rentFee" />
+              </run_actions>
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Rent [%s]: %s rented for %s Cr, auto %s, free %s, relation %s'.[
+                  player.age, $rentStation.debugname, $rentFee, $rentAuto, $rentStation.people.free, $rentStation.relationto.{faction.player}]" />
+              <do_for_each name="$rentProposal" in="$proposals" reverse="true">
+                <do_if value="$rentProposal.$station == $rentStation">
+                  <remove_from_list name="$proposals" exact="$rentProposal" />
+                </do_if>
+              </do_for_each>
+              <set_value name="$rentOk" exact="true" />
+              <include_actions ref="RefreshPlaces" />
+              <include_actions ref="Publish" />
+            </do_else>
+            <remove_value name="$rentText" />
+            <remove_value name="$rentProposal" />
+            <remove_value name="$rentLease" />
+            <remove_value name="$rentLeased" />
+          </actions>
+        </library>
+
+        <cue name="OnStasisIn" instantiate="true" version="201">
+          <conditions>
+            <!-- param2 = table[$station, $ranger, $templates]; the ranger has transferred them already -->
+            <event_object_signalled object="player.entity" param="'rr_stasis_in'" />
+            <check_value value="typeof event.param2 == datatype.table" />
+            <check_value value="@event.param2.$station.isoperational" />
+            <check_value value="typeof @event.param2.$templates == datatype.list" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$inStation" exact="event.param2.$station" />
+            <set_value name="$inRanger" exact="@event.param2.$ranger" />
+            <set_value name="$inCount" exact="0" />
+            <do_for_each name="$inTemplate" in="event.param2.$templates">
+              <do_if value="not @$inStation.people.{$inTemplate}.exists">
+                <debug_text chance="$debugChance" text="'RR_Stasis - In [%s]: %s is not on %s, skipped'.[player.age, $inTemplate, $inStation.debugname]" />
+                <continue />
+              </do_if>
+              <include_actions ref="AddRecord" />
+              <set_value name="$inCount" operation="add" />
+              <debug_text chance="$traceChance" text="'RR_Stasis - In [%s]: record %s'.[player.age, $record]" />
+            </do_for_each>
+            <debug_text chance="$debugChance"
+              text="'RR_Stasis - In [%s]: %s of %s placed on %s by %s, %s in Stasis now'.[
+                player.age, $inCount, event.param2.$templates.count, $inStation.debugname, @$inRanger.debugname, $people.count]" />
+            <do_if value="$inCount gt 0">
+              <do_for_each name="$inProposal" in="$proposals" reverse="true">
+                <do_if value="$inProposal.$ranger == @$inRanger.idcode">
+                  <remove_from_list name="$proposals" exact="$inProposal" />
+                </do_if>
+              </do_for_each>
+              <signal_objects object="player.entity" param="'rr_stats'"
+                param2="table[$kind = 'toStasis', $count = $inCount, $ranger = $inRanger, $sector = $inStation.sector, $other = $inStation]" />
+              <include_actions ref="RefreshPlaces" />
+              <include_actions ref="Publish" />
+              <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            </do_if>
+            <remove_value name="$inProposal" />
+            <remove_value name="$record" />
+            <remove_value name="$inTemplate" />
+            <remove_value name="$inCount" />
+            <remove_value name="$inRanger" />
+            <remove_value name="$inStation" />
+          </actions>
+        </cue>
+
+        <cue name="OnStasisOut" instantiate="true" version="200">
+          <conditions>
+            <!-- param2 = table[$templates, $target]; Get-Them-Back has returned them to $target already -->
+            <event_object_signalled object="player.entity" param="'rr_stasis_out'" />
+            <check_value value="typeof event.param2 == datatype.table" />
+            <check_value value="typeof @event.param2.$templates == datatype.list" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$outCount" exact="0" />
+            <do_for_each name="$outRecord" in="$people" reverse="true">
+              <do_if value="event.param2.$templates.indexof.{@$templates.{$outRecord.$key}} gt 0">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Out [%s]: %s returned from %s to %s'.[player.age, $outRecord.$name, @$outRecord.$station.debugname, @event.param2.$target.debugname]" />
+                <set_value name="$removeRecord" exact="$outRecord" />
+                <include_actions ref="RemoveRecord" />
+                <set_value name="$outCount" operation="add" />
+              </do_if>
+            </do_for_each>
+            <debug_text chance="$traceChance"
+              text="'RR_Stasis - Out [%s]: %s of %s were in Stasis, %s in Stasis now'.[player.age, $outCount, event.param2.$templates.count, $people.count]" />
+            <do_if value="$outCount gt 0">
+              <include_actions ref="RefreshPlaces" />
+              <include_actions ref="Publish" />
+              <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            </do_if>
+            <remove_value name="$removeRecord" />
+            <remove_value name="$outRecord" />
+            <remove_value name="$outCount" />
+          </actions>
+        </cue>
+
+        <cue name="Upkeep" instantiate="true" checkinterval="60s" version="201">
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$upkeepChanged" exact="false" />
+
+            <create_list name="$lostNames" />
+            <create_list name="$lostCounts" />
+            <do_for_each name="$record" in="$people" reverse="true">
+              <set_value name="$template" exact="@$templates.{$record.$key}" />
+              <do_if value="not @$record.$station.isoperational">
+                <set_value name="$lostIndex" exact="$lostNames.indexof.{$record.$stationName}" />
+                <do_if value="$lostIndex gt 0">
+                  <set_value name="$lostCounts.{$lostIndex}" operation="add" />
+                </do_if>
+                <do_else>
+                  <append_to_list name="$lostNames" exact="$record.$stationName" />
+                  <append_to_list name="$lostCounts" exact="1" />
+                </do_else>
+                <set_value name="$removeRecord" exact="$record" />
+                <include_actions ref="RemoveRecord" />
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_if>
+              <do_elseif value="not @$record.$station.people.{$template}.exists">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Upkeep [%s]: %s left %s'.[player.age, $record.$name, $record.$station.debugname]" />
+                <set_value name="$removeRecord" exact="$record" />
+                <include_actions ref="RemoveRecord" />
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_elseif>
+              <do_else>
+                <include_actions ref="ReadSkills" />
+              </do_else>
+            </do_for_each>
+            <do_for_each name="$lostName" in="$lostNames" counter="$lostIndex">
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Upkeep [%s]: %s is gone, %s in Stasis lost'.[player.age, $lostName, $lostCounts.{$lostIndex}]" />
+              <run_actions ref="Notify">
+                <param name="text" value="{1972092402, 4023}.[$lostName, $lostCounts.{$lostIndex}]" />
+                <param name="warning" value="true" />
+              </run_actions>
+            </do_for_each>
+
+            <do_for_each name="$lease" in="$leases" reverse="true">
+              <do_if value="not @$lease.$station.isoperational or @$lease.$station.owner == faction.player">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Upkeep [%s]: lease on %s dropped: station gone or owned by the player'.[player.age, $lease.$stationName]" />
+                <remove_from_list name="$leases" exact="$lease" />
+                <set_value name="$upkeepChanged" exact="true" />
+                <continue />
+              </do_if>
+              <set_value name="$lease.$ownerId" exact="$lease.$station.owner.id" />
+              <set_value name="$lease.$ownerName" exact="$lease.$station.owner.knownname" />
+
+              <do_if value="$lease.$debt gt 0 and player.money ge ($lease.$debt)Cr">
+                <debug_text chance="$debugChance" text="'RR_Stasis - Upkeep [%s]: lease on %s: debt %s Cr paid'.[player.age, $lease.$stationName, $lease.$debt]" />
+                <reward_player money="-($lease.$debt)Cr" />
+                <run_actions ref="Notify">
+                  <param name="text" value="{1972092402, 4013}.[$lease.$station.knownname, (($lease.$debt)Cr).formatted.default]" />
+                  <param name="object" value="$lease.$station" />
+                  <param name="money" value="-$lease.$debt" />
+                </run_actions>
+                <set_value name="$lease.$debt" exact="0" />
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_if>
+
+              <do_while value="not $lease.$closing and player.age ge $lease.$paidUntil">
+                <set_value name="$lease.$paidUntil" operation="add" exact="$rentPeriod" />
+                <do_if value="$lease.$debt le 0 and player.money ge ($lease.$fee)Cr">
+                  <debug_text chance="$debugChance"
+                    text="'RR_Stasis - Upkeep [%s]: lease on %s: rent %s Cr paid until %s'.[player.age, $lease.$stationName, $lease.$fee, $lease.$paidUntil]" />
+                  <reward_player money="-($lease.$fee)Cr" />
+                  <run_actions ref="Notify">
+                    <param name="text" value="{1972092402, 4011}.[$lease.$station.knownname, (($lease.$fee)Cr).formatted.default]" />
+                    <param name="object" value="$lease.$station" />
+                    <param name="money" value="-$lease.$fee" />
+                  </run_actions>
+                </do_if>
+                <do_else>
+                  <set_value name="$lease.$debt" operation="add" exact="$lease.$fee" />
+                  <debug_text chance="$debugChance"
+                    text="'RR_Stasis - Upkeep [%s]: lease on %s: rent %s Cr unpaid, debt %s Cr'.[player.age, $lease.$stationName, $lease.$fee, $lease.$debt]" />
+                  <run_actions ref="Notify">
+                    <param name="text" value="{1972092402, 4012}.[$lease.$station.knownname, (($lease.$debt)Cr).formatted.default]" />
+                    <param name="object" value="$lease.$station" />
+                    <param name="warning" value="true" />
+                  </run_actions>
+                </do_else>
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_while>
+
+              <set_value name="$relationOk" exact="$lease.$station.hasrelation.dock.{faction.player}" />
+              <!-- Docking disabled only stops newcomers; people already there stay -->
+              <set_value name="$wasDocking" exact="@$lease.$docking" />
+              <set_value name="$lease.$docking" exact="$relationOk and $lease.$station.dockingenabled" />
+              <do_if value="$lease.$docking != $wasDocking">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Upkeep [%s]: lease on %s docking %s (enabled %s, relation %s)'.[
+                    player.age, $lease.$stationName, $lease.$docking, $lease.$station.dockingenabled, $lease.$station.relationto.{faction.player}]" />
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_if>
+              <set_value name="$wasBlocked" exact="$lease.$blocked" />
+              <set_value name="$lease.$blocked" exact="$lease.$debt gt 0 or not $relationOk" />
+              <set_value name="$lease.$reason" exact="if not $relationOk then 'relation' else (if $lease.$debt gt 0 then 'debt' else '')" />
+              <do_if value="$lease.$blocked != $wasBlocked">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Upkeep [%s]: lease on %s blocked %s (%s), relation %s, debt %s'.[
+                    player.age, $lease.$stationName, $lease.$blocked, $lease.$reason, $lease.$station.relationto.{faction.player}, $lease.$debt]" />
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_if>
+
+              <do_if value="$lease.$blocked or $lease.$closing">
+                <set_value name="$countStation" exact="$lease.$station" />
+                <include_actions ref="CountAtStation" />
+                <set_value name="$leaseLeft" exact="$countAtStation" />
+                <do_if value="$leaseLeft gt 0">
+                  <set_value name="$relocateFrom" exact="$lease.$station" />
+                  <include_actions ref="Relocate" />
+                  <do_if value="$relocateMoved gt 0">
+                    <set_value name="$upkeepChanged" exact="true" />
+                  </do_if>
+                  <set_value name="$leaseLeft" exact="$relocateLeft" />
+                </do_if>
+                <set_value name="$reasonText" exact="if $lease.$reason == 'relation' then {1972092402, 4021}.[$lease.$ownerName, $lease.$station.knownname] else {1972092402, 4024}.[$lease.$station.knownname, (($lease.$debt)Cr).formatted.default]" />
+                <do_if value="$leaseLeft gt 0">
+                  <do_if value="player.age ge $lease.$warnedAt + $rentPeriod">
+                    <set_value name="$lease.$warnedAt" exact="player.age" />
+                    <run_actions ref="Notify">
+                      <param name="text" value="'%s\n%s'.[$reasonText, {1972092402, 4022}.[$lease.$station.knownname, $leaseLeft]]" />
+                      <param name="object" value="$lease.$station" />
+                      <param name="warning" value="true" />
+                    </run_actions>
+                  </do_if>
+                </do_if>
+                <do_elseif value="$lease.$debt gt 0">
+                  <set_value name="$lease.$closing" exact="true" />
+                </do_elseif>
+                <do_else>
+                  <debug_text chance="$debugChance" text="'RR_Stasis - Upkeep [%s]: lease on %s ended (%s)'.[player.age, $lease.$stationName, $lease.$reason]" />
+                  <run_actions ref="Notify">
+                    <param name="text" value="if $lease.$closing then {1972092402, 4014}.[$lease.$station.knownname] else '%s\n%s'.[$reasonText, {1972092402, 4014}.[$lease.$station.knownname]]" />
+                    <param name="object" value="$lease.$station" />
+                    <param name="warning" value="not $lease.$closing" />
+                  </run_actions>
+                  <remove_from_list name="$leases" exact="$lease" />
+                  <set_value name="$upkeepChanged" exact="true" />
+                </do_else>
+              </do_if>
+            </do_for_each>
+
+            <do_for_each name="$proposal" in="$proposals" reverse="true">
+              <do_if value="player.age ge $proposal.$at + 3600 or not @$proposal.$station.isoperational">
+                <remove_from_list name="$proposals" exact="$proposal" />
+                <set_value name="$upkeepChanged" exact="true" />
+              </do_if>
+            </do_for_each>
+
+            <include_actions ref="RefreshPlaces" />
+            <include_actions ref="Publish" />
+            <do_if value="$upkeepChanged">
+              <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            </do_if>
+            <debug_text chance="$traceChance"
+              text="'RR_Stasis - Upkeep [%s]: %s in Stasis, %s leases, %s places, changed %s'.[player.age, $people.count, $leases.count, $places.count, $upkeepChanged]" />
+            <remove_value name="$proposal" />
+            <remove_value name="$reasonText" />
+            <remove_value name="$leaseLeft" />
+            <remove_value name="$countStation" />
+            <remove_value name="$countAtStation" />
+            <remove_value name="$relocateFrom" />
+            <remove_value name="$relocateMoved" />
+            <remove_value name="$relocateLeft" />
+            <remove_value name="$wasBlocked" />
+            <remove_value name="$wasDocking" />
+            <remove_value name="$relationOk" />
+            <remove_value name="$lease" />
+            <remove_value name="$lostName" />
+            <remove_value name="$lostIndex" />
+            <remove_value name="$lostCounts" />
+            <remove_value name="$lostNames" />
+            <remove_value name="$removeRecord" />
+            <remove_value name="$template" />
+            <remove_value name="$record" />
+            <remove_value name="$upkeepChanged" />
+          </actions>
+        </cue>
+
+        <cue name="OnRent" instantiate="true" version="200">
+          <conditions>
+            <!-- param3 = table[$station] -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Rent'" />
+            <check_value value="@event.param3.$station.isclass.station" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$rentStation" exact="event.param3.$station" />
+            <set_value name="$rentAuto" exact="false" />
+            <include_actions ref="DoRent" />
+            <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            <remove_value name="$rentOk" />
+            <remove_value name="$rentAuto" />
+            <remove_value name="$rentStation" />
+          </actions>
+        </cue>
+
+        <cue name="OnCandidates" instantiate="true" version="200">
+          <conditions>
+            <!-- param3 = table[$from], the Rescue ships' home sectors or the ships themselves -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Candidates'" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$candFrom" exact="if typeof @event.param3.$from == datatype.list then event.param3.$from else []" />
+            <set_value name="$candRanger" exact="null" />
+            <include_actions ref="BuildCandidates" />
+            <set_value name="$candidates" exact="$candList" />
+            <set_value name="$candidatesAt" exact="player.age" />
+            <debug_text chance="$debugChance" text="'RR_Stasis - Candidates [%s]: %s stations to rent, measured from %s places'.[player.age, $candidates.count, $candFrom.count]" />
+            <include_actions ref="Publish" />
+            <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            <remove_value name="$candList" />
+            <remove_value name="$candRanger" />
+            <remove_value name="$candFrom" />
+          </actions>
+        </cue>
+
+        <!-- The order found no place: rent one when auto-rent allows, else propose one in the overview -->
+        <cue name="OnNeed" instantiate="true" version="200">
+          <conditions>
+            <!-- param2 = table[$ranger, $need] -->
+            <event_object_signalled object="player.entity" param="'rr_stasis_need'" />
+            <check_value value="typeof event.param2 == datatype.table" />
+            <check_value value="@event.param2.$ranger.isoperational" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$needRanger" exact="event.param2.$ranger" />
+            <set_value name="$needCount" exact="[@event.param2.$need, 1].max" />
+            <set_value name="$needOld" exact="null" />
+            <do_for_each name="$needEntry" in="$proposals">
+              <do_if value="$needEntry.$ranger == $needRanger.idcode">
+                <set_value name="$needOld" exact="$needEntry" />
+                <break />
+              </do_if>
+            </do_for_each>
+            <do_if value="$needOld and player.age lt $needOld.$at + 60">
+              <debug_text chance="$traceChance" text="'RR_Stasis - Need [%s]: %s asked again within 60 s, skipped'.[player.age, $needRanger.debugname]" />
+            </do_if>
+            <do_else>
+              <do_if value="$needOld">
+                <remove_from_list name="$proposals" exact="$needOld" />
+              </do_if>
+              <create_list name="$candFrom" />
+              <set_value name="$candRanger" exact="$needRanger" />
+              <include_actions ref="BuildCandidates" />
+              <set_value name="$needPick" exact="null" />
+              <do_for_each name="$needEntry" in="$candList">
+                <do_if value="$needEntry.$free ge $needCount">
+                  <set_value name="$needPick" exact="$needEntry" />
+                  <break />
+                </do_if>
+              </do_for_each>
+              <do_if value="$needPick == null and $candList.count gt 0">
+                <set_value name="$needPick" exact="$candList.{1}" />
+              </do_if>
+              <set_value name="$needPercent" exact="@player.entity.$RescueRangersConfig.$stasisAutoRentPercent" />
+              <set_value name="$needLastAuto" exact="@$autoRentedAt.{$needRanger.idcode}" />
+              <set_value name="$needPropose" exact="$needPick != null" />
+              <do_if value="$needPick == null">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Need [%s]: %s needs room for %s, no station to rent'.[player.age, $needRanger.debugname, $needCount]" />
+              </do_if>
+              <!-- One automatic rent per Rescue ship and hour: a place the order still cannot use must not rent the next one -->
+              <do_elseif value="$needPercent gt 0 and player.money * $needPercent / 100 ge ($rentFee)Cr and (not $needLastAuto or player.age ge $needLastAuto + 3600)">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Need [%s]: %s needs room for %s, auto-rent %s (%s jumps, free %s, friend %s)'.[
+                    player.age, $needRanger.debugname, $needCount, $needPick.$station.debugname, $needPick.$distance, $needPick.$free, $needPick.$friend]" />
+                <set_value name="$rentStation" exact="$needPick.$station" />
+                <set_value name="$rentAuto" exact="true" />
+                <include_actions ref="DoRent" />
+                <do_if value="$rentOk">
+                  <set_value name="$autoRentedAt.{$needRanger.idcode}" exact="player.age" />
+                  <set_value name="$needPropose" exact="false" />
+                </do_if>
+              </do_elseif>
+              <do_if value="$needPropose">
+                <append_to_list name="$proposals"
+                  exact="table[
+                    $station = $needPick.$station,
+                    $stationName = $needPick.$stationName,
+                    $ownerName = $needPick.$ownerName,
+                    $sectorName = $needPick.$sectorName,
+                    $distance = $needPick.$distance,
+                    $friend = $needPick.$friend,
+                    $free = $needPick.$free,
+                    $ranger = $needRanger.idcode,
+                    $rangerName = $needRanger.knownname,
+                    $need = $needCount,
+                    $at = player.age
+                  ]" />
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Need [%s]: %s needs room for %s, proposed %s (%s jumps, free %s), auto-rent %s, last auto-rent %s'.[
+                    player.age, $needRanger.debugname, $needCount, $needPick.$station.debugname, $needPick.$distance, $needPick.$free, $needPercent, $needLastAuto]" />
+              </do_if>
+              <include_actions ref="Publish" />
+              <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            </do_else>
+            <remove_value name="$rentOk" />
+            <remove_value name="$rentAuto" />
+            <remove_value name="$rentStation" />
+            <remove_value name="$needPropose" />
+            <remove_value name="$needLastAuto" />
+            <remove_value name="$needPercent" />
+            <remove_value name="$needPick" />
+            <remove_value name="$candList" />
+            <remove_value name="$candRanger" />
+            <remove_value name="$candFrom" />
+            <remove_value name="$needEntry" />
+            <remove_value name="$needOld" />
+            <remove_value name="$needCount" />
+            <remove_value name="$needRanger" />
+          </actions>
+        </cue>
+
+        <cue name="OnEndLease" instantiate="true" version="201">
+          <conditions>
+            <!-- param3 = table[$station] -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'EndLease'" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$endLease" exact="null" />
+            <do_for_each name="$lease" in="$leases">
+              <do_if value="$lease.$station == @event.param3.$station">
+                <set_value name="$endLease" exact="$lease" />
+                <break />
+              </do_if>
+            </do_for_each>
+            <do_if value="$endLease == null">
+              <debug_text chance="$debugChance" text="'RR_Stasis - EndLease [%s]: no lease on %s'.[player.age, @event.param3.$station.debugname]" />
+            </do_if>
+            <do_else>
+              <set_value name="$relocateFrom" exact="$endLease.$station" />
+              <include_actions ref="Relocate" />
+              <do_if value="$relocateLeft gt 0">
+                <run_actions ref="Notify">
+                  <param name="text" value="{1972092402, 4033}.[$endLease.$station.knownname, $relocateLeft]" />
+                  <param name="object" value="$endLease.$station" />
+                  <param name="warning" value="true" />
+                </run_actions>
+              </do_if>
+              <do_else>
+                <do_if value="$endLease.$debt gt 0">
+                  <set_value name="$endLease.$closing" exact="true" />
+                </do_if>
+                <do_else>
+                  <remove_from_list name="$leases" exact="$endLease" />
+                </do_else>
+                <run_actions ref="Notify">
+                  <param name="text" value="{1972092402, 4014}.[$endLease.$station.knownname]" />
+                  <param name="object" value="$endLease.$station" />
+                </run_actions>
+              </do_else>
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - EndLease [%s]: %s, moved %s, left %s, debt %s'.[player.age, $endLease.$stationName, $relocateMoved, $relocateLeft, $endLease.$debt]" />
+              <include_actions ref="RefreshPlaces" />
+              <include_actions ref="Publish" />
+            </do_else>
+            <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            <remove_value name="$relocateFrom" />
+            <remove_value name="$relocateMoved" />
+            <remove_value name="$relocateLeft" />
+            <remove_value name="$lease" />
+            <remove_value name="$endLease" />
+          </actions>
+        </cue>
+
+        <cue name="OnAssign" instantiate="true" version="202">
+          <conditions>
+            <!-- param3 = table[$keys, $target, $role]; $role = 'service', 'marine', 'pilot' (a ship) or 'manager' (a station) -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Assign'" />
+            <check_value value="@event.param3.$target.isoperational" />
+            <check_value value="event.param3.$target.isplayerowned and not event.param3.$target.isnpcassignmentrestricted" />
+            <check_value value="['service', 'marine', 'pilot', 'manager'].indexof.{@event.param3.$role} gt 0" />
+            <check_value value="if event.param3.$role == 'manager' then event.param3.$target.isclass.station else event.param3.$target.isclass.ship" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$assignTarget" exact="event.param3.$target" />
+            <set_value name="$assignRole" exact="event.param3.$role" />
+            <set_value name="$assignKeys" exact="if typeof event.param3.$keys == datatype.list then event.param3.$keys else [event.param3.$keys]" />
+            <do_if value="($assignRole == 'pilot' or $assignRole == 'manager') and $assignKeys.count gt 1">
+              <set_value name="$assignKeys" exact="[$assignKeys.{1}]" />
+            </do_if>
+            <set_value name="$assignDone" exact="0" />
+            <do_for_each name="$findKey" in="$assignKeys">
+              <do_if value="$assignTarget.people.free le 0">
+                <break />
+              </do_if>
+              <include_actions ref="FindRecord" />
+              <do_if value="$foundRecord == null">
+                <continue />
+              </do_if>
+              <set_value name="$assignTemplate" exact="$templates.{$findKey}" />
+              <do_if value="$foundRecord.$station != $assignTarget">
+                <transfer_people result="$assignResult" object="$assignTarget" otherobject="$foundRecord.$station" receiveworkforce="false">
+                  <existing_people people="[$assignTemplate]" />
+                </transfer_people>
+              </do_if>
+              <do_if value="not @$assignTarget.people.{$assignTemplate}.exists">
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Assign [%s]: %s not transferred from %s to %s'.[player.age, $foundRecord.$name, $foundRecord.$station.debugname, $assignTarget.debugname]" />
+                <continue />
+              </do_if>
+              <do_if value="$assignRole == 'service'">
+                <set_npc_template_role object="$assignTarget" template="$assignTemplate" role="entityrole.service" />
+              </do_if>
+              <do_elseif value="$assignRole == 'marine'">
+                <set_npc_template_role object="$assignTarget" template="$assignTemplate" role="entityrole.marine" />
+              </do_elseif>
+              <do_elseif value="$assignRole == 'pilot'">
+                <!-- Service crew if the swap fails -->
+                <set_npc_template_role object="$assignTarget" template="$assignTemplate" role="entityrole.service" />
+                <signal_objects object="player.entity" param="'rr_swap_pilot'" param2="table[$ship = $assignTarget, $pilot = $assignTemplate]" />
+              </do_elseif>
+              <do_elseif value="$assignRole == 'manager'">
+                <!-- The engine refuses an occupied manager post: the current manager steps down and goes into Stasis here -->
+                <set_value name="$oldManager" exact="@$assignTarget.assignedcontrolentity.{controlpost.manager}" />
+                <do_if value="$oldManager">
+                  <dismiss_control_entity actor="$oldManager" object="$assignTarget" />
+                </do_if>
+                <assign_hired_actor actor="[$assignTarget, $assignTemplate]" target="$assignTarget" post="controlpost.manager"
+                  success="$assignOk" failed="$assignMessage" check="true" />
+                <do_if value="$assignOk">
+                  <assign_hired_actor actor="[$assignTarget, $assignTemplate]" target="$assignTarget" post="controlpost.manager"
+                    success="$assignOk" failed="$assignMessage" />
+                </do_if>
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Assign [%s]: %s as manager of %s: %s %s, current manager %s'.[player.age, $foundRecord.$name, $assignTarget.debugname, $assignOk, @$assignMessage, @$oldManager.debugname]" />
+                <do_if value="$oldManager and $assignOk">
+                  <!-- Vanilla md.Conversations NPCAssigned_Transfer handles a replaced actor this way -->
+                  <set_value name="$oldRole" exact="if $oldManager.potentialskill.{entityrole.service} gt $oldManager.potentialskill.{entityrole.marine} then entityrole.service else entityrole.marine" />
+                  <create_npc_template object="$assignTarget" entity="$oldManager" role="$oldRole" name="$inTemplate" />
+                  <do_if value="not $inTemplate">
+                    <create_npc_template object="$assignTarget" entity="$oldManager" role="$oldRole" name="$inTemplate" force="true" />
+                  </do_if>
+                  <set_entity_role entity="$oldManager" role="$oldRole" />
+                  <set_entity_role_object entity="$oldManager" object="$assignTarget" />
+                  <signal_objects object="$oldManager" param="'npc_state_reinit'" />
+                  <do_if value="$inTemplate and @$assignTarget.people.{$inTemplate}.exists">
+                    <set_value name="$inStation" exact="$assignTarget" />
+                    <set_value name="$inRanger" exact="null" />
+                    <include_actions ref="AddRecord" />
+                    <set_value name="$assignReplaced" exact="{1972092402, 4043}.[$foundRecord.$name, $assignTarget.knownname, $oldManager.knownname]" />
+                  </do_if>
+                  <debug_text chance="$debugChance"
+                    text="'RR_Stasis - Assign [%s]: former manager %s of %s, template %s, Stasis key %s'.[player.age, $oldManager.debugname, $assignTarget.debugname, @$inTemplate, @$record.$key]" />
+                </do_if>
+                <do_elseif value="$oldManager">
+                  <assign_control_entity actor="$oldManager" object="$assignTarget" post="controlpost.manager" result="$assignRestored" />
+                  <signal_objects object="$oldManager" param="'npc_state_reinit'" />
+                  <debug_text chance="$debugChance"
+                    text="'RR_Stasis - Assign [%s]: %s back as manager of %s: %s'.[player.age, $oldManager.debugname, $assignTarget.debugname, $assignRestored]" />
+                </do_elseif>
+                <do_if value="not $assignOk">
+                  <do_if value="$foundRecord.$station != $assignTarget">
+                    <transfer_people result="$assignResult" object="$foundRecord.$station" otherobject="$assignTarget" receiveworkforce="false">
+                      <existing_people people="[$assignTemplate]" />
+                    </transfer_people>
+                  </do_if>
+                  <do_if value="not @$foundRecord.$station.people.{$assignTemplate}.exists">
+                    <set_value name="$foundRecord.$station" exact="$assignTarget" />
+                    <set_value name="$foundRecord.$stationName" exact="{1972092402, 1010}.[$assignTarget.knownname, $assignTarget.idcode]" />
+                  </do_if>
+                  <debug_text chance="$debugChance"
+                    text="'RR_Stasis - Assign [%s]: %s stays in Stasis on %s'.[player.age, $foundRecord.$name, $foundRecord.$station.debugname]" />
+                  <set_value name="$assignFailed" exact="$foundRecord.$name" />
+                  <continue />
+                </do_if>
+              </do_elseif>
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Assign [%s]: %s moved from %s to %s as %s'.[player.age, $foundRecord.$name, $foundRecord.$station.debugname, $assignTarget.debugname, $assignRole]" />
+              <set_value name="$removeRecord" exact="$foundRecord" />
+              <include_actions ref="RemoveRecord" />
+              <set_value name="$assignDone" operation="add" />
+            </do_for_each>
+            <do_if value="$assignDone gt 0">
+              <run_actions ref="Notify">
+                <param name="text" value="if $assignReplaced? then $assignReplaced else {1972092402, 4040}.[$assignTarget.knownname, $assignDone]" />
+                <param name="object" value="$assignTarget" />
+              </run_actions>
+              <include_actions ref="RefreshPlaces" />
+              <include_actions ref="Publish" />
+            </do_if>
+            <do_else>
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Assign [%s]: nobody assigned to %s as %s: free %s, keys %s'.[player.age, $assignTarget.debugname, $assignRole, $assignTarget.people.free, $assignKeys]" />
+              <run_actions ref="Notify">
+                <param name="text" value="if $assignFailed? then {1972092402, 4044}.[$assignFailed, $assignTarget.knownname] else {1972092402, 4041}.[$assignTarget.knownname]" />
+                <param name="object" value="$assignTarget" />
+                <param name="warning" value="true" />
+              </run_actions>
+              <do_if value="$assignFailed?">
+                <include_actions ref="RefreshPlaces" />
+                <include_actions ref="Publish" />
+              </do_if>
+            </do_else>
+            <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            <remove_value name="$assignOk" />
+            <remove_value name="$assignMessage" />
+            <remove_value name="$assignReplaced" />
+            <remove_value name="$assignRestored" />
+            <remove_value name="$assignFailed" />
+            <remove_value name="$oldManager" />
+            <remove_value name="$oldRole" />
+            <remove_value name="$inTemplate" />
+            <remove_value name="$inStation" />
+            <remove_value name="$inRanger" />
+            <remove_value name="$record" />
+            <remove_value name="$assignResult" />
+            <remove_value name="$assignTemplate" />
+            <remove_value name="$removeRecord" />
+            <remove_value name="$foundRecord" />
+            <remove_value name="$findKey" />
+            <remove_value name="$assignDone" />
+            <remove_value name="$assignKeys" />
+            <remove_value name="$assignRole" />
+            <remove_value name="$assignTarget" />
+          </actions>
+        </cue>
+
+        <cue name="OnDismiss" instantiate="true" version="201">
+          <conditions>
+            <!-- param3 = table[$keys] -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Dismiss'" />
+            <check_value value="event.param3.$keys?" />
+          </conditions>
+          <actions>
+            <include_actions ref="Prepare" />
+            <set_value name="$dismissKeys" exact="if typeof event.param3.$keys == datatype.list then event.param3.$keys else [event.param3.$keys]" />
+            <set_value name="$dismissDone" exact="0" />
+            <do_for_each name="$findKey" in="$dismissKeys">
+              <include_actions ref="FindRecord" />
+              <do_if value="$foundRecord == null">
+                <continue />
+              </do_if>
+              <do_if value="@$foundRecord.$station.isoperational">
+                <remove_npc_template object="$foundRecord.$station" template="$templates.{$findKey}" />
+              </do_if>
+              <debug_text chance="$debugChance" text="'RR_Stasis - Dismiss [%s]: %s on %s'.[player.age, $foundRecord.$name, $foundRecord.$stationName]" />
+              <set_value name="$removeRecord" exact="$foundRecord" />
+              <include_actions ref="RemoveRecord" />
+              <set_value name="$dismissDone" operation="add" />
+            </do_for_each>
+            <do_if value="$dismissDone gt 0">
+              <run_actions ref="Notify">
+                <param name="text" value="{1972092402, 4042}.[$dismissDone]" />
+              </run_actions>
+              <include_actions ref="RefreshPlaces" />
+              <include_actions ref="Publish" />
+            </do_if>
+            <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            <remove_value name="$removeRecord" />
+            <remove_value name="$foundRecord" />
+            <remove_value name="$findKey" />
+            <remove_value name="$dismissDone" />
+            <remove_value name="$dismissKeys" />
+          </actions>
+        </cue>
+
+      </cues>
+    </cue>
+  </cues>
+</mdscript>
