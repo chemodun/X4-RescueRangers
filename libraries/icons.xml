@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <diff>
-  <add sel="/icons">
+  <!-- vanilla moved the texture in 8.00: follow whichever path order_rescueship has -->
+  <add sel="/icons" if="/icons/icon[@name='order_rescueship' and @texture='assets\textures\ui\order\order_rescueship.tga']">
+    <icon name="order_rescuerangers" texture="assets\textures\ui\order\order_rescueship.tga" height="32" width="32"></icon>
+  </add>
+  <add sel="/icons" if="/icons/icon[@name='order_rescueship' and @texture='assets\fx\gui\textures\order\order_rescueship.tga']">
     <icon name="order_rescuerangers" texture="assets\fx\gui\textures\order\order_rescueship.tga" height="32" width="32"></icon>
   </add>
 </diff>

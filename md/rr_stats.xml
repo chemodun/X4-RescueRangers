@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="RR_Stats" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+  <cues>
+    <cue name="Main" version="107">
+      <actions>
+        <include_actions ref="EnsureStats" />
+      </actions>
+      <cues>
+
+        <!-- player.entity.$RescueRangersStats holds strings and numbers only: ui/rr_overview.lua reads it from the blackboard -->
+        <library name="EnsureStats" version="107">
+          <actions>
+            <do_if value="not player.entity.$RescueRangersStats?">
+              <set_value name="player.entity.$RescueRangersStats"
+                exact="table[
+                  $since = player.age,
+                  $ejected = 0,
+                  $rescued = 0,
+                  $lost = 0,
+                  $toDormitory = 0,
+                  $joinedCrew = 0,
+                  $returned = 0,
+                  $rangers = [],
+                  $events = [],
+                  $hours = []
+                ]" />
+            </do_if>
+          </actions>
+        </library>
+
+        <library name="ReadDebugChances" version="107">
+          <actions>
+            <set_value name="$debugLevel" exact="@player.entity.$RescueRangersConfig.$debugLevel" />
+            <set_value name="$debugChance" exact="if @$debugLevel == 'debug' or @$debugLevel == 'trace' then 100 else 0" />
+            <set_value name="$traceChance" exact="if @$debugLevel == 'trace' then 100 else 0" />
+            <remove_value name="$debugLevel" />
+          </actions>
+        </library>
+
+        <!-- In: $event = table[$kind, $count, $ranger, $person, $sector, $other]; $kind is one of the counter names -->
+        <library name="Record" version="107">
+          <actions>
+            <include_actions ref="EnsureStats" />
+            <set_value name="$stats" exact="player.entity.$RescueRangersStats" />
+            <set_value name="$key" exact="'$' + $event.$kind" />
+            <set_value name="$count" exact="if @$event.$count gt 0 then $event.$count else 1" />
+            <do_if value="$stats.{$key}?">
+              <set_value name="$stats.{$key}" operation="add" exact="$count" />
+            </do_if>
+
+            <set_value name="$hour" exact="(player.age / 3600)i" />
+            <do_if value="$stats.$hours.count == 0 or @$stats.$hours.{$stats.$hours.count}.$h != $hour">
+              <append_to_list name="$stats.$hours" exact="table[$h = $hour, $ejected = 0, $rescued = 0, $lost = 0, $returned = 0]" />
+              <do_if value="$stats.$hours.count gt 168">
+                <remove_value name="$stats.$hours.{1}" />
+              </do_if>
+            </do_if>
+            <set_value name="$bucket" exact="$stats.$hours.{$stats.$hours.count}" />
+            <do_if value="$bucket.{$key}?">
+              <set_value name="$bucket.{$key}" operation="add" exact="$count" />
+            </do_if>
+
+            <do_if value="@$event.$ranger.isoperational">
+              <set_value name="$rangerStats" exact="null" />
+              <do_for_each name="$entry" in="$stats.$rangers">
+                <do_if value="$entry.$id == $event.$ranger.idcode">
+                  <set_value name="$rangerStats" exact="$entry" />
+                  <break />
+                </do_if>
+              </do_for_each>
+              <do_if value="$rangerStats == null">
+                <set_value name="$rangerStats" exact="table[$id = $event.$ranger.idcode, $rescued = 0, $toDormitory = 0, $joinedCrew = 0, $last = 0]" />
+                <append_to_list name="$stats.$rangers" exact="$rangerStats" />
+              </do_if>
+              <set_value name="$rangerStats.$name" exact="$event.$ranger.knownname" />
+              <do_if value="$rangerStats.{$key}?">
+                <set_value name="$rangerStats.{$key}" operation="add" exact="$count" />
+              </do_if>
+              <set_value name="$rangerStats.$last" exact="player.age" />
+              <remove_value name="$rangerStats" />
+              <remove_value name="$entry" />
+            </do_if>
+
+            <append_to_list name="$stats.$events"
+              exact="table[
+                $t = player.age,
+                $kind = $event.$kind,
+                $count = $count,
+                $ranger = @$event.$ranger.idcode,
+                $rangerName = @$event.$ranger.knownname,
+                $person = @$event.$person,
+                $sector = @$event.$sector.knownname,
+                $other = @$event.$other.knownname,
+                $otherId = @$event.$other.idcode
+              ]" />
+            <do_if value="$stats.$events.count gt 100">
+              <remove_value name="$stats.$events.{1}" />
+            </do_if>
+            <debug_text chance="$debugChance"
+              text="'RR_Stats [%s]: %s x%s, ranger %s, person %s, sector %s, other %s. Totals: ejected %s, rescued %s, lost %s, dormitory %s, crew %s, returned %s'.[
+                player.age, $event.$kind, $count, @$event.$ranger.debugname, @$event.$person, @$event.$sector.knownname, @$event.$other.debugname,
+                $stats.$ejected, $stats.$rescued, $stats.$lost, $stats.$toDormitory, $stats.$joinedCrew, $stats.$returned]" />
+            <remove_value name="$bucket" />
+            <remove_value name="$hour" />
+            <remove_value name="$count" />
+            <remove_value name="$key" />
+            <remove_value name="$stats" />
+          </actions>
+        </library>
+
+        <cue name="OnStatsSignal" instantiate="true" version="107">
+          <conditions>
+            <!-- param2 = table[$kind, $count, $ranger, $person, $sector, $other] -->
+            <event_object_signalled object="player.entity" param="'rr_stats'" />
+            <check_value value="typeof event.param2 == datatype.table" />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <set_value name="$event" exact="event.param2" />
+            <include_actions ref="Record" />
+            <remove_value name="$event" />
+          </actions>
+        </cue>
+
+        <cue name="OnCrewShipLost" instantiate="true" version="107">
+          <conditions>
+            <event_player_owned_destroyed />
+            <check_value
+              value="event.param.isclass.ship and not event.param.ismasstraffic and not event.param.isunit and not event.param.isdeployable and not event.param.isclass.ship_xs and not event.param.isclass.buildstorage" />
+            <check_value value="event.param3 != killmethod.collected" />
+            <check_value value="event.param3 != killmethod.removed" />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <find_ship_by_true_owner name="$spacesuits" faction="faction.player" space="event.param.sector" class="class.spacesuit" docked="false"
+              checkoperational="true" multiple="true" />
+            <!-- Two losses in one frame see each other's new suits: count every suit once -->
+            <do_if value="not $countedSuits?">
+              <create_list name="$countedSuits" />
+            </do_if>
+            <do_for_each name="$spacesuit" in="$countedSuits" reverse="true">
+              <do_if value="not @$spacesuit.isoperational">
+                <remove_from_list name="$countedSuits" exact="$spacesuit" />
+              </do_if>
+            </do_for_each>
+            <set_value name="$ejected" exact="0" />
+            <do_for_each name="$spacesuit" in="$spacesuits">
+              <do_if value="$spacesuit.age le 0.1 and $countedSuits.indexof.{$spacesuit} le 0">
+                <set_value name="$ejected" operation="add" />
+                <append_to_list name="$countedSuits" exact="$spacesuit" />
+              </do_if>
+            </do_for_each>
+            <do_if value="$ejected gt 0">
+              <set_value name="$event" exact="table[$kind = 'ejected', $count = $ejected, $sector = event.param.sector, $other = event.param]" />
+              <include_actions ref="Record" />
+              <remove_value name="$event" />
+            </do_if>
+            <remove_value name="$spacesuit" />
+            <remove_value name="$spacesuits" />
+            <remove_value name="$ejected" />
+          </actions>
+        </cue>
+
+        <cue name="OnSpacesuitLost" instantiate="true" version="107">
+          <conditions>
+            <event_player_owned_destroyed />
+            <check_value value="event.param.isclass.spacesuit" />
+            <check_value value="event.param3 != killmethod.removed and event.param3 != killmethod.collected" />
+            <check_value value="event.param != player.occupiedship" />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <set_value name="$event" exact="table[$kind = 'lost', $count = 1, $person = @event.param.pilot.knownname, $sector = event.param.sector]" />
+            <include_actions ref="Record" />
+            <remove_value name="$event" />
+          </actions>
+        </cue>
+
+      </cues>
+    </cue>
+  </cues>
+</mdscript>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="RR_GetThemBack" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
   <cues>
-    <cue name="Main" version="105">
+    <cue name="Main" version="107">
       <conditions>
         <event_cue_signalled cue="md.Setup.Start" />
       </conditions>
@@ -40,6 +40,41 @@
           <create_list name="$commanderCheck" />
         </do_if>
       </actions>
+      <patch sinceversion="107">
+        <!-- Up to 1.06 both indexes held names; 1.07 keys people by npctemplate, which every record keeps in $id -->
+        <set_value name="$migrationDropped" exact="0" />
+        <do_if value="$personInSpaceList?">
+          <create_list name="$personInSpaceIndex" />
+          <do_for_each name="$person" in="$personInSpaceList" counter="$personIndex" reverse="true">
+            <do_if value="not @$person.$id">
+              <remove_value name="$personInSpaceList.{$personIndex}" />
+              <set_value name="$migrationDropped" operation="add" />
+            </do_if>
+          </do_for_each>
+          <do_for_each name="$person" in="$personInSpaceList">
+            <append_to_list name="$personInSpaceIndex" exact="$person.$id" />
+          </do_for_each>
+        </do_if>
+        <do_if value="$personRescuedList?">
+          <create_list name="$personRescuedIndex" />
+          <do_for_each name="$person" in="$personRescuedList" counter="$personIndex" reverse="true">
+            <do_if value="not @$person.$id">
+              <remove_value name="$personRescuedList.{$personIndex}" />
+              <set_value name="$migrationDropped" operation="add" />
+            </do_if>
+          </do_for_each>
+          <do_for_each name="$person" in="$personRescuedList">
+            <append_to_list name="$personRescuedIndex" exact="$person.$id" />
+          </do_for_each>
+        </do_if>
+        <debug_text
+          chance="if @player.entity.$RescueRangersConfig.$debugLevel == 'debug' or @player.entity.$RescueRangersConfig.$debugLevel == 'trace' then 100 else 0"
+          text="'RR_GetThemBack - Migration 107 [%s]: people re-keyed by npctemplate: in space %s, rescued %s, dropped without a template %s'.
+          [ player.age, @$personInSpaceIndex.count, @$personRescuedIndex.count, $migrationDropped ]" />
+        <remove_value name="$migrationDropped" />
+        <remove_value name="$person" />
+        <remove_value name="$personIndex" />
+      </patch>
       <cues>
 
         <library name="ReadDebugChances" version="107">
@@ -71,7 +106,6 @@
                 $id = $destroyedShip.idcode,
                 $macro = $destroyedShip.macro,
                 $sector = $destroyedAt,
-                $commander = null,
                 $replacement = null,
                 $updated = player.age
               ]" />
@@ -113,7 +147,7 @@
                 />
                 <continue />
               </do_if>
-              <do_if value="$personInSpaceIndex.indexof.{$spacesuit.pilot.name} gt 0">
+              <do_if value="$personInSpaceIndex.indexof.{$spacesuit.pilot.npctemplate} gt 0">
                 <debug_text
                   chance="$traceChance" text="'RR_GetThemBack - Collect Spacesuits [%s]: %s is already collected'.
                   [ player.age, $spacesuit.pilot.name ]"
@@ -132,7 +166,7 @@
                   $shipId = @$destroyedShip.idcode,
                   $updated = player.age]" />
               <debug_text chance="$traceChance" text="'RR_GetThemBack - Data Item [%s]: %s.'.[ player.age, $person ]" />
-              <append_to_list name="$personInSpaceIndex" exact="$spacesuit.pilot.name" />
+              <append_to_list name="$personInSpaceIndex" exact="$spacesuit.pilot.npctemplate" />
               <append_to_list name="$personInSpaceList" exact="$person" />
             </do_for_each>
             <debug_text
@@ -151,97 +185,6 @@
             <remove_value name="$destroyTimestamp" />
             <remove_value name="$destroyedAt" />
             <remove_value name="$destroyedShip" />
-          </actions>
-        </cue>
-
-        <library name="ForwardReconstituteSignal" version="107">
-          <actions>
-            <debug_text
-              chance="if @player.entity.$RescueRangersConfig.$debugLevel == 'debug' or @player.entity.$RescueRangersConfig.$debugLevel == 'trace' then 100 else 0"
-              text="'RR_GetThemBack - ForwardFleetUnitsRequests [%s]: Commander: %s. FleetUnits Count: %s'.
-              [player.age, @event.param2.debugname, @event.param3.count]"
-            />
-            <create_list name="$fleetUnits" />
-            <append_list_elements name="$fleetUnits" other="@$shipstobereplaced" />
-            <signal_objects object="player.entity" param="'rr_reconstitute_fleet'" param2="event.param2" param3="$fleetUnits" delay="10ms" />
-            <remove_value name="$fleetUnits" />
-          </actions>
-        </library>
-
-        <cue name="ProcessFleetUnitRequests" instantiate="true" version="107">
-          <conditions>
-            <!-- param2 = requester, param3 = [ships to be replaced] -->
-            <event_object_signalled object="player.entity" param="'rr_reconstitute_fleet'" />
-            <check_value value="event.param2.isoperational" />
-            <check_value value="event.param2.isclass.controllable" />
-            <check_value value="not event.param2.fleetunit" />
-            <check_value value="@event.param3.count" />
-            <check_value value="@player.entity.$RRGetThemBackEnabled + 1800 ge player.age" />
-            <check_value value="player.gameversion ge 750" />
-          </conditions>
-          <actions>
-            <include_actions ref="ReadDebugChances" />
-            <set_value name="$commander" exact="event.param2" />
-            <do_if value="$commander.commander">
-              <set_value name="$commander" exact="$commander.toplevelcommander" />
-            </do_if>
-            <do_if value="$commander.isoperational">
-              <debug_text
-                chance="$debugChance" text="'RR_GetThemBack - FleetUnitsRequests [%s]: Commander: %s. FleetUnits Count: %s.'.
-                [ player.age, $commander.debugname, event.param3.count]"
-              />
-              <do_if value="@$shipsDestroyedList.count gt 0">
-                <!-- MD fleetunit has no idcode; ui/rr_fleet_units.lua answers with the lost ship's idcode per unit -->
-                <raise_lua_event name="'RescueRangers.FleetUnits'" param="$commander" />
-              </do_if>
-              <do_else>
-                <debug_text
-                  chance="$debugChance" text="'RR_GetThemBack - FleetUnitsRequests [%s]: No destroyed ships recorded, nothing to match for %s.'.
-                  [ player.age, $commander.debugname ]" />
-              </do_else>
-            </do_if>
-            <remove_value name="$commander" />
-          </actions>
-        </cue>
-
-        <cue name="FleetUnitIdcode" instantiate="true" version="107">
-          <conditions>
-            <!-- param3 = table[$commander, $idcode], one event per lost fleet unit -->
-            <event_ui_triggered screen="'RescueRangers.FleetUnits'" control="'Result'" />
-            <check_value value="@player.entity.$RRGetThemBackEnabled + 1800 ge player.age" />
-            <check_value value="player.gameversion ge 750" />
-          </conditions>
-          <actions>
-            <include_actions ref="ReadDebugChances" />
-            <set_value name="$commander" exact="@event.param3.$commander" />
-            <set_value name="$idcode" exact="@event.param3.$idcode" />
-            <set_value name="$shipInfo" exact="null" />
-            <do_for_each name="$info" in="$shipsDestroyedList">
-              <do_if value="$info.$id == $idcode">
-                <set_value name="$shipInfo" exact="$info" />
-                <break />
-              </do_if>
-            </do_for_each>
-            <do_if value="$shipInfo == null">
-              <debug_text
-                chance="$debugChance" text="'RR_GetThemBack - FleetUnitIdcode [%s]: No destroyed ship record for %s (commander %s).'.
-                [ player.age, $idcode, @$commander.debugname ]" />
-            </do_if>
-            <do_elseif value="not @$commander.isoperational">
-              <debug_text
-                chance="$debugChance" text="'RR_GetThemBack - FleetUnitIdcode [%s]: Commander of %s is not operational: %s.'.
-                [ player.age, $idcode, $commander ]" />
-            </do_elseif>
-            <do_else>
-              <set_value name="$shipInfo.$commander" exact="$commander" />
-              <set_value name="$shipInfo.$updated" exact="player.age" />
-              <debug_text
-                chance="$debugChance" text="'RR_GetThemBack - FleetUnitIdcode [%s]: Commander %s set for %s. Record: %s.'.
-                [ player.age, $commander.debugname, $idcode, $shipInfo ]" />
-            </do_else>
-            <remove_value name="$shipInfo" />
-            <remove_value name="$idcode" />
-            <remove_value name="$commander" />
           </actions>
         </cue>
 
@@ -270,36 +213,68 @@
               ]"
             />
             <do_if value="player.gameversion ge 750 and $personInSpaceIndex?">
+              <!-- Key: the person's npctemplate; an order started before 1.07 sends only the name -->
               <set_value name="$personRescued" exact="event.param2" />
+              <set_value name="$personKey" exact="@event.param3.$template" />
               <set_value name="$personRescuedContainer" exact="event.param3.$container" />
               <set_value name="$personRescuedContainerTag" exact="event.param3.$containerTag" />
-              <do_if value="$personRescuedContainerTag == 'rescuer' and @$personInSpaceIndex.count gt 0">
-                <set_value name="$personIndex" exact="$personInSpaceIndex.indexof.{$personRescued}" />
+              <do_if value="$personRescuedContainerTag == 'rescuer' and @$personInSpaceList.count gt 0">
+                <set_value name="$personIndex" exact="0" />
+                <do_if value="$personKey">
+                  <set_value name="$personIndex" exact="$personInSpaceIndex.indexof.{$personKey}" />
+                </do_if>
+                <do_else>
+                  <do_for_each name="$candidate" in="$personInSpaceList" counter="$candidateIndex">
+                    <do_if value="$candidate.$name == $personRescued">
+                      <set_value name="$personIndex" exact="$candidateIndex" />
+                      <break />
+                    </do_if>
+                  </do_for_each>
+                  <remove_value name="$candidate" />
+                  <remove_value name="$candidateIndex" />
+                </do_else>
                 <do_if value="$personIndex gt 0">
                   <set_value name="$person" exact="$personInSpaceList.{$personIndex}" />
-                  <remove_from_list name="$personInSpaceList" exact="$person" />
-                  <remove_from_list name="$personInSpaceIndex" exact="$personRescued" />
+                  <remove_value name="$personInSpaceList.{$personIndex}" />
+                  <remove_value name="$personInSpaceIndex.{$personIndex}" />
                   <set_value name="$person.$container" exact="$personRescuedContainer" />
                   <set_value name="$person.$containerTag" exact="$personRescuedContainerTag" />
                   <set_value name="$person.$updated" exact="player.age" /> <!-- Set the update timestamp -->
-                  <set_value name="$containerPersons" exact="$personRescuedContainer.availablepeople.{entityrole.unassigned}.list" />
-                  <do_for_each name="$containerPerson" in="$containerPersons">
-                    <do_if value="$personRescuedContainer.availablepeople.{$containerPerson}.name == $personRescued">
-                      <set_value name="$person.$id" exact="$containerPerson" />
-                    </do_if>
-                  </do_for_each>
-                  <append_to_list name="$personRescuedIndex" exact="$personRescued" />
+                  <do_if value="not $personKey">
+                    <set_value name="$containerPersons" exact="$personRescuedContainer.availablepeople.{entityrole.unassigned}.list" />
+                    <do_for_each name="$containerPerson" in="$containerPersons">
+                      <do_if value="$personRescuedContainer.availablepeople.{$containerPerson}.name == $personRescued">
+                        <set_value name="$person.$id" exact="$containerPerson" />
+                      </do_if>
+                    </do_for_each>
+                    <remove_value name="$containerPerson" />
+                    <remove_value name="$containerPersons" />
+                  </do_if>
+                  <append_to_list name="$personRescuedIndex" exact="$person.$id" />
                   <append_to_list name="$personRescuedList" exact="$person" />
                   <debug_text
-                    chance="$debugChance" text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Person Item moved from spacesuit for %s: %s'.
-                    [ player.age, $personRescued, $person ]"
+                    chance="$debugChance" text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Person Item moved from spacesuit for %s (by %s): %s'.
+                    [ player.age, $personRescued, if $personKey then 'template' else 'name', $person ]"
                   />
                   <remove_value name="$person" />
-                  <remove_value name="$destroyedIndex" />
                 </do_if>
+                <remove_value name="$personIndex" />
               </do_if>
-              <do_elseif value="$personRescuedContainerTag == 'dormitory' and @$personRescuedIndex.count gt 0">
-                <set_value name="$personIndex" exact="$personRescuedIndex.indexof.{$personRescued}" />
+              <do_elseif value="$personRescuedContainerTag == 'dormitory' and @$personRescuedList.count gt 0">
+                <set_value name="$personIndex" exact="0" />
+                <do_if value="$personKey">
+                  <set_value name="$personIndex" exact="$personRescuedIndex.indexof.{$personKey}" />
+                </do_if>
+                <do_else>
+                  <do_for_each name="$candidate" in="$personRescuedList" counter="$candidateIndex">
+                    <do_if value="$candidate.$name == $personRescued">
+                      <set_value name="$personIndex" exact="$candidateIndex" />
+                      <break />
+                    </do_if>
+                  </do_for_each>
+                  <remove_value name="$candidate" />
+                  <remove_value name="$candidateIndex" />
+                </do_else>
                 <do_if value="$personIndex gt 0">
                   <set_value name="$personRescuedList.{$personIndex}.$container" exact="$personRescuedContainer" />
                   <set_value name="$personRescuedList.{$personIndex}.$containerTag" exact="$personRescuedContainerTag" />
@@ -311,6 +286,7 @@
                 </do_if>
                 <remove_value name="$personIndex" />
               </do_elseif>
+              <remove_value name="$personKey" />
               <remove_value name="$personRescued" />
               <remove_value name="$personRescuedContainerTag" />
               <remove_value name="$personRescuedContainer" />
@@ -337,8 +313,10 @@
           <conditions>
             <check_value value="@player.entity.$RRGetThemBackEnabled + 7600 ge player.age" />
             <check_any>
-              <check_value value="$personRescuedList?" />
-              <check_value value="$personRescuedList?" />
+              <check_value value="@$personInSpaceList.count gt 0" />
+              <check_value value="@$personRescuedList.count gt 0" />
+              <check_value value="@$shipsDestroyedList.count gt 0" />
+              <check_value value="@$shipsReplacementsList.count gt 0" />
             </check_any>
           </conditions>
           <actions>
@@ -349,8 +327,8 @@
                 <set_value name="$personToCheck" exact="$personInSpaceList.{$personInSpacesuitIndex}" />
                 <include_actions ref="CheckPersonInSpace" />
                 <do_if value="$personToCheckGone">
-                  <remove_from_list name="$personInSpaceIndex" exact="$personToCheck.$name" />
-                  <remove_from_list name="$personInSpaceList" exact="$personToCheck" />
+                  <remove_value name="$personInSpaceIndex.{$personInSpacesuitIndex}" />
+                  <remove_value name="$personInSpaceList.{$personInSpacesuitIndex}" />
                   <debug_text
                     chance="$traceChance" text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Person in Space List'.[ player.age, $personToCheck.$name ]" />
                 </do_if>
@@ -366,9 +344,22 @@
               <set_value name="$personIndex" exact="1" />
               <do_while value="$personIndex le $personRescuedList.count">
                 <set_value name="$person" exact="@$personRescuedList.{$personIndex}" />
-                <do_if value="player.age gt ($person.$updated + 3600)">
-                  <remove_from_list name="$personRescuedIndex" exact="$person.$name" />
-                  <remove_from_list name="$personRescuedList" exact="$person" />
+                <set_value name="$personExpired" exact="player.age gt ($person.$updated + 3600)" />
+                <do_if value="$personExpired and @$shipsDestroyedIndex.indexof.{$person.$shipId} gt 0">
+                  <set_value name="$personExpired" exact="false" />
+                </do_if>
+                <do_if value="$personExpired">
+                  <do_for_each name="$replacementInfo" in="$shipsReplacementsList">
+                    <do_if value="$replacementInfo.$id == $person.$shipId">
+                      <set_value name="$personExpired" exact="false" />
+                      <break />
+                    </do_if>
+                  </do_for_each>
+                  <remove_value name="$replacementInfo" />
+                </do_if>
+                <do_if value="$personExpired">
+                  <remove_value name="$personRescuedIndex.{$personIndex}" />
+                  <remove_value name="$personRescuedList.{$personIndex}" />
                   <debug_text chance="$traceChance" text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Dormitories'.[ player.age, $person.$name ]" />
                 </do_if>
                 <do_else>
@@ -376,6 +367,7 @@
                 </do_else>
               </do_while>
               <remove_value name="$person" />
+              <remove_value name="$personExpired" />
               <remove_value name="$personIndex" />
             </do_if>
             <do_if value="$shipsDestroyedList? and @$shipsDestroyedList.count gt 0">
@@ -437,56 +429,68 @@
           </conditions>
           <actions>
             <include_actions ref="ReadDebugChances" />
-            <set_value name="$replacement" exact="event.param2" />
-            <set_value name="$commander" exact="event.param3" />
-            <do_if value="$commander.toplevelcommander">
-              <set_value name="$commander" exact="$commander.toplevelcommander" />
-            </do_if>
             <debug_text
-              chance="$traceChance" text="'RR_GetThemBack - ReplacementShipBuilded [%s]: Data exists: %s. Records count: %s. Input: Commander: %s. Replacement: %s. Macro: %s'.
-              [
-                player.age,
-                $shipsDestroyedList?,
-                $shipsDestroyedList.count,
-                $commander.debugname,
-                $replacement.debugname,
-                $replacement.macro
-              ]"
+              chance="$traceChance" text="'RR_GetThemBack - ReplacementShipBuilded [%s]: Replacement: %s. Commander: %s. Macro: %s. Records count: %s'.
+              [ player.age, event.param2.debugname, event.param3.debugname, event.param2.macro, @$shipsDestroyedList.count ]"
             />
-            <do_if value="$shipsDestroyedList? and @$shipsDestroyedList.count gt 0">
-              <set_value name="$shipInfo" exact="null" />
-              <do_for_each name="$info" in="$shipsDestroyedList">
-                <do_if value="$info.$macro == $replacement.macro and $info.$commander == $commander">
-                  <set_value name="$shipInfo" exact="$info" />
-                  <set_value name="$shipInfo.$replacement" exact="$replacement" />
-                  <break />
-                </do_if>
-              </do_for_each>
+            <do_if value="@$shipsDestroyedList.count gt 0">
+              <!-- MD fleetunit has no idcode; ui/rr_fleet_units.lua answers with the lost ship's idcode -->
+              <raise_lua_event name="'RescueRangers.FleetUnit'" param="event.param2" />
+            </do_if>
+            <do_else>
               <debug_text
-                chance="$traceChance" text="'RR_GetThemBack - ReplacementShipBuilded [%s]: Commander: %s. Macro: %s. Replacement: %s. Ship Info: %s'.
-                [ player.age, $commander.debugname, $replacement.macro, $replacement.debugname, $shipInfo ]"
+                chance="$debugChance" text="'RR_GetThemBack - ReplacementShipBuilded [%s]: No destroyed ships recorded, nothing to match for %s.'.
+                [ player.age, event.param2.debugname ]"
               />
-              <do_if value="$shipInfo != null">
-                <append_to_list name="$shipsReplacementsList" exact="$shipInfo" />
-                <append_to_list name="$shipsReplacementsIndex" exact="$replacement.idcode" />
-                <remove_from_list name="$shipsDestroyedList" exact="$shipInfo" />
-                <remove_from_list name="$shipsDestroyedIndex" exact="$shipInfo.$id" />
-                <debug_text
-                  chance="$debugChance" text="'RR_GetThemBack - ReplacementShipBuilded [%s]: ShipInfo: %s is assigned to Replacement ship %s'.
-                  [ player.age, $shipInfo, $replacement.debugname ]"
-                />
+            </do_else>
+          </actions>
+        </cue>
+
+        <cue name="ReplacementFleetUnit" instantiate="true" version="107">
+          <conditions>
+            <!-- param3 = table[$replacement, $idcode], $idcode = the lost ship's idcode -->
+            <event_ui_triggered screen="'RescueRangers.FleetUnits'" control="'Replacement'" />
+            <check_value value="@player.entity.$RRGetThemBackEnabled + 1800 ge player.age" />
+            <check_value value="player.gameversion ge 750" />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <set_value name="$replacement" exact="@event.param3.$replacement" />
+            <set_value name="$idcode" exact="@event.param3.$idcode" />
+            <set_value name="$shipInfo" exact="null" />
+            <do_for_each name="$info" in="$shipsDestroyedList">
+              <do_if value="$info.$id == $idcode">
+                <set_value name="$shipInfo" exact="$info" />
                 <break />
               </do_if>
-              <do_else>
-                <debug_text
-                  chance="$debugChance" text="'RR_GetThemBack - ReplacementShipBuilded [%s]: ShipInfo not found for Replacement ship %s'.
-                  [ player.age, $replacement.debugname ]"
-                />
-              </do_else>
-              <remove_value name="$shipInfo" />
+            </do_for_each>
+            <do_if value="$shipInfo == null">
+              <debug_text
+                chance="$debugChance" text="'RR_GetThemBack - ReplacementFleetUnit [%s]: No destroyed ship record for %s, replacement %s.'.
+                [ player.age, $idcode, @$replacement.debugname ]"
+              />
             </do_if>
+            <do_elseif value="not @$replacement.isoperational">
+              <debug_text
+                chance="$debugChance" text="'RR_GetThemBack - ReplacementFleetUnit [%s]: Replacement for %s is not operational: %s.'.
+                [ player.age, $idcode, $replacement ]"
+              />
+            </do_elseif>
+            <do_else>
+              <set_value name="$shipInfo.$replacement" exact="$replacement" />
+              <set_value name="$shipInfo.$updated" exact="player.age" />
+              <append_to_list name="$shipsReplacementsList" exact="$shipInfo" />
+              <append_to_list name="$shipsReplacementsIndex" exact="$replacement.idcode" />
+              <remove_from_list name="$shipsDestroyedList" exact="$shipInfo" />
+              <remove_from_list name="$shipsDestroyedIndex" exact="$shipInfo.$id" />
+              <debug_text
+                chance="$debugChance" text="'RR_GetThemBack - ReplacementFleetUnit [%s]: ShipInfo: %s is assigned to Replacement ship %s'.
+                [ player.age, $shipInfo, $replacement.debugname ]"
+              />
+            </do_else>
+            <remove_value name="$shipInfo" />
+            <remove_value name="$idcode" />
             <remove_value name="$replacement" />
-            <remove_value name="$commander" />
           </actions>
         </cue>
 
@@ -614,8 +618,8 @@
                       <create_list name="$crewLocal" />
                       <do_for_each name="$person" in="$replacement.availablepeople.list">
                         <debug_text
-                          chance="$traceChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Person: %s. Role: %s. Control Post: %s'.
-                           [ player.age, $person, @$replacement.people.{$person}.role.name, @$replacement.people.{$person}.controlpost.name ]"
+                          chance="$traceChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Person: %s (%s). Role: %s'.
+                           [ player.age, $person, @$replacement.availablepeople.{$person}.name, @$replacement.availablepeople.{$person}.role.name ]"
                         />
                         <do_if value="$replacement.availablepeople.{$person}.role == entityrole.unassigned" negate="true">
                           <set_npc_template_role object="$replacement" template="$person" role="entityrole.unassigned" />
@@ -720,9 +724,9 @@
                       <do_if value="$rescuedCrew.count gt 0">
                         <sort_list list="$rescuedCrew" sortbyvalue="@loop.element.$skillCombined" sortdescending="true" />
                         <create_list name="$crewToTransfer" />
+                        <set_value name="$returnedCount" exact="0" />
                         <do_for_each name="$newCrewMember" in="$rescuedCrew">
-                          <set_value name="$personIndex" exact="$personRescuedIndex.indexof.{$newCrewMember.$name}" />
-                          <set_value name="$person" exact="$personRescuedList.{$personIndex}" />
+                          <set_value name="$person" exact="$newCrewMember" />
                           <debug_text
                             chance="$traceChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Crew member %s(%s) is ready to transfer from %s'.
                             [ player.age, $person.$name, $person.$id, $person.$container.debugname ]"
@@ -735,11 +739,17 @@
                             chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Person transferred: Count: %s, Data: %s.'.
                             [ player.age, $personTransferred.count, $personTransferred ]"
                           />
-                          <do_if value="$pilotRescued != null and $personTransferred.count == 1 and $person.$name == $pilotRescued.$name">
+                          <do_if value="$pilotRescued != null and $personTransferred.count == 1 and $person.$id == $pilotRescued.$id">
                             <set_value name="$pilotTransferred" exact="true" />
                           </do_if>
+                          <set_value name="$returnedCount" operation="add" exact="$personTransferred.count" />
                           <clear_list list="$personTransferred" />
                         </do_for_each>
+                        <do_if value="$returnedCount gt 0">
+                          <signal_objects object="player.entity" param="'rr_stats'"
+                            param2="table[$kind = 'returned', $count = $returnedCount, $sector = $replacement.sector, $other = $replacement]" />
+                        </do_if>
+                        <remove_value name="$returnedCount" />
                       </do_if>
                       <do_else>
                         <debug_text
@@ -786,7 +796,7 @@
                         </do_if>
                         <do_else>
                           <debug_text
-                            chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Pilot not transferred: %s(%)s'.
+                            chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Pilot not transferred: %s (%s)'.
                             [ player.age, @$pilotRescued.$name, @$pilotRescued.$id ]"
                           />
                         </do_else>
@@ -795,7 +805,7 @@
                       <set_value name="$crewUnassigned" exact="$replacement.availablepeople.{entityrole.unassigned}.list" />
                       <set_value name="$lastMarine" exact="false" />
                       <do_for_each name="$crewMember" in="$crewUnassigned">
-                        <do_if value="$pilotRescued == null or $replacement.availablepeople.{$crewMember}.name != @$pilotRescued.$name">
+                        <do_if value="$pilotRescued == null or $crewMember != @$pilotRescued.$id">
                           <set_value name="$skillEngineering" exact="$replacement.availablepeople.{$crewMember}.skill.engineering" />
                           <set_value name="$skillBoarding" exact="$replacement.availablepeople.{$crewMember}.skill.boarding" />
                           <set_value name="$skillCombined" exact="$skillEngineering + $skillBoarding" />
@@ -843,12 +853,13 @@
                       <remove_value name="$crewMember" />
                       <remove_value name="$crewUnassigned" />
                       <remove_value name="$pilotRescued" />
-                      <do_for_each name="$person" in="$personRescuedList">
+                      <do_for_each name="$person" in="$personRescuedList" counter="$rescuedIndex" reverse="true">
                         <do_if value="$person.$shipId == $shipInfo.$id">
-                          <remove_from_list name="$personRescuedList" exact="$person" />
-                          <remove_from_list name="$personRescuedIndex" exact="$person.$name" />
+                          <remove_value name="$personRescuedList.{$rescuedIndex}" />
+                          <remove_value name="$personRescuedIndex.{$rescuedIndex}" />
                         </do_if>
                       </do_for_each>
+                      <remove_value name="$rescuedIndex" />
                     </do_if>
                     <do_else>
                       <debug_text chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: No crew assigned'" />
@@ -898,8 +909,8 @@
                   <set_value name="$personIndex" operation="add" />
                 </do_if>
                 <do_else>
-                  <remove_from_list name="$personInSpaceList" exact="$personToCheck" />
-                  <remove_from_list name="$personInSpaceIndex" exact="$personToCheck.$name" />
+                  <remove_value name="$personInSpaceList.{$personIndex}" />
+                  <remove_value name="$personInSpaceIndex.{$personIndex}" />
                 </do_else>
               </do_while>
               <remove_value name="$personToCheck" />
@@ -997,6 +1008,9 @@
                   post="controlpost.aipilot" success="$pilotsSwappingResult" failed="$pilotsSwappingMessage" check="true" />
                 <set_value name="$currentCommander" exact="@$swapInfo.$ship.commander" />
                 <set_value name="$currentGroupId" exact="@$swapInfo.$ship.subordinategroupid" />
+                <!-- aipilot still names the old pilot in this frame -->
+                <set_value name="$newPilotName" exact="@$swapInfo.$ship.availablepeople.{$swapInfo.$pilot}.name" />
+                <set_value name="$oldPilotName" exact="@$swapInfo.$ship.aipilot.knownname" />
                 <do_if value="$pilotsSwappingResult">
                   <debug_text
                     chance="$debugChance" text="'RR_GetThemBack - SwapPilots [%s]: Check passed. Swapping pilots by record %s'.
@@ -1007,8 +1021,8 @@
                 </do_if>
                 <do_if value="$pilotsSwappingResult">
                   <debug_text
-                    chance="$debugChance" text="'RR_GetThemBack - SwapPilots [%s]: Pilot %s swapped on %s.'.
-                    [ player.age, @$swapInfo.$ship.aipilot.knownname, $swapInfo.$ship.debugname ]"
+                    chance="$debugChance" text="'RR_GetThemBack - SwapPilots [%s]: %s is the pilot of %s now, %s moved to the crew.'.
+                    [ player.age, $newPilotName, $swapInfo.$ship.debugname, $oldPilotName ]"
                   />
                   <remove_from_list name="@$pilotsToSwap" exact="$swapInfo" />
                   <do_if value="$currentCommander != null and $currentGroupId != null">
@@ -1018,7 +1032,7 @@
                 </do_if>
                 <do_else>
                   <debug_text
-                    chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: Pilot swap failed: %s'.
+                    chance="$debugChance" text="'RR_GetThemBack - SwapPilots [%s]: Pilot swap failed: %s'.
                     [ player.age, $pilotsSwappingMessage]" />
                   <do_if value="$swapInfo.$updated + 300 lt player.age">
                     <remove_from_list name="@$pilotsToSwap" exact="$swapInfo" />
@@ -1033,6 +1047,8 @@
                 </do_else>
                 <remove_value name="$currentCommander" />
                 <remove_value name="$currentGroupId" />
+                <remove_value name="$newPilotName" />
+                <remove_value name="$oldPilotName" />
               </do_if>
               <do_else>
                 <remove_from_list name="@$pilotsToSwap" exact="$swapInfo" />

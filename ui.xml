@@ -2,6 +2,8 @@
 <addon name="rr_fleet_units" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../ui/core/addon.xsd">
     <environment type="menus">
         <dependency name="sn_mod_support_apis" />
+        <dependency name="ego_detailmonitor" />
         <file name="ui/rr_fleet_units.lua" />
+        <file name="ui/rr_overview.lua" />
     </environment>
 </addon>

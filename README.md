@@ -24,6 +24,7 @@ Compatible with `X4: Foundations 7.1`. At least it written and tested with this 
 Several ships with one order can work in one sector or crossed sectors.
 `Mimic` order in a fleet is fully supported.
 From version 1.03 can work without `Home station` set - in the `Fleet support` mode.
+From version 1.07 the `Rescue Rangers` overview in the top menu shows every Rescue ship, the rescue statistics and each Rescue ship's settings.
 
 ## How it works
 
@@ -89,7 +90,7 @@ The `Lost Ships Replacement` feature should be enabled for appropriate fleet com
 
 The rescued crew is returned on the replacement of the very ship they were lost from. Ships lost outside a fleet with `Lost Ships Replacement` get no replacement, so their rescued crew stays where the Rescue ship put it.
 
-There is one limitation: if one fleet lost several ships of the same model, their rescued crews can be returned on each other's replacements.
+A loss is remembered for two hours: a Replacement Ship finished later than that (for example, while the shipyards were short of resources) gets no rescued crew back.
 
 **Important note**: This feature is configured on each Rescue ship separately!
 
@@ -117,6 +118,10 @@ These options are on the `Rescue Rangers` page of the `Extension options` menu. 
 
 From `0` (the default) to `5`. Raises the highest `Max gate distance to rescue` you can select for any Rescue ship by this number. It changes only what the order menu lets you pick; set the distance on each Rescue ship as before.
 
+### Show the Rescue Rangers overview in the top menu
+
+`Enabled` by default. Adds the `Rescue Rangers` overview to the row of top menu icons, right after the map.
+
 ### Debug Level
 
 Sets how much the extension writes to the game's debug log:
@@ -124,6 +129,14 @@ Sets how much the extension writes to the game's debug log:
 - `None` - nothing, the default.
 - `Debug` - one line per action: order start and settings, rescue target selected, rescue result, transfers to the "Dormitory", and the main steps of `Return them back on Replacement Ship`. Please use this level for a log attached to a problem report.
 - `Trace` - in addition, every spacesuit checked, every loop of the order, and the vanilla docking and undocking details.
+
+## Rescue Rangers overview
+
+Open it with its icon in the top menu, right after the map. It has three tabs:
+
+- `Rescue ships` - every ship on the order, each Mimic right under its commander: mode (`Sector`, `Fleet` or `Mimic`), current location, home sector with its rescue range, home station or "Dormitory", crew on board, the "Dormitory" load, the current state, and how many people it rescued. Double-click a row, or use `Show on Map`, to see the ship on the map.
+- `Statistics` - how many crew members were ejected from your lost ships, rescued, died in space, moved to "Dormitories", joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
+- `Settings` - each Rescue ship's `Max gate distance to rescue` and its four options. A change applies at once and restarts that ship's order, as the same change in the order menu does. A Mimic follows its commander's settings.
 
 ## Situation when both ships are full
 

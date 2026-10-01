@@ -6,6 +6,7 @@
 
 - New order option `Keep rescued on board as crew`: rescued crews' members join the Rescue ship as service crew or marines instead of going to the "Dormitory".
 - `Rescue Rangers` page in the Extension Options, with `Extra max gate distance above the pilot skill limit` (0 to 5) to allow a longer rescue range, and a `Debug Level` setting.
+- `Rescue Rangers` overview in the top menu, right after the map, with three tabs: `Rescue ships` (every Rescue ship and its Mimics with mode, location, home, crew, "Dormitory" load and current state), `Statistics` (crew ejected, rescued, died in space, moved to "Dormitories", joined crews, returned on Replacement Ships, per Rescue ship, and the recent events) and `Settings` (each Rescue ship's range and options, changed in place). The top menu entry can be switched off in the Extension Options.
 - Requires `Mod Support APIs`, `Options Helper` and `Print Extension List`.
 
 ### Changed
@@ -25,7 +26,10 @@
 - `Mimic` subordinates always ran with `Return them back on Replacement Ship` off.
 - `Return them back on Replacement Ship` could stop tracking losses and replacements while all Rescue ships were busy for more than 5 minutes.
 - `Return them back on Replacement Ship`: rescued crew is now returned on the replacement of the very ship they were lost from. Before, any recent loss of the same model nearby could take its place, even one from a fleet without `Lost Ships Replacement`.
+- `Return them back on Replacement Ship`: rescued crew whose Replacement Ship took more than an hour to build and arrive was forgotten before it joined the fleet.
+- `Return them back on Replacement Ship`: crew members were tracked by name, so two people with the same name could be skipped or mixed up. They are tracked one by one now; a save from an older version is converted on load.
 - The order can no longer be added to a repeat orders loop.
+- A Rescue ship destroyed while on the order wrote errors to the game's debug log.
 
 ## [1.06] - 2025-06-16
 

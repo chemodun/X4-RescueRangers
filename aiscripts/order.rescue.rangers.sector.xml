@@ -81,6 +81,8 @@
           </do_else>
         </do_for_each>
         <do_if value="$crewToAssign.count gt 0">
+          <signal_objects object="player.entity" param="'rr_stats'"
+            param2="table[$kind = 'joinedCrew', $count = $crewToAssign.count, $ranger = this.assignedcontrolled, $sector = this.assignedcontrolled.sector]" />
           <debug_text chance="$debugChance"
             text="'RescueRangers [%s at %s, Mode: %s] - %s rescued joined the crew. Service: %s, marines: %s, unassigned: %s'
               .[
@@ -112,7 +114,7 @@
       <conditions>
         <check_all>
           <event_game_loaded />
-          <debug_text chance="if @player.entity.$RescueRangersConfig.$debugLevel == 'trace' then 100 else 0"
+          <debug_text debugchance="if @player.entity.$RescueRangersConfig.$debugLevel == 'trace' then 100 else 0"
             text="'RescueRangers [%s at %s]. Game loaded with version %s'.
             [
               this.assignedcontrolled.debugname,
@@ -189,8 +191,10 @@
             </do_if>
             <do_if value="@$getThemBack">
               <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
-                param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
+                param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer', $template = @$targetTemplate]" />
             </do_if>
+            <signal_objects object="player.entity" param="'rr_stats'"
+              param2="table[$kind = 'rescued', $count = 1, $ranger = this.assignedcontrolled, $person = $targetPerson, $sector = this.assignedcontrolled.sector]" />
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
         </do_if>
@@ -262,8 +266,10 @@
           </do_if>
           <do_if value="@$getThemBack">
             <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
-              param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
+              param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer', $template = @$targetTemplate]" />
           </do_if>
+          <signal_objects object="player.entity" param="'rr_stats'"
+            param2="table[$kind = 'rescued', $count = 1, $ranger = this.assignedcontrolled, $person = $targetPerson, $sector = this.assignedcontrolled.sector]" />
         </do_if>
         <do_if value="this.assignedcontrolled.people.free gt 0">
           <abort_called_scripts resume="findSpacesuits" />
@@ -365,6 +371,7 @@
     <set_value name="$target" exact="null" />
     <set_value name="$skipGoToDock" exact="false" />
     <set_value name="$targetPerson" exact="''" />
+    <set_value name="$targetTemplate" exact="null" />
     <set_value name="$textTargetPerson" exact="''" />
     <set_value name="$textTargetSector" exact="''" />
     <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
@@ -373,6 +380,8 @@
       <do_if value="@this.assignedcontrolled.pilot.$rescueData.$timeStamp ge (player.age - 300)">
         <set_value name="$target" exact="@this.assignedcontrolled.pilot.$rescueData.$target" />
         <set_value name="$targetPerson" exact="@this.assignedcontrolled.pilot.$rescueData.$person" />
+        <!-- null for a rescue started before 1.07: the MD then matches by name -->
+        <set_value name="$targetTemplate" exact="@this.assignedcontrolled.pilot.$rescueData.$template" />
         <set_value name="$textTargetPerson" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetPerson" />
         <set_value name="$textTargetSector" exact="@this.assignedcontrolled.pilot.$rescueData.$textTargetSector" />
         <set_value name="$skipGoToDock" exact="true" />
@@ -383,7 +392,7 @@
               this.assignedcontrolled.debugname,
               this.assignedcontrolled.sector.knownname,
               @$rescueMode,
-              $target.debugname,
+              @$target.debugname,
               $targetPerson,
               $textTargetPerson,
               $textTargetSector,
@@ -517,6 +526,9 @@
     <do_if value="$targetPerson?" negate="true">
       <set_value name="$targetPerson" exact="''" />
     </do_if>
+    <do_if value="$targetTemplate?" negate="true">
+      <set_value name="$targetTemplate" exact="null" />
+    </do_if>
     <do_if value="$textTargetSector?" negate="true">
       <set_value name="$textTargetSector" exact="''" />
     </do_if>
@@ -636,8 +648,10 @@
             </do_if>
             <do_if value="@$getThemBack">
               <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$targetPerson"
-                param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer']" />
+                param3="table[$container = this.assignedcontrolled, $containerTag = 'rescuer', $template = @$targetTemplate]" />
             </do_if>
+            <signal_objects object="player.entity" param="'rr_stats'"
+              param2="table[$kind = 'rescued', $count = 1, $ranger = this.assignedcontrolled, $person = $targetPerson, $sector = this.assignedcontrolled.sector]" />
             <apply_experience entity="this" experience="'rescue_rangers'" chance="90" />
           </do_if>
           <do_if value="@$target.pilot.$toRescueBy.$id == this.assignedcontrolled.idcode">
@@ -989,6 +1003,7 @@
           />
           <set_value name="$crewFreeCount" exact="this.assignedcontrolled.people.free" />
           <set_value name="$targetPerson" exact="@$target.pilot.knownname" />
+          <set_value name="$targetTemplate" exact="@$target.pilot.npctemplate" />
           <set_value name="$textTargetPerson" exact="{1972092402, 1014}.[@$target.pilot.knownname, $target.name, $target.idcode]" />
           <set_value name="$textTargetSector" exact="{1972092402, 1003}.[$target.sector.knownname]" />
           <do_if value="$recordActionsToLogBook">
@@ -1001,6 +1016,7 @@
             $timeStamp = player.age,
             $target = $target,
             $person = $targetPerson,
+            $template = $targetTemplate,
             $textTargetPerson = $textTargetPerson,
             $textTargetSector = $textTargetSector,
             $crewFreeCount = $crewFreeCount,
@@ -1106,13 +1122,15 @@
             <existing_people people="$peopleList" />
           </transfer_people>
           <do_if value="@$personsTransferred.count gt 0">
+            <signal_objects object="player.entity" param="'rr_stats'"
+              param2="table[$kind = 'toDormitory', $count = $personsTransferred.count, $ranger = this.assignedcontrolled, $sector = this.assignedcontrolled.sector, $other = $shipDormitory]" />
             <set_value name="$unassignedList" exact="$shipDormitory.availablepeople.{entityrole.unassigned}.list" />
             <do_for_each name="$person" in="$peopleList">
               <do_if value="$unassignedList.indexof.{$person} gt 0">
                 <do_if value="@$getThemBack">
                   <signal_objects object="player.entity" param="'rr_entity_transfer'"
                     param2="$shipDormitory.availablepeople.{$person}.name"
-                    param3="table[$container = $shipDormitory, $containerTag = 'dormitory']" />
+                    param3="table[$container = $shipDormitory, $containerTag = 'dormitory', $template = $person]" />
                 </do_if>
               </do_if>
             </do_for_each>
@@ -1199,14 +1217,15 @@
     <debug_text chance="$debugChance"
       text="'RescueRangers [%s at %s, Mode: %s] - Aborted Base Order. Order: %s, is running: %s. '
         .[
-          this.assignedcontrolled.debugname,
-          this.assignedcontrolled.sector.knownname,
+          @this.assignedcontrolled.debugname,
+          @this.assignedcontrolled.sector.knownname,
           @$rescueMode,
-          this.assignedcontrolled.order.id,
-          this.assignedcontrolled.order.isrunning,
+          @this.assignedcontrolled.order.id,
+          @this.assignedcontrolled.order.isrunning,
         ]"
     />
-    <do_if value="this.assignedcontrolled.order.id != 'RescueShip'">
+    <!-- the ship is null here when it was destroyed -->
+    <do_if value="@this.assignedcontrolled.pilot and @this.assignedcontrolled.order.id != 'RescueShip'">
       <remove_value name="this.assignedcontrolled.pilot.$rescueData" />
       <debug_text chance="$traceChance"
         text="'RescueRangers [%s at %s, Mode: %s] - Rescue data removed.'

@@ -9,6 +9,7 @@
             <set_value name="$cfg" exact="table[
               $debugLevel = 'none',
               $extraRange = 0,
+              $topMenuIcon = 1,
             ]" />
           </actions>
         </library>
@@ -71,6 +72,19 @@
 
               <include_actions ref="md.Options_Helper.Add_Empty_Row" />
               <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092402, 90200}" />
+              </run_actions>
+              <run_actions ref="md.Options_Helper.Add_Checkbox">
+                <param name="id" value="'topMenuIcon'" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="11" />
+                <param name="text" value="{1972092402, 90210}" />
+                <param name="data" value="$cfg" />
+                <param name="handle" value="HandleCheckbox" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
                 <param name="title" value="{1972092402, 90900}" />
               </run_actions>
 
@@ -111,6 +125,18 @@
             <remove_value name="$resultTable" />
             <!-- The slider reports a float; the order's gate distance is an integer -->
             <set_value name="player.entity.$RescueRangersConfig.$extraRange" exact="(player.entity.$RescueRangersConfig.$extraRange)i" />
+          </actions>
+        </cue>
+
+        <cue name="HandleCheckbox" instantiate="true" version="107">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <set_value name="$resultTable" exact="player.entity.$RescueRangersConfig" />
+            <include_actions ref="md.Options_Helper.Process_Checkbox_Changed" />
+            <remove_value name="$resultTable" />
+            <raise_lua_event name="'RescueRangers.TopMenuIcon'" />
           </actions>
         </cue>
 
