@@ -30,7 +30,8 @@ Compatible with `X4: Foundations 7.1`. At least it written and tested with this 
 Several ships with one order can work in one sector or crossed sectors.
 [b]Mimic[/b] order in a fleet is fully supported.
 From version 1.03 can work without [b]Home station[/b] set - in the [b]Fleet support[/b] mode.
-From version 1.07 the [b]Rescue Rangers[/b] overview in the top menu shows every Rescue ship, the rescue statistics and each Rescue ship's settings.
+From version 2.00 the [b]Rescue Rangers[/b] overview in the top menu shows every Rescue ship, the rescue statistics, the people in Stasis and each Rescue ship's settings.
+From version 2.00 rescued people can be kept in Stasis: on your stations with free space for people, or on space rented on NPC stations.
 
 [size=130][u]How it works[/u][/size]
 
@@ -116,6 +117,17 @@ If enabled, the rescued crews' members join the Rescue ship's crew right away: a
 
 If enabled, the ship will record the events to the logbook. I.e. starts, travel to desired sector, flying to the target, attacking the target, destroying the target, etc.
 
+[size=125][u]Stasis[/u][/size]
+
+[b]0[/b] by default. When this Rescue ship moves its rescued people to Stasis, see [b]Keeping rescued people in Stasis[/b] below:
+[list]
+[*] [b]0[/b] - as set in the Extension Options, see `Move rescued people to Stasis`.
+[*] [b]1[/b] - never.
+[*] [b]2[/b] - only when the Rescue ship and its "Dormitory" are full.
+[*] [b]3[/b] - always, instead of the "Dormitory".
+[/list]
+The [b]Settings[/b] tab of the overview shows the same choice as a dropdown.
+
 [size=130][u]Rescue Rangers options[/u][/size]
 
 These options are on the [b]Rescue Rangers[/b] page of the [b]Extension options[/b] menu. They apply to all Rescue ships.
@@ -128,6 +140,18 @@ From [b]0[/b] (the default) to `5`. Raises the highest [b]Max gate distance to r
 
 [b]Enabled[/b] by default. Adds the [b]Rescue Rangers[/b] overview to the row of top menu icons, right after the map.
 
+[size=125][u]Move rescued people to Stasis[/u][/size]
+
+[b]Off[/b] by default. When Rescue ships move their rescued people to Stasis, unless a Rescue ship has its own [b]Stasis[/b] option set: `Off`, `When the ship and the Dormitory are full`, or `Instead of the Dormitory`.
+
+[size=125][u]Extra jumps a rented place on a friendly station may be farther than one on a neutral station[/u][/size]
+
+From [b]0[/b] to `5`, [b]2[/b] by default. A Rescue ship prefers a rented place on a station whose owner is friendly to you, unless one on a neutral station is more than this many jumps closer.
+
+[size=125][u]Rent a place on an NPC station automatically[/u][/size]
+
+From [b]0[/b] (the default, never) to `100`. When a Rescue ship finds no place in Stasis, space on an NPC station is rented automatically if a day of rent is at most this percent of your money. Otherwise the [b]Stasis[/b] tab proposes a station to rent.
+
 [size=125][u]Debug Level[/u][/size]
 
 Sets how much the extension writes to the game's debug log:
@@ -138,11 +162,23 @@ Sets how much the extension writes to the game's debug log:
 [/list]
 [size=130][u]Rescue Rangers overview[/u][/size]
 
-Open it with its icon in the top menu, right after the map. It has three tabs:
+Open it with its icon in the top menu, right after the map. It has four tabs:
 [list]
 [*] [b]Rescue ships[/b] - every ship on the order, each Mimic right under its commander: mode (`Sector`, [b]Fleet[/b] or `Mimic`), current location, home sector with its rescue range, home station or "Dormitory", crew on board, the "Dormitory" load, the current state, and how many people it rescued. Double-click a row, or use `Show on Map`, to see the ship on the map.
-[*] [b]Statistics[/b] - how many crew members were ejected from your lost ships, rescued, died in space, moved to "Dormitories", joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
-[*] [b]Settings[/b] - each Rescue ship's [b]Max gate distance to rescue[/b] and its four options. A change applies at once and restarts that ship's order, as the same change in the order menu does. A Mimic follows its commander's settings.
+[*] [b]Statistics[/b] - how many crew members were ejected from your lost ships, rescued, died in space, moved to "Dormitories" or to Stasis, joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
+[*] [b]Stasis[/b] - the people in Stasis, the places they are kept and the rent of space on NPC stations, see [b]Keeping rescued people in Stasis[/b] below.
+[*] [b]Settings[/b] - each Rescue ship's `Max gate distance to rescue`, its four options and its [b]Stasis[/b] option. A change applies at once and restarts that ship's order, as the same change in the order menu does. The [b]All Rescue ships[/b] row on top changes a setting for every Rescue ship at once (a range is capped by each pilot's skill). A Mimic follows its commander's settings.
+[/list]
+[size=130][u]Keeping rescued people in Stasis[/u][/size]
+
+Stasis keeps rescued people on stations until you need them, instead of filling a "Dormitory" ship. It is off until you switch it on, for all Rescue ships with [b]Move rescued people to Stasis[/b] in the Extension Options or per Rescue ship with its [b]Stasis[/b] option.
+[list]
+[*] [b]Places[/b]: your own stations with free space for people come first, then space you rented on NPC stations, nearest first. A Rescue ship flies to the place and docks there, as it does with the "Dormitory", so docking and your sector blacklists must allow it.
+[*] [b]Rent[/b]: in the [b]Stasis[/b] tab, [b]Find stations[/b] lists the known NPC stations where your ships may dock and that have free space, nearest first, friendly ones preferred; [b]Rent[/b] rents the whole free space of one station for a flat rent per day. When a Rescue ship finds no place, the tab proposes a station, or it is rented automatically, see `Rent a place on an NPC station automatically`. End a lease with [b]End lease[/b] when you no longer need it: its people move to another place in Stasis first, and with no room elsewhere the lease stays.
+[*] [b]Unpaid rent or a low relation[/b]: the rent of a day you cannot pay becomes a debt, paid when the money is there. While a lease has a debt, or its owner's relation to you drops too low for your ships to dock there, its people move at once to another place in Stasis and the lease ends. With no room elsewhere they stay, the place takes no newcomers, and you are told once a day.
+[*] [b]People[/b]: one list of everyone in Stasis with their skills, lost ship, Rescue ship and location; filter it by name, ship or station and sort it. Select several people to assign them at once as service crew or marines to a ship with free crew space, or one person as the pilot of a ship (the former pilot stays aboard as service crew) or as the manager of one of your stations (a former manager moves into Stasis on that station). [b]Dismiss[/b] removes the selected people for good.
+[*] [b]Return them back on Replacement Ship[/b]: people in Stasis are returned on the Replacement Ship of the ship they were lost from, like the ones in a "Dormitory".
+[*] [b]On the map[/b]: people in Stasis are shown as unassigned people in a station's crew list. Dismissing them there removes them from Stasis too. If a station is destroyed, the people in Stasis there are lost.
 [/list]
 [size=130][u]Situation when both ships are full[/u][/size]
 
