@@ -301,6 +301,48 @@
           </actions>
         </library>
 
+        <!-- In: $personRef, a Stasis $key or a ship's $container + $name + skills. Out: $personFrom, $personTemplate, $personRecord (null on a ship) -->
+        <library name="ResolvePerson" version="200">
+          <actions>
+            <set_value name="$personFrom" exact="null" />
+            <set_value name="$personTemplate" exact="null" />
+            <set_value name="$personRecord" exact="null" />
+            <do_if value="@$personRef.$key">
+              <set_value name="$findKey" exact="$personRef.$key" />
+              <include_actions ref="FindRecord" />
+              <do_if value="$foundRecord">
+                <set_value name="$personRecord" exact="$foundRecord" />
+                <set_value name="$personFrom" exact="$foundRecord.$station" />
+                <set_value name="$personTemplate" exact="$templates.{$findKey}" />
+              </do_if>
+              <remove_value name="$foundRecord" />
+              <remove_value name="$findKey" />
+            </do_if>
+            <do_elseif value="@$personRef.$container.isoperational">
+              <!-- Namesakes: the one with the same skills wins -->
+              <do_for_each name="$personCandidate" in="$personRef.$container.availablepeople.{entityrole.unassigned}.list">
+                <do_if value="$personRef.$container.people.{$personCandidate}.name == $personRef.$name">
+                  <do_if value="not $personTemplate">
+                    <set_value name="$personTemplate" exact="$personCandidate" />
+                  </do_if>
+                  <do_if value="$personRef.$container.people.{$personCandidate}.skill.piloting == @$personRef.$piloting
+                    and $personRef.$container.people.{$personCandidate}.skill.engineering == @$personRef.$engineering
+                    and $personRef.$container.people.{$personCandidate}.skill.boarding == @$personRef.$boarding
+                    and $personRef.$container.people.{$personCandidate}.skill.management == @$personRef.$management
+                    and $personRef.$container.people.{$personCandidate}.skill.morale == @$personRef.$morale">
+                    <set_value name="$personTemplate" exact="$personCandidate" />
+                    <break />
+                  </do_if>
+                </do_if>
+              </do_for_each>
+              <do_if value="$personTemplate">
+                <set_value name="$personFrom" exact="$personRef.$container" />
+              </do_if>
+              <remove_value name="$personCandidate" />
+            </do_elseif>
+          </actions>
+        </library>
+
         <!-- In: $countStation. Out: $countAtStation -->
         <library name="CountAtStation" version="200">
           <actions>
@@ -930,181 +972,130 @@
           </actions>
         </cue>
 
-        <cue name="OnAssign" instantiate="true" version="202">
+        <cue name="OnMove" instantiate="true" version="200">
           <conditions>
-            <!-- param3 = table[$keys, $target, $role]; $role = 'service', 'marine', 'pilot' (a ship) or 'manager' (a station) -->
-            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Assign'" />
-            <check_value value="@event.param3.$target.isoperational" />
-            <check_value value="event.param3.$target.isplayerowned and not event.param3.$target.isnpcassignmentrestricted" />
-            <check_value value="['service', 'marine', 'pilot', 'manager'].indexof.{@event.param3.$role} gt 0" />
-            <check_value value="if event.param3.$role == 'manager' then event.param3.$target.isclass.station else event.param3.$target.isclass.ship" />
+            <!-- param3 = table[$people, $target]; each person as ResolvePerson takes it; $target a Stasis place or a player ship -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Move'" />
+            <check_value value="@event.param3.$target.isoperational and typeof @event.param3.$people == datatype.list" />
+            <check_value value="event.param3.$target.isclass.station or (event.param3.$target.isclass.ship and event.param3.$target.isplayerowned)" />
           </conditions>
           <actions>
             <include_actions ref="Prepare" />
-            <set_value name="$assignTarget" exact="event.param3.$target" />
-            <set_value name="$assignRole" exact="event.param3.$role" />
-            <set_value name="$assignKeys" exact="if typeof event.param3.$keys == datatype.list then event.param3.$keys else [event.param3.$keys]" />
-            <do_if value="($assignRole == 'pilot' or $assignRole == 'manager') and $assignKeys.count gt 1">
-              <set_value name="$assignKeys" exact="[$assignKeys.{1}]" />
+            <set_value name="$moveTarget" exact="event.param3.$target" />
+            <set_value name="$moveToStation" exact="$moveTarget.isclass.station" />
+            <set_value name="$moveAllowed" exact="not $moveToStation" />
+            <do_if value="$moveToStation">
+              <include_actions ref="RefreshPlaces" />
+              <do_for_each name="$movePlace" in="$places">
+                <do_if value="$movePlace.$station == $moveTarget">
+                  <set_value name="$moveAllowed" exact="true" />
+                  <break />
+                </do_if>
+              </do_for_each>
+              <remove_value name="$movePlace" />
             </do_if>
-            <set_value name="$assignDone" exact="0" />
-            <do_for_each name="$findKey" in="$assignKeys">
-              <do_if value="$assignTarget.people.free le 0">
-                <break />
-              </do_if>
-              <include_actions ref="FindRecord" />
-              <do_if value="$foundRecord == null">
-                <continue />
-              </do_if>
-              <set_value name="$assignTemplate" exact="$templates.{$findKey}" />
-              <do_if value="$foundRecord.$station != $assignTarget">
-                <transfer_people result="$assignResult" object="$assignTarget" otherobject="$foundRecord.$station" receiveworkforce="false">
-                  <existing_people people="[$assignTemplate]" />
-                </transfer_people>
-              </do_if>
-              <do_if value="not @$assignTarget.people.{$assignTemplate}.exists">
-                <debug_text chance="$debugChance"
-                  text="'RR_Stasis - Assign [%s]: %s not transferred from %s to %s'.[player.age, $foundRecord.$name, $foundRecord.$station.debugname, $assignTarget.debugname]" />
-                <continue />
-              </do_if>
-              <do_if value="$assignRole == 'service'">
-                <set_npc_template_role object="$assignTarget" template="$assignTemplate" role="entityrole.service" />
-              </do_if>
-              <do_elseif value="$assignRole == 'marine'">
-                <set_npc_template_role object="$assignTarget" template="$assignTemplate" role="entityrole.marine" />
-              </do_elseif>
-              <do_elseif value="$assignRole == 'pilot'">
-                <!-- Service crew if the swap fails -->
-                <set_npc_template_role object="$assignTarget" template="$assignTemplate" role="entityrole.service" />
-                <signal_objects object="player.entity" param="'rr_swap_pilot'" param2="table[$ship = $assignTarget, $pilot = $assignTemplate]" />
-              </do_elseif>
-              <do_elseif value="$assignRole == 'manager'">
-                <!-- The engine refuses an occupied manager post: the current manager steps down and goes into Stasis here -->
-                <set_value name="$oldManager" exact="@$assignTarget.assignedcontrolentity.{controlpost.manager}" />
-                <do_if value="$oldManager">
-                  <dismiss_control_entity actor="$oldManager" object="$assignTarget" />
+            <set_value name="$moveDone" exact="0" />
+            <do_if value="$moveAllowed">
+              <do_for_each name="$personRef" in="event.param3.$people">
+                <do_if value="$moveTarget.people.free le 0">
+                  <break />
                 </do_if>
-                <assign_hired_actor actor="[$assignTarget, $assignTemplate]" target="$assignTarget" post="controlpost.manager"
-                  success="$assignOk" failed="$assignMessage" check="true" />
-                <do_if value="$assignOk">
-                  <assign_hired_actor actor="[$assignTarget, $assignTemplate]" target="$assignTarget" post="controlpost.manager"
-                    success="$assignOk" failed="$assignMessage" />
-                </do_if>
-                <debug_text chance="$debugChance"
-                  text="'RR_Stasis - Assign [%s]: %s as manager of %s: %s %s, current manager %s'.[player.age, $foundRecord.$name, $assignTarget.debugname, $assignOk, @$assignMessage, @$oldManager.debugname]" />
-                <do_if value="$oldManager and $assignOk">
-                  <!-- Vanilla md.Conversations NPCAssigned_Transfer handles a replaced actor this way -->
-                  <set_value name="$oldRole" exact="if $oldManager.potentialskill.{entityrole.service} gt $oldManager.potentialskill.{entityrole.marine} then entityrole.service else entityrole.marine" />
-                  <create_npc_template object="$assignTarget" entity="$oldManager" role="$oldRole" name="$inTemplate" />
-                  <do_if value="not $inTemplate">
-                    <create_npc_template object="$assignTarget" entity="$oldManager" role="$oldRole" name="$inTemplate" force="true" />
-                  </do_if>
-                  <set_entity_role entity="$oldManager" role="$oldRole" />
-                  <set_entity_role_object entity="$oldManager" object="$assignTarget" />
-                  <signal_objects object="$oldManager" param="'npc_state_reinit'" />
-                  <do_if value="$inTemplate and @$assignTarget.people.{$inTemplate}.exists">
-                    <set_value name="$inStation" exact="$assignTarget" />
-                    <set_value name="$inRanger" exact="null" />
-                    <include_actions ref="AddRecord" />
-                    <set_value name="$assignReplaced" exact="{1972092402, 4043}.[$foundRecord.$name, $assignTarget.knownname, $oldManager.knownname]" />
-                  </do_if>
+                <include_actions ref="ResolvePerson" />
+                <do_if value="not $personTemplate or $personFrom == $moveTarget">
                   <debug_text chance="$debugChance"
-                    text="'RR_Stasis - Assign [%s]: former manager %s of %s, template %s, Stasis key %s'.[player.age, $oldManager.debugname, $assignTarget.debugname, @$inTemplate, @$record.$key]" />
-                </do_if>
-                <do_elseif value="$oldManager">
-                  <assign_control_entity actor="$oldManager" object="$assignTarget" post="controlpost.manager" result="$assignRestored" />
-                  <signal_objects object="$oldManager" param="'npc_state_reinit'" />
-                  <debug_text chance="$debugChance"
-                    text="'RR_Stasis - Assign [%s]: %s back as manager of %s: %s'.[player.age, $oldManager.debugname, $assignTarget.debugname, $assignRestored]" />
-                </do_elseif>
-                <do_if value="not $assignOk">
-                  <do_if value="$foundRecord.$station != $assignTarget">
-                    <transfer_people result="$assignResult" object="$foundRecord.$station" otherobject="$assignTarget" receiveworkforce="false">
-                      <existing_people people="[$assignTemplate]" />
-                    </transfer_people>
-                  </do_if>
-                  <do_if value="not @$foundRecord.$station.people.{$assignTemplate}.exists">
-                    <set_value name="$foundRecord.$station" exact="$assignTarget" />
-                    <set_value name="$foundRecord.$stationName" exact="{1972092402, 1010}.[$assignTarget.knownname, $assignTarget.idcode]" />
-                  </do_if>
-                  <debug_text chance="$debugChance"
-                    text="'RR_Stasis - Assign [%s]: %s stays in Stasis on %s'.[player.age, $foundRecord.$name, $foundRecord.$station.debugname]" />
-                  <set_value name="$assignFailed" exact="$foundRecord.$name" />
+                    text="'RR_Stasis - Move [%s]: %s not found or already on %s'.[player.age, @$personRef.$name, $moveTarget.debugname]" />
                   <continue />
                 </do_if>
-              </do_elseif>
-              <debug_text chance="$debugChance"
-                text="'RR_Stasis - Assign [%s]: %s moved from %s to %s as %s'.[player.age, $foundRecord.$name, $foundRecord.$station.debugname, $assignTarget.debugname, $assignRole]" />
-              <set_value name="$removeRecord" exact="$foundRecord" />
-              <include_actions ref="RemoveRecord" />
-              <set_value name="$assignDone" operation="add" />
-            </do_for_each>
-            <do_if value="$assignDone gt 0">
+                <transfer_people result="$moveResult" object="$moveTarget" otherobject="$personFrom" receiveworkforce="false">
+                  <existing_people people="[$personTemplate]" />
+                </transfer_people>
+                <do_if value="not @$moveTarget.people.{$personTemplate}.exists">
+                  <debug_text chance="$debugChance"
+                    text="'RR_Stasis - Move [%s]: %s not transferred from %s to %s'.[player.age, @$personRef.$name, $personFrom.debugname, $moveTarget.debugname]" />
+                  <continue />
+                </do_if>
+                <set_value name="$moveName" exact="$moveTarget.people.{$personTemplate}.name" />
+                <do_if value="$personRecord and $moveToStation">
+                  <set_value name="$personRecord.$station" exact="$moveTarget" />
+                  <set_value name="$personRecord.$stationName" exact="{1972092402, 1010}.[$moveTarget.knownname, $moveTarget.idcode]" />
+                </do_if>
+                <do_elseif value="$personRecord">
+                  <set_value name="$removeRecord" exact="$personRecord" />
+                  <include_actions ref="RemoveRecord" />
+                </do_elseif>
+                <do_elseif value="$moveToStation">
+                  <set_value name="$inStation" exact="$moveTarget" />
+                  <set_value name="$inRanger" exact="@$personRef.$ranger" />
+                  <set_value name="$inTemplate" exact="$personTemplate" />
+                  <include_actions ref="AddRecord" />
+                </do_elseif>
+                <!-- Get-Them-Back returns from the new place -->
+                <signal_objects object="player.entity" param="'rr_entity_transfer'" param2="$moveName"
+                  param3="table[$container = $moveTarget, $containerTag = (if $moveToStation then 'stasis' else 'dormitory'), $template = $personTemplate]" />
+                <debug_text chance="$debugChance"
+                  text="'RR_Stasis - Move [%s]: %s moved from %s to %s'.[player.age, $moveName, $personFrom.debugname, $moveTarget.debugname]" />
+                <set_value name="$moveDone" operation="add" />
+              </do_for_each>
+            </do_if>
+            <do_if value="$moveDone gt 0">
               <run_actions ref="Notify">
-                <param name="text" value="if $assignReplaced? then $assignReplaced else {1972092402, 4040}.[$assignTarget.knownname, $assignDone]" />
-                <param name="object" value="$assignTarget" />
+                <param name="text" value="{1972092402, 4040}.[$moveTarget.knownname, $moveDone]" />
+                <param name="object" value="$moveTarget" />
               </run_actions>
               <include_actions ref="RefreshPlaces" />
               <include_actions ref="Publish" />
             </do_if>
             <do_else>
               <debug_text chance="$debugChance"
-                text="'RR_Stasis - Assign [%s]: nobody assigned to %s as %s: free %s, keys %s'.[player.age, $assignTarget.debugname, $assignRole, $assignTarget.people.free, $assignKeys]" />
+                text="'RR_Stasis - Move [%s]: nobody moved to %s: allowed %s, free %s, people %s'.[player.age, $moveTarget.debugname, $moveAllowed, $moveTarget.people.free, event.param3.$people.count]" />
               <run_actions ref="Notify">
-                <param name="text" value="if $assignFailed? then {1972092402, 4044}.[$assignFailed, $assignTarget.knownname] else {1972092402, 4041}.[$assignTarget.knownname]" />
-                <param name="object" value="$assignTarget" />
+                <param name="text" value="{1972092402, 4041}.[$moveTarget.knownname]" />
+                <param name="object" value="$moveTarget" />
                 <param name="warning" value="true" />
               </run_actions>
-              <do_if value="$assignFailed?">
-                <include_actions ref="RefreshPlaces" />
-                <include_actions ref="Publish" />
-              </do_if>
             </do_else>
             <raise_lua_event name="'RescueRangers.StasisChanged'" />
-            <remove_value name="$assignOk" />
-            <remove_value name="$assignMessage" />
-            <remove_value name="$assignReplaced" />
-            <remove_value name="$assignRestored" />
-            <remove_value name="$assignFailed" />
-            <remove_value name="$oldManager" />
-            <remove_value name="$oldRole" />
             <remove_value name="$inTemplate" />
             <remove_value name="$inStation" />
             <remove_value name="$inRanger" />
             <remove_value name="$record" />
-            <remove_value name="$assignResult" />
-            <remove_value name="$assignTemplate" />
             <remove_value name="$removeRecord" />
-            <remove_value name="$foundRecord" />
-            <remove_value name="$findKey" />
-            <remove_value name="$assignDone" />
-            <remove_value name="$assignKeys" />
-            <remove_value name="$assignRole" />
-            <remove_value name="$assignTarget" />
+            <remove_value name="$moveName" />
+            <remove_value name="$moveResult" />
+            <remove_value name="$personRef" />
+            <remove_value name="$personFrom" />
+            <remove_value name="$personTemplate" />
+            <remove_value name="$personRecord" />
+            <remove_value name="$moveDone" />
+            <remove_value name="$moveAllowed" />
+            <remove_value name="$moveToStation" />
+            <remove_value name="$moveTarget" />
           </actions>
         </cue>
 
-        <cue name="OnDismiss" instantiate="true" version="201">
+        <cue name="OnDismiss" instantiate="true" version="202">
           <conditions>
-            <!-- param3 = table[$keys] -->
+            <!-- param3 = table[$people]; each person as ResolvePerson takes it -->
             <event_ui_triggered screen="'RescueRangers.Stasis'" control="'Dismiss'" />
-            <check_value value="event.param3.$keys?" />
+            <check_value value="typeof @event.param3.$people == datatype.list" />
           </conditions>
           <actions>
             <include_actions ref="Prepare" />
-            <set_value name="$dismissKeys" exact="if typeof event.param3.$keys == datatype.list then event.param3.$keys else [event.param3.$keys]" />
             <set_value name="$dismissDone" exact="0" />
-            <do_for_each name="$findKey" in="$dismissKeys">
-              <include_actions ref="FindRecord" />
-              <do_if value="$foundRecord == null">
+            <do_for_each name="$personRef" in="event.param3.$people">
+              <include_actions ref="ResolvePerson" />
+              <do_if value="not $personTemplate">
                 <continue />
               </do_if>
-              <do_if value="@$foundRecord.$station.isoperational">
-                <remove_npc_template object="$foundRecord.$station" template="$templates.{$findKey}" />
+              <do_if value="@$personFrom.isoperational">
+                <remove_npc_template object="$personFrom" template="$personTemplate" />
               </do_if>
-              <debug_text chance="$debugChance" text="'RR_Stasis - Dismiss [%s]: %s on %s'.[player.age, $foundRecord.$name, $foundRecord.$stationName]" />
-              <set_value name="$removeRecord" exact="$foundRecord" />
-              <include_actions ref="RemoveRecord" />
+              <debug_text chance="$debugChance"
+                text="'RR_Stasis - Dismiss [%s]: %s on %s'.[player.age, if $personRecord then $personRecord.$name else $personRef.$name, if $personRecord then $personRecord.$stationName else $personFrom.debugname]" />
+              <do_if value="$personRecord">
+                <set_value name="$removeRecord" exact="$personRecord" />
+                <include_actions ref="RemoveRecord" />
+              </do_if>
               <set_value name="$dismissDone" operation="add" />
             </do_for_each>
             <do_if value="$dismissDone gt 0">
@@ -1116,10 +1107,22 @@
             </do_if>
             <raise_lua_event name="'RescueRangers.StasisChanged'" />
             <remove_value name="$removeRecord" />
-            <remove_value name="$foundRecord" />
-            <remove_value name="$findKey" />
+            <remove_value name="$personRef" />
+            <remove_value name="$personFrom" />
+            <remove_value name="$personTemplate" />
+            <remove_value name="$personRecord" />
             <remove_value name="$dismissDone" />
-            <remove_value name="$dismissKeys" />
+          </actions>
+        </cue>
+
+        <cue name="OnAllowReassign" instantiate="true" version="200">
+          <conditions>
+            <!-- param3 = table[$value] -->
+            <event_ui_triggered screen="'RescueRangers.Stasis'" control="'AllowReassign'" />
+            <check_value value="player.entity.$RescueRangersConfig?" />
+          </conditions>
+          <actions>
+            <set_value name="player.entity.$RescueRangersConfig.$stasisAllowReassign" exact="if @event.param3.$value then 1 else 0" />
           </actions>
         </cue>
 

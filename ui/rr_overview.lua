@@ -30,21 +30,24 @@ local config = {
   candidatesStale = 600, -- game seconds before the rent candidates are asked for again on tab open
   candidatesRetry = 30,  -- real seconds between two automatic asks
   confirmWidth    = 420,
+  contextWidth    = 260, -- vanilla InteractMenu width, as the map's person context
+  mouseOutRange   = 100, -- the person context closes once the mouse is this far outside it, as vanilla Personnel
+  getThemBackTtl  = 1800, -- seconds $RRGetThemBackEnabled stays valid, as md/rr_getthemback.xml checks it
 }
 
 local TABS = {
   { id = "rangers",  icon = "tlt_rescuerangers",      name = function() return ReadText(PAGE, 3001) end },
   { id = "stats",    icon = "pi_statistics",          name = function() return ReadText(1001, 2500) end },
-  { id = "stasis",   icon = "pi_personnelmanagement", name = function() return ReadText(PAGE, 4000) end },
+  { id = "stasis",   icon = "pi_personnelmanagement", name = function() return ReadText(PAGE, 3012) end },
   { id = "settings", icon = "mapst_standing_orders",  name = function() return ReadText(1001, 2679) end },
 }
 
--- Assign roles; `skill` is the potential skill field of a Stasis record (0-100).
+-- Suitability roles; `skill` is the potential skill field of a person (0-100), `role`/`post` its GetPersonCombinedSkill args.
 local ROLES = {
-  { id = "service", skill = "asService", text = function() return ReadText(20208, 20103) end },
-  { id = "marine",  skill = "asMarine",  text = function() return ReadText(20208, 20203) end },
-  { id = "pilot",   skill = "asPilot",   text = function() return ReadText(1001, 4847) end },
-  { id = "manager", skill = "asManager", text = function() return ReadText(20208, 30301) end },
+  { id = "service", skill = "asService", role = "service", text = function() return ReadText(20208, 20103) end },
+  { id = "marine",  skill = "asMarine",  role = "marine",  text = function() return ReadText(20208, 20203) end },
+  { id = "pilot",   skill = "asPilot",   post = "aipilot", text = function() return ReadText(1001, 4847) end },
+  { id = "manager", skill = "asManager", post = "manager", text = function() return ReadText(20208, 30301) end },
 }
 local SORTS = {
   { id = "name",     text = function() return ReadText(1001, 2809) end },
@@ -156,22 +159,25 @@ local function sectorNameOf(id64)
   return sector and tostring(GetComponentData(sector, "name")) or ""
 end
 
--- Crew on board (the pilot not counted) and the crew capacity.
+-- Crew on board (the pilot not counted), the crew capacity and the unassigned (rescued not yet moved).
 local function crewOf(id64)
   if not isAlive(id64) then
-    return 0, 0
+    return 0, 0, 0
   end
   local capacity = C.GetPeopleCapacity(id64, "", false)
   local numroles = C.GetNumAllRoles()
-  local count = 0
+  local count, unassigned = 0, 0
   if numroles > 0 then
     local buf = ffi.new("PeopleInfo[?]", numroles)
     local n = C.GetPeople2(buf, numroles, id64, true)
     for i = 0, n - 1 do
       count = count + buf[i].amount
+      if ffi.string(buf[i].id) == "unassigned" then
+        unassigned = buf[i].amount
+      end
     end
   end
-  return count, capacity
+  return count, capacity, unassigned
 end
 
 local function pilotingOf(id64)
@@ -208,30 +214,47 @@ local function queuedOrder(id64, orderdef)
   return false
 end
 
+-- The Stasis mode a ship runs with: its order param, the Options mode for 0.
+local function stasisModeOf(param)
+  return (param == 2 and "overflow") or (param == 3 and "instead") or ((param == 0) and tostring(rr.cfg.stasisMode or "off")) or "off"
+end
+
 -- Rescued people the last Stasis pass found no place for (the order's pilot flag); 0 while Stasis is off.
-local function stasisNoPlaceOf(id64, stasisMode)
-  local mode = (stasisMode == 2 and "overflow") or (stasisMode == 3 and "instead") or ((stasisMode == 0) and rr.cfg.stasisMode) or "off"
-  if mode ~= "overflow" and mode ~= "instead" then
-    return 0
-  end
-  local pilot = GetComponentData(luaId(id64), "assignedpilot")
-  if not pilot then
+local function stasisNoPlaceOf(pilot, stasisNow)
+  if not pilot or (stasisNow ~= "overflow" and stasisNow ~= "instead") then
     return 0
   end
   return math.floor(tonumber(GetNPCBlackboard(ConvertIDTo64Bit(pilot), "$rescueRangersStasisNoPlace")) or 0)
 end
 
-local function stateOf(id64, noPlace)
-  if queuedOrder(id64, "RescueShip") then
-    return ReadText(PAGE, 3030), "text_positive"
+-- The container a docked ship sits in, 0 while under way.
+local function dockedAtOf(id64)
+  if not GetComponentData(luaId(id64), "isdocked") then
+    return 0
   end
-  if noPlace > 0 then
-    return ReadText(PAGE, 3067), "text_warning", string.format(pageText(3068), noPlace)
+  return ConvertStringTo64Bit(tostring(C.GetContextByClass(id64, "container", false)))
+end
+
+-- The station or ship the pilot's deepest command heads for, 0 for none.
+local function headingToOf(pilot)
+  local stack = pilot and GetComponentData(pilot, "aicommandstack") or {}
+  for i = #stack, 1, -1 do
+    local param = stack[i].param
+    if param and IsComponentClass(param, "container") then
+      return ConvertIDTo64Bit(param)
+    end
   end
-  if GetComponentData(luaId(id64), "isdocked") then
-    return ReadText(1001, 3249), "text_normal"
+  return 0
+end
+
+-- The person a rescue flight is after and the sector the suit is in, from the order's pilot record.
+local function rescueTargetOf(pilot)
+  local data = pilot and GetNPCBlackboard(ConvertIDTo64Bit(pilot), "$rescueData")
+  if type(data) ~= "table" then
+    return nil, ""
   end
-  return ReadText(PAGE, 3031), "text_normal"
+  local target = componentOf(data.target)
+  return tostring(data.person or ""), isAlive(target) and sectorNameOf(target) or ""
 end
 
 local function readRanger(id64, settingsFrom)
@@ -241,16 +264,25 @@ local function readRanger(id64, settingsFrom)
   end
   local station = componentOf(value(P.homeStation))
   local dormitory = componentOf(value(P.dormitory))
-  local crew, capacity = crewOf(id64)
+  local crew, capacity, unassigned = crewOf(id64)
   local dormCrew, dormCapacity = crewOf(dormitory)
   local stasisMode = math.floor(tonumber(value(P.stasisMode)) or 0)
-  local state, stateColor, stateHint = stateOf(id64, stasisNoPlaceOf(id64, stasisMode))
+  local stasisNow = stasisModeOf(stasisMode)
+  local pilot = GetComponentData(luaId(id64), "assignedpilot")
+  local rescuing = queuedOrder(id64, "RescueShip")
+  local rescuePerson, rescueSector
+  if rescuing then
+    rescuePerson, rescueSector = rescueTargetOf(pilot)
+  end
+  local sectorId = GetComponentData(luaId(id64), "sectorid")
   return {
     id64         = id64,
     idcode       = ffi.string(C.GetObjectIDCode(id64)),
     name         = nameOf(id64),
     mode         = (station ~= 0) and "sector" or "fleet",
-    sector       = sectorNameOf(id64),
+    sector       = sectorId and tostring(GetComponentData(sectorId, "name")) or "",
+    sectorKey    = sectorId and tostring(ConvertIDTo64Bit(sectorId)) or "",
+    sectorOwner  = sectorId and tostring(GetComponentData(sectorId, "owner") or "") or "",
     homeSector   = nameOf(componentOf(value(P.homeSector))),
     homeSectorId = componentOf(value(P.homeSector)),
     range        = math.floor(tonumber(value(P.range)) or 0),
@@ -263,11 +295,16 @@ local function readRanger(id64, settingsFrom)
     logbook      = toBool(value(P.logbook)),
     crew         = crew,
     capacity     = capacity,
+    unassigned   = unassigned,
     dormCrew     = dormCrew,
     dormCapacity = dormCapacity,
-    state        = state,
-    stateColor   = stateColor,
-    stateHint    = stateHint,
+    stasisNow    = stasisNow,
+    noPlace      = stasisNoPlaceOf(pilot, stasisNow),
+    rescuing     = rescuing,
+    rescuePerson = rescuePerson,
+    rescueSector = rescueSector,
+    dockedAt     = dockedAtOf(id64),
+    headingTo    = headingToOf(pilot),
     piloting     = pilotingOf(id64),
   }
 end
@@ -388,7 +425,7 @@ local function personMatches(person, filter)
   if filter == "" then
     return true
   end
-  for _, value in ipairs({ person.name, person.lostShip, person.stationName, person.rangerName, person.ranger }) do
+  for _, value in ipairs({ person.name, person.lostShip, person.placeName, person.rangerName, person.ranger }) do
     if value ~= nil and value ~= 0 and string.find(string.lower(tostring(value)), filter, 1, true) then
       return true
     end
@@ -396,12 +433,120 @@ local function personMatches(person, filter)
   return false
 end
 
--- The filtered and sorted Stasis records.
-local function stasisPeople(data, state)
+-- Names of a station's unassigned people, read once per list build.
+local function unassignedNames(station, cache)
+  local key = tostring(station)
+  if not cache[key] then
+    local names = {}
+    if isAlive(station) then
+      for _, npc in ipairs(GetRoleTierNPCs(station, "unassigned", 0) or {}) do
+        names[npc.name] = true
+      end
+    end
+    cache[key] = names
+  end
+  return cache[key]
+end
+
+-- People Get-Them-Back still returns, "<container>|<name>" -> lost ship; none while no Rescue ship has it on.
+local function readGetThemBack()
+  local due = {}
+  local enabled = tonumber(GetNPCBlackboard(rr.playerId, "$RRGetThemBackEnabled"))
+  if not enabled or enabled + config.getThemBackTtl < C.GetCurrentGameTime() then
+    return due
+  end
+  local list = GetNPCBlackboard(rr.playerId, "$RescueRangersGetThemBack")
+  for _, entry in ipairs((type(list) == "table") and list or {}) do
+    due[tostring(componentOf(entry.container)) .. "|" .. tostring(entry.name)] = textOf(entry.shipId)
+  end
+  return due
+end
+
+local function recordPerson(record, due)
+  local person = {}
+  for key, value in pairs(record) do
+    person[key] = value
+  end
+  person.recordKey = record.key
+  person.container = componentOf(record.station)
+  person.name = textOf(record.name)
+  person.placeName = textOf(record.stationName)
+  person.due = due[tostring(person.container) .. "|" .. person.name]
+  return person
+end
+
+-- An unassigned person aboard a ship, read live; `ranger` is the Rescue ship it is on, or nil.
+local function shipPerson(ship, npc, ranger, due, skillBuf, numSkills)
+  local seed = C.ConvertStringTo64Bit(tostring(npc.seed))
+  local person = {
+    key        = "s" .. tostring(ship) .. ":" .. tostring(npc.seed),
+    container  = ship,
+    seed       = seed,
+    name       = tostring(npc.name),
+    placeName  = shipLabel(ship),
+    ranger     = ranger and ranger.idcode,
+    rangerName = ranger and ranger.name,
+    rangerId   = ranger and ranger.id64,
+  }
+  for i = 0, C.GetPersonSkills3(skillBuf, numSkills, seed, ship) - 1 do
+    person[ffi.string(skillBuf[i].id)] = skillBuf[i].value
+  end
+  for _, role in ipairs(ROLES) do
+    person[role.skill] = C.GetPersonCombinedSkill(ship, seed, role.role, role.post)
+  end
+  person.due = due[tostring(ship) .. "|" .. person.name]
+  person.lostShip = person.due
+  return person
+end
+
+-- Every rescued person: Stasis records still on their station (Upkeep drops the others within 60 s),
+-- then the unassigned people aboard the Rescue ships and their Dormitories.
+local function rescuedAll(data, rangers)
+  local due = readGetThemBack()
+  local all, onStation = {}, {}
+  for _, record in ipairs((data and data.people) or {}) do
+    if unassignedNames(componentOf(record.station), onStation)[record.name] then
+      all[#all + 1] = recordPerson(record, due)
+    end
+  end
+  local numSkills = C.GetNumSkills()
+  local skillBuf = ffi.new("SkillInfo[?]", numSkills)
+  local seen = {}
+  local function addShip(id64, ranger)
+    local key = tostring(id64)
+    if seen[key] or not isAlive(id64) then
+      return
+    end
+    seen[key] = true
+    for _, npc in ipairs(GetRoleTierNPCs(id64, "unassigned", 0) or {}) do
+      all[#all + 1] = shipPerson(id64, npc, ranger, due, skillBuf, numSkills)
+    end
+  end
+  for _, ranger in ipairs(rangers) do
+    addShip(ranger.id64, ranger)
+  end
+  for _, ranger in ipairs(rangers) do
+    addShip(ranger.dormitory, nil)
+  end
+  return all
+end
+
+-- Changes when someone arrives, leaves or stops being due back; the list is rebuilt then.
+local function rescuedSignature(all)
+  local keys = {}
+  for i, person in ipairs(all) do
+    keys[i] = tostring(person.key) .. (person.due and "+" or "")
+  end
+  table.sort(keys)
+  return table.concat(keys, ",")
+end
+
+-- The filtered and sorted rescued people.
+local function rescuedPeople(all, state)
   local role = roleOf(state.role)
   local filter = string.lower(state.filter or "")
   local list = {}
-  for _, person in ipairs((data and data.people) or {}) do
+  for _, person in ipairs(all) do
     if personMatches(person, filter) then
       local primary = ""
       if state.sort == "skill" then
@@ -409,11 +554,11 @@ local function stasisPeople(data, state)
       elseif state.sort == "lostShip" then
         primary = (textOf(person.lostShip) ~= "-") and string.lower(tostring(person.lostShip)) or "\127"
       elseif state.sort == "since" then
-        primary = string.format("%012d", math.floor(tonumber(person.since) or 0))
+        primary = person.since and string.format("%012d", math.floor(tonumber(person.since) or 0)) or "\127"
       elseif state.sort == "location" then
-        primary = string.lower(textOf(person.stationName))
+        primary = string.lower(person.placeName)
       end
-      list[#list + 1] = { person = person, primary = primary, name = string.lower(textOf(person.name)) }
+      list[#list + 1] = { person = person, primary = primary, name = string.lower(person.name) }
     end
   end
   table.sort(list, function(a, b)
@@ -422,7 +567,11 @@ local function stasisPeople(data, state)
     elseif a.name ~= b.name then
       return a.name < b.name
     end
-    return (tonumber(a.person.key) or 0) < (tonumber(b.person.key) or 0)
+    local ka, kb = a.person.key, b.person.key
+    if type(ka) == type(kb) then
+      return ka < kb
+    end
+    return type(ka) == "number"
   end)
   local people = {}
   for i, entry in ipairs(list) do
@@ -431,42 +580,48 @@ local function stasisPeople(data, state)
   return people
 end
 
--- Player ships (player stations for a manager) with free people space, most space first.
-local function assignTargets(roleId)
-  local targets = {}
-  local stations = (roleId == "manager")
-  local n = stations and C.GetNumAllFactionStations("player") or C.GetNumAllFactionShips("player")
-  if n > 0 then
-    local buf = ffi.new("UniverseID[?]", n)
-    if stations then
-      n = C.GetAllFactionStations(buf, n, "player")
-    else
-      n = C.GetAllFactionShips(buf, n, "player")
-    end
-    for i = 0, n - 1 do
-      local id64 = ConvertStringTo64Bit(tostring(buf[i]))
-      local crew, capacity = crewOf(id64)
-      if capacity > crew and not GetComponentData(luaId(id64), "isnpcassignmentrestricted") then
-        local label = shipLabel(id64)
-        local target = { id64 = id64, label = label, free = capacity - crew, sortKey = string.lower(label) }
-        if stations then
-          local manager = componentOf(GetComponentData(luaId(id64), "tradenpc"))
-          if isAlive(manager) then
-            target.managerName = nameOf(manager)
-            target.managerStars = potentialStars(C.GetEntityCombinedSkill(manager, nil, "manager"))
-          end
-        end
-        targets[#targets + 1] = target
-      end
+-- Stasis places, then the Dormitory ships, each with room for all `marked` and none of them aboard already.
+local function moveTargets(marked, data, rangers)
+  local targets, seen = {}, {}
+  for _, person in ipairs(marked) do
+    seen[tostring(person.container)] = true
+  end
+  local function add(id64, free, kind)
+    local key = tostring(id64)
+    if not seen[key] and free >= #marked and isAlive(id64) then
+      seen[key] = true
+      targets[#targets + 1] = { id64 = id64, text = string.format("%s: %s", kind, string.format(pageText(4130), shipLabel(id64), free)) }
     end
   end
-  table.sort(targets, function(a, b)
-    if a.free ~= b.free then
-      return a.free > b.free
+  local stasis = ReadText(PAGE, 4000)
+  for _, place in ipairs((data and data.places) or {}) do
+    add(componentOf(place.station), math.floor(tonumber(place.free) or 0), stasis)
+  end
+  local dormitory = ReadText(20104, 31603)
+  for _, ranger in ipairs(rangers) do
+    if isAlive(ranger.dormitory) then
+      local crew, capacity = crewOf(ranger.dormitory)
+      add(ranger.dormitory, capacity - crew, dormitory)
     end
-    return a.sortKey < b.sortKey
-  end)
+  end
   return targets
+end
+
+-- A person Get-Them-Back still returns, while the tab does not allow reassigning them.
+local function isHeld(person)
+  return person ~= nil and person.due ~= nil and not menu.stasis.allowReassign
+end
+
+-- What MD's ResolvePerson takes: a Stasis key, or a ship's person by name and skills.
+local function personRef(person)
+  if person.recordKey then
+    return { key = person.recordKey }
+  end
+  local ref = { container = luaId(person.container), name = person.name, ranger = person.rangerId and luaId(person.rangerId) or nil }
+  for _, skill in ipairs(SKILLS) do
+    ref[skill.key] = person[skill.key]
+  end
+  return ref
 end
 
 -- Where rent candidates are measured from: sector-mode home sectors and fleet-mode ships.
@@ -520,11 +675,112 @@ local function modeText(ranger)
   return ReadText(1001, 11284)
 end
 
-local function baseText(ranger)
-  if ranger.mode == "sector" then
-    return shipLabel(ranger.station)
+-- Text in the owner faction's colour; plain when the owner is unknown.
+local function factionColored(text, owner)
+  local color = (owner ~= nil and owner ~= "") and GetFactionData(owner, "color") or nil
+  return color and (Helper.convertColorToText(color) .. text .. "\27X") or text
+end
+
+local function shipHint(ranger)
+  local text = ReadText(PAGE, 3010) .. ReadText(1001, 120) .. " " .. modeText(ranger)
+  if ranger.commander then
+    text = text .. "\n" .. string.format(pageText(3017), string.format("%s (%s)", ranger.commander.name, ranger.commander.idcode))
   end
-  return shipLabel(ranger.dormitory)
+  return text
+end
+
+local function statusOf(ranger)
+  if ranger.rescuing then
+    return ReadText(PAGE, 3030), "text_positive"
+  elseif ranger.dockedAt ~= 0 then
+    return ReadText(1001, 3249), "text_normal"
+  end
+  return ReadText(PAGE, 3031), "text_normal"
+end
+
+-- The order flies home to the home station in Sector mode, to the Dormitory otherwise; any other flight is to Stasis.
+local function activityOf(ranger)
+  if ranger.rescuing then
+    return ranger.rescuePerson and string.format(pageText(3071), ranger.rescuePerson, ranger.rescueSector) or "-"
+  end
+  if ranger.dockedAt ~= 0 or ranger.headingTo == 0 then
+    return "-"
+  end
+  local parking = (ranger.station ~= 0) and ranger.station or ranger.dormitory
+  if ranger.headingTo == parking then
+    return string.format(pageText(3073), shipLabel(parking))
+  elseif ranger.stasisNow ~= "off" then
+    return string.format(pageText(3072), shipLabel(ranger.headingTo))
+  end
+  return "-"
+end
+
+-- Where the rescued go next, and the room left there.
+local function destinationOf(ranger)
+  if ranger.joinCrew then
+    local free = ranger.capacity - ranger.crew
+    return string.format(pageText(3074), ReadText(1001, 80), free), (free <= 0) and "text_negative" or "text_normal"
+  end
+  if ranger.stasisNow == "instead" then
+    return ReadText(PAGE, 4000), "text_normal"
+  end
+  if not isAlive(ranger.dormitory) then
+    return "-", "text_normal"
+  end
+  local free = ranger.dormCapacity - ranger.dormCrew
+  local text = string.format(pageText(3074), shipLabel(ranger.dormitory), free)
+  if ranger.stasisNow == "overflow" then
+    return string.format(pageText(3075), text), (free <= 0) and "text_warning" or "text_normal"
+  end
+  return text, (free <= 0) and "text_negative" or "text_normal"
+end
+
+-- The order's own stop rules: a full ship with nowhere to move the rescued takes no more.
+local function warningOf(ranger)
+  if ranger.noPlace > 0 then
+    return ReadText(PAGE, 3067), "text_warning", string.format(pageText(3068), ranger.noPlace)
+  end
+  local shipFull = ranger.capacity - ranger.crew <= 0
+  if ranger.joinCrew then
+    return shipFull and ReadText(PAGE, 3078) or "", "text_negative"
+  end
+  if ranger.stasisNow == "instead" then
+    return "", "text_normal"
+  end
+  if not isAlive(ranger.dormitory) then
+    return ReadText(PAGE, 3077), "text_negative"
+  end
+  if ranger.stasisNow == "overflow" or ranger.dormCapacity - ranger.dormCrew > 0 then
+    return "", "text_normal"
+  end
+  if shipFull then
+    return ReadText(PAGE, 3078), "text_negative"
+  end
+  return ReadText(PAGE, 3076), "text_warning"
+end
+
+-- Rescue ships by the sector they are in now; a Mimic follows its commander when both are there.
+local function sectorGroups(rangers)
+  local groups, byKey = {}, {}
+  for _, ranger in ipairs(rangers) do
+    local group = byKey[ranger.sectorKey]
+    if not group then
+      group = { name = ranger.sector, owner = ranger.sectorOwner, rangers = {}, has = {} }
+      byKey[ranger.sectorKey] = group
+      groups[#groups + 1] = group
+    end
+    group.rangers[#group.rangers + 1] = ranger
+    group.has[ranger.idcode] = true
+  end
+  for _, group in ipairs(groups) do
+    for _, ranger in ipairs(group.rangers) do
+      ranger.indent = (ranger.commander ~= nil) and group.has[ranger.commander.idcode] or false
+      ranger.groupKey = ranger.indent and ranger.sortKey or string.lower(ranger.name .. " " .. ranger.idcode)
+    end
+    table.sort(group.rangers, function(a, b) return a.groupKey < b.groupKey end)
+  end
+  table.sort(groups, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+  return groups
 end
 
 local function eventText(event)
@@ -682,11 +938,10 @@ end
 function menu.cleanup()
   menu.open = false
   menu.infoFrame = nil
-  menu.confirmFrame = nil
-  menu.confirmKeys = nil
+  menu.contextFrame = nil
+  menu.confirmPeople = nil
   menu.peopleTable = nil
   menu.detailTable = nil
-  menu.actionTable = nil
   menu.refreshQueued = nil
   menu.sliderActive = nil
   menu.filterActive = nil
@@ -701,7 +956,8 @@ function menu.onShowMenu(state)
     menu.selected = menu.selected or {}
     menu.topRows = menu.topRows or {}
   end
-  menu.stasis = menu.stasis or { selected = {}, filter = "", sort = "name", role = "service" }
+  menu.stasis = menu.stasis or { marked = {}, filter = "", sort = "name", role = "service" }
+  menu.stasis.allowReassign = toBool(rr.cfg.stasisAllowReassign)
   menu.stasis.wantCandidates = (menu.tab == "stasis")
   Helper.setTabScrollCallback(menu, menu.onTabScroll)
   menu.createFrame()
@@ -738,6 +994,12 @@ function menu.viewCreated(_layer, ...)
 end
 
 local function titleRow(ftable, cols, text)
+  -- 8.00 has no row groups: a half-height gap separates a later section, as 9.00's group container does
+  local last = ftable.rows[#ftable.rows]
+  if not rr.isV9 and last ~= nil then
+    local gap = ftable:addRow(false, { fixed = last.properties.fixed })
+    gap[1]:setColSpan(cols):createText(" ", { fontsize = 1, minRowHeight = Helper.standardTextHeight / 2 })
+  end
   local properties = { fixed = true }
   for key, value in pairs(Helper.headerRowProperties or {}) do
     properties[key] = value
@@ -765,12 +1027,12 @@ local function noticeRow(rows, cols, text)
 end
 
 function menu.createFrame()
+  menu.closeContext()
   Helper.clearDataForRefresh(menu, config.infoLayer)
   menu.sliderActive = nil
   menu.filterActive = nil
   menu.peopleTable = nil
   menu.detailTable = nil
-  menu.actionTable = nil
   menu.infoFrame = Helper.createFrameHandle(menu, {
     layer           = config.infoLayer,
     standardButtons = { back = true, close = true, help = false },
@@ -793,7 +1055,7 @@ function menu.createFrame()
   elseif menu.tab == "stasis" then
     menu.createStasisPanel(Helper.frameBorder, top, width, rangers)
   else
-    menu.createRangersPanel(Helper.frameBorder, top, width, rangers, stats)
+    menu.createRangersPanel(Helper.frameBorder, top, width, rangers)
   end
 
   menu.infoFrame:display()
@@ -824,7 +1086,8 @@ function menu.createTabRow(topLevelBottom)
   local currentName = ""
   for i, tab in ipairs(TABS) do
     local current = (tab.id == menu.tab)
-    row[i + 1]:createButton({ height = iconSize, bgColor = Color["toplevel_button_background"], borderColor = Color["button_border_hidden"], mouseOverText = tab.name() })
+    -- button_border_hidden is 9.00 only; reading it on 8.00 logs a colour error
+    row[i + 1]:createButton({ height = iconSize, bgColor = Color["toplevel_button_background"], borderColor = rr.isV9 and Color["button_border_hidden"] or nil, mouseOverText = tab.name() })
         :setIcon(tab.icon, { color = current and Color["icon_normal"] or Color["icon_inactive"] })
     if current then
       currentName = tostring(tab.name())
@@ -862,42 +1125,43 @@ local function buttonBar(x, width)
   return ftable.properties.y - Helper.borderSize
 end
 
-function menu.createRangersPanel(x, y, width, rangers, stats)
+function menu.createRangersPanel(x, y, width, rangers)
   local bottom = buttonBar(x, width)
-  local cols = 9
+  local cols = 6
   local ftable = menu.infoFrame:addTable(cols, { tabOrder = 1, x = x, y = y, width = width, maxVisibleHeight = bottom - y })
-  ftable:setColWidthPercent(2, 7)
-  ftable:setColWidthPercent(3, 12)
-  ftable:setColWidthPercent(4, 14)
-  ftable:setColWidthPercent(5, 17)
-  ftable:setColWidthPercent(6, 7)
-  ftable:setColWidthPercent(7, 7)
-  ftable:setColWidthPercent(8, 9)
-  ftable:setColWidthPercent(9, 7)
+  ftable:setColWidthPercent(2, 8)
+  ftable:setColWidthPercent(3, 24)
+  ftable:setColWidthPercent(4, 8)
+  ftable:setColWidthPercent(5, 24)
+  ftable:setColWidthPercent(6, 14)
   titleRow(ftable, cols, ReadText(PAGE, 3001))
   local rows = rowGroup(ftable)
   headerRow(rows, {
-    ReadText(1001, 5), ReadText(PAGE, 3010), ReadText(1001, 2943), ReadText(PAGE, 3013), ReadText(PAGE, 3011),
-    ReadText(1001, 80), ReadText(PAGE, 3014), ReadText(1001, 12), ReadText(PAGE, 3012),
-  }, { "left", "left", "left", "left", "left", "right", "right", "left", "right" })
+    ReadText(1001, 5), ReadText(1001, 12), ReadText(1001, 12822), ReadText(PAGE, 3069), ReadText(PAGE, 3070), ReadText(1001, 8342),
+  }, { "left", "left", "left", "right", "left", "left" })
   if #rangers == 0 then
     noticeRow(rows, cols, ReadText(PAGE, 3056))
   end
   local rowOf = {}
-  for _, ranger in ipairs(rangers) do
-    local row = rows:addRow({ "ranger", ranger.idcode }, {})
-    rowOf[ranger.idcode] = row.index
-    local label = string.format("%s (%s)", ranger.name, ranger.idcode)
-    row[1]:createText((ranger.mode == "mimic") and ("   " .. label) or label, { halign = "left" })
-    row[2]:createText(modeText(ranger), { halign = "left" })
-    row[3]:createText(ranger.sector, { halign = "left" })
-    row[4]:createText(string.format("%s (%d)", ranger.homeSector, ranger.range), { halign = "left", mouseOverText = ReadText(PAGE, 104) })
-    row[5]:createText(baseText(ranger), { halign = "left", mouseOverText = (ranger.mode == "sector") and ReadText(PAGE, 102) or ReadText(PAGE, 103) })
-    row[6]:createText(string.format("%d / %d", ranger.crew, ranger.capacity), { halign = "right" })
-    row[7]:createText((ranger.dormitory ~= 0) and string.format("%d / %d", ranger.dormCrew, ranger.dormCapacity) or "-", { halign = "right" })
-    row[8]:createText(ranger.state, { halign = "left", color = Color[ranger.stateColor], mouseOverText = ranger.stateHint })
-    local entry = rangerStatsOf(stats, ranger.idcode)
-    row[9]:createText(tostring(entry and entry.rescued or 0), { halign = "right" })
+  for _, group in ipairs(sectorGroups(rangers)) do
+    local sectorRow = ftable:addRow(false, { bgColor = Color["row_title_background"] })
+    sectorRow[1]:setColSpan(cols):createText(factionColored(group.name, group.owner), { halign = "left", font = Helper.standardFontBold })
+    rows = rowGroup(ftable)
+    for _, ranger in ipairs(group.rangers) do
+      local row = rows:addRow({ "ranger", ranger.idcode }, {})
+      rowOf[ranger.idcode] = row.index
+      local label = string.format("%s (%s)", ranger.name, ranger.idcode)
+      row[1]:createText(ranger.indent and ("   " .. label) or label, { halign = "left", mouseOverText = shipHint(ranger) })
+      local status, statusColor = statusOf(ranger)
+      row[2]:createText(status, { halign = "left", color = Color[statusColor] })
+      local activity = activityOf(ranger)
+      row[3]:createText(activity, { halign = "left", mouseOverText = activity })
+      row[4]:createText(tostring(ranger.unassigned), { halign = "right" })
+      local goesTo, goesToColor = destinationOf(ranger)
+      row[5]:createText(goesTo, { halign = "left", color = Color[goesToColor], mouseOverText = goesTo })
+      local warning, warningColor, warningHint = warningOf(ranger)
+      row[6]:createText(warning, { halign = "left", color = Color[warningColor], mouseOverText = warningHint })
+    end
   end
   restoreRows(ftable, "rangers", rowOf)
 end
@@ -1021,7 +1285,8 @@ function menu.createGraph(x, y, width, height, stats)
       break
     end
   end
-  graph:setXAxis({ startvalue = 1 - GRAPH_HOURS, endvalue = 0, granularity = 3, offset = 0, gridcolor = Color["graph_grid"], unittext = ReadText(1001, 102) })
+  -- unittext is 9.00 only, 8.00 logs a widget error for it
+  graph:setXAxis({ startvalue = 1 - GRAPH_HOURS, endvalue = 0, granularity = 3, offset = 0, gridcolor = Color["graph_grid"], unittext = rr.isV9 and ReadText(1001, 102) or nil })
   graph:setXAxisLabel(ReadText(1001, 6519), { fontsize = 9 })
   graph:setYAxis({ startvalue = 0, endvalue = (math.ceil(maxY / yStep) + 0.5) * yStep, granularity = yStep, offset = 0, gridcolor = Color["graph_grid"] })
   graph:setYAxisLabel(ReadText(1001, 6521), { fontsize = 9 })
@@ -1042,12 +1307,10 @@ function menu.createSettingsPanel(x, y, width, rangers)
   local bottom = buttonBar(x, width)
   local cols = 7
   local ftable = menu.infoFrame:addTable(cols, { tabOrder = 1, x = x, y = y, width = width, maxVisibleHeight = bottom - y })
-  ftable:setColWidthPercent(2, 10)
-  ftable:setColWidthPercent(3, 12)
-  ftable:setColWidthPercent(4, 12)
-  ftable:setColWidthPercent(5, 12)
-  ftable:setColWidthPercent(6, 12)
-  ftable:setColWidthPercent(7, 16)
+  local percent = { [2] = 10, [3] = 12, [4] = 16, [5] = 12, [6] = 12, [7] = 16 }
+  for col = 2, cols do
+    ftable:setColWidthPercent(col, percent[col])
+  end
   titleRow(ftable, cols, ReadText(1001, 2679))
   local rows = rowGroup(ftable)
   headerRow(rows, { ReadText(1001, 5), ReadText(PAGE, 104), ReadText(PAGE, 105), ReadText(PAGE, 106), ReadText(PAGE, 107), ReadText(PAGE, 109), ReadText(PAGE, 4000) },
@@ -1057,7 +1320,10 @@ function menu.createSettingsPanel(x, y, width, rangers)
   end
   local size = Helper.scaleX(Helper.standardTextHeight)
   local inset = rr.isV9 and Helper.standardContainerOffset or 0
-  local boxX = math.max(0, math.floor((width * 0.12 - inset - size) / 2))
+  local boxX = {}
+  for col = 3, 6 do
+    boxX[col] = math.max(0, math.floor((width * percent[col] / 100 - inset - size) / 2))
+  end
   local rowOf = {}
   menu.createSettingsAllRow(rows, rangers, size, boxX)
   for _, ranger in ipairs(rangers) do
@@ -1082,7 +1348,7 @@ function menu.createSettingsPanel(x, y, width, rangers)
         row[2]:createText("0", { halign = "left", color = Color["text_inactive"], mouseOverText = ReadText(PAGE, 3018) })
       end
       local function checkbox(col, index, on)
-        row[col]:createCheckBox(on, { width = size, height = size, scaling = false, x = boxX, mouseOverText = ReadText(PAGE, 3058) })
+        row[col]:createCheckBox(on, { width = size, height = size, scaling = false, x = boxX[col], mouseOverText = ReadText(PAGE, 3058) })
         row[col].handlers.onClick = function(_, checked) return menu.setParam(ranger.id64, index, checked) end
       end
       checkbox(3, P.oxygen, ranger.oxygen)
@@ -1142,7 +1408,7 @@ function menu.createSettingsAllRow(rows, rangers, size, boxX)
     for _, ranger in ipairs(main) do
       allOn = allOn and ranger[key] == true
     end
-    row[col]:createCheckBox(allOn, { width = size, height = size, scaling = false, x = boxX, mouseOverText = mouseOver })
+    row[col]:createCheckBox(allOn, { width = size, height = size, scaling = false, x = boxX[col], mouseOverText = mouseOver })
     row[col].handlers.onClick = function(_, checked)
       local on = toBool(checked)
       return menu.setParamAll(P[key], function(ranger)
@@ -1200,7 +1466,7 @@ function menu.setParamAll(index, valueOf)
   menu.refreshQueued = true
 end
 
--- *** Stasis tab: not on the refresh timer, rebuilt on RescueRangers.StasisChanged ***
+-- *** Rescued tab (id "stasis"): rebuilt on RescueRangers.StasisChanged or a changed people list, not on the timer ***
 
 local function sendStasis(control, param)
   debugLog("stasis: %s sent.", control)
@@ -1237,41 +1503,47 @@ function menu.createStasisPanel(x, y, width, rangers)
   local rightX = x + leftWidth + Helper.borderSize
   local rightWidth = width - leftWidth - Helper.borderSize
 
-  -- Selection and the current person only ever refer to shown records.
-  local people = stasisPeople(data, state)
+  -- Marks and the current person only ever refer to shown people.
+  local all = rescuedAll(data, rangers)
+  menu.peopleSignature = rescuedSignature(all)
+  local people = rescuedPeople(all, state)
   local shown = {}
   for _, person in ipairs(people) do
     shown[person.key] = person
   end
-  for key in pairs(state.selected) do
+  for key in pairs(state.marked) do
     if not shown[key] then
-      state.selected[key] = nil
+      state.marked[key] = nil
     end
   end
   if state.current ~= nil and not shown[state.current] then
     state.current = nil
   end
   menu.stasisShown = shown
+  menu.stasisList = people
+  menu.stasisCount = #all
 
   local controlsBottom = menu.createStasisControls(x, y, leftWidth)
-  local actionsTop = menu.createStasisActions(x, bottom, leftWidth, #people)
-  menu.createStasisPeople(x, controlsBottom + Helper.borderSize, leftWidth, actionsTop - Helper.borderSize, data, people)
+  local actionsTop = menu.createStasisActions(x, bottom, leftWidth, people, data, rangers)
+  menu.createStasisPeople(x, controlsBottom + Helper.borderSize, leftWidth, actionsTop - Helper.borderSize, people)
 
   local detailBottom = menu.createStasisDetail(rightX, y, rightWidth)
   local rentTop = menu.createStasisRent(rightX, detailBottom + Helper.borderSize, bottom, rightWidth, data)
   menu.createStasisLocations(rightX, detailBottom + Helper.borderSize, rentTop - Helper.borderSize, rightWidth, data)
 end
 
--- Filter, sort and role; returns the y under the table.
+-- Filter, sort, suitability role and the reassign switch; returns the y under the table.
 function menu.createStasisControls(x, y, width)
   local state = menu.stasis
-  local cols = 3
+  local cols = 4
+  local size = Helper.scaleX(Helper.standardTextHeight)
   local ftable = menu.infoFrame:addTable(cols, { tabOrder = 1, x = x, y = y, width = width, reserveScrollBar = false })
-  ftable:setColWidthPercent(2, 25)
+  ftable:setColWidth(1, size, false)
   ftable:setColWidthPercent(3, 25)
-  titleRow(ftable, cols, ReadText(PAGE, 4000))
+  ftable:setColWidthPercent(4, 25)
+  titleRow(ftable, cols, ReadText(PAGE, 3012))
   local row = ftable:addRow(true, { fixed = true })
-  row[1]:createEditBox({ defaultText = ReadText(1001, 3250), height = Helper.standardTextHeight }):setText(state.filter, { halign = "left", x = Helper.standardTextOffsetx })
+  row[1]:setColSpan(2):createEditBox({ defaultText = ReadText(1001, 3250), height = Helper.standardTextHeight }):setText(state.filter, { halign = "left", x = Helper.standardTextOffsetx })
   row[1].handlers.onEditBoxActivated = function() menu.filterActive = true end
   row[1].handlers.onEditBoxDeactivated = function(_, text)
     menu.filterActive = nil
@@ -1284,8 +1556,8 @@ function menu.createStasisControls(x, y, width)
   for _, sort in ipairs(SORTS) do
     sorts[#sorts + 1] = { id = sort.id, text = sort.text(), icon = "", displayremoveoption = false }
   end
-  row[2]:createDropDown(sorts, { startOption = state.sort, height = Helper.standardTextHeight, mouseOverText = ReadText(1001, 2906) })
-  row[2].handlers.onDropDownConfirmed = function(_, id)
+  row[3]:createDropDown(sorts, { startOption = state.sort, height = Helper.standardTextHeight, mouseOverText = ReadText(1001, 2906) })
+  row[3].handlers.onDropDownConfirmed = function(_, id)
     if id ~= state.sort then
       state.sort = id
       menu.refreshQueued = true
@@ -1295,47 +1567,71 @@ function menu.createStasisControls(x, y, width)
   for _, role in ipairs(ROLES) do
     roles[#roles + 1] = { id = role.id, text = role.text(), icon = "", displayremoveoption = false }
   end
-  row[3]:createDropDown(roles, { startOption = state.role, height = Helper.standardTextHeight, mouseOverText = ReadText(PAGE, 4131) })
-  row[3].handlers.onDropDownConfirmed = function(_, id)
+  row[4]:createDropDown(roles, { startOption = state.role, height = Helper.standardTextHeight, mouseOverText = ReadText(PAGE, 4131) })
+  row[4].handlers.onDropDownConfirmed = function(_, id)
     if id ~= state.role then
       state.role = id
-      state.target = nil
       menu.refreshQueued = true
     end
   end
+  row = ftable:addRow(true, { fixed = true })
+  row[1]:createCheckBox(state.allowReassign, { width = size, height = size, scaling = false, mouseOverText = ReadText(PAGE, 4137) })
+  row[1].handlers.onClick = function(_, checked) return menu.setAllowReassign(checked) end
+  row[2]:setColSpan(3):createText(ReadText(PAGE, 4136), { halign = "left", mouseOverText = ReadText(PAGE, 4137) })
   return ftable.properties.y + ftable:getFullHeight()
 end
 
--- No row group: its interplay with GetSelectedRows is unknown.
-function menu.createStasisPeople(x, y, width, bottomY, data, people)
+function menu.setAllowReassign(checked)
+  local state = menu.stasis
+  state.allowReassign = checked and true or false
+  rr.cfg.stasisAllowReassign = state.allowReassign and 1 or 0
+  debugLog("stasis: reassigning people due back %s.", state.allowReassign and "allowed" or "blocked")
+  sendStasis("AllowReassign", { value = state.allowReassign })
+  menu.refreshQueued = true
+end
+
+local function sinceText(person, now)
+  return person.since and formatAgo(now - (tonumber(person.since) or now)) or "-"
+end
+
+local function dueText(person)
+  return person.due and string.format(pageText(4138), person.due) or nil
+end
+
+-- A checkbox per person marks them for the bar below; the row selection is the current person.
+function menu.createStasisPeople(x, y, width, bottomY, people)
   local state = menu.stasis
   local role = roleOf(state.role)
-  local cols = 5
-  local ftable = menu.infoFrame:addTable(cols, { tabOrder = 2, x = x, y = y, width = width, maxVisibleHeight = bottomY - y, multiSelect = true })
-  ftable:setColWidthPercent(2, 14)
-  ftable:setColWidthPercent(3, 16)
+  local cols = 6
+  local size = Helper.scaleX(Helper.standardTextHeight)
+  local ftable = menu.infoFrame:addTable(cols, { tabOrder = 2, x = x, y = y, width = width, maxVisibleHeight = bottomY - y })
+  ftable:setColWidth(1, size, false)
+  ftable:setColWidthPercent(3, 14)
   ftable:setColWidthPercent(4, 16)
-  ftable:setColWidthPercent(5, 26)
-  headerRow(ftable, { ReadText(1001, 2809), role.text(), ReadText(PAGE, 4101), ReadText(PAGE, 4102), ReadText(1001, 2943) })
+  ftable:setColWidthPercent(5, 16)
+  ftable:setColWidthPercent(6, 26)
+  headerRow(ftable, { "", ReadText(1001, 2809), role.text(), ReadText(PAGE, 4101), ReadText(PAGE, 4102), ReadText(1001, 2943) })
   menu.peopleTable = ftable
   menu.peopleRowKey = {}
   menu.peopleRowOf = {}
   menu.peopleOrder = {}
   if #people == 0 then
-    noticeRow(ftable, cols, ReadText(PAGE, (#((data and data.people) or {}) > 0) and 4106 or 4100))
+    noticeRow(ftable, cols, ReadText(PAGE, (menu.stasisCount > 0) and 4106 or 4100))
   end
   local now = C.GetCurrentGameTime()
   for _, person in ipairs(people) do
     local key = person.key
-    local row = ftable:addRow({ "person", key }, { multiSelected = state.selected[key] == true })
+    local row = ftable:addRow({ "person", key }, {})
     menu.peopleRowKey[row.index] = key
     menu.peopleRowOf[key] = row.index
     menu.peopleOrder[#menu.peopleOrder + 1] = key
-    row[1]:createText(textOf(person.name), { halign = "left" })
-    row[2]:createText(potentialStars(person[role.skill]), { halign = "left" })
-    row[3]:createText(textOf(person.lostShip), { halign = "left" })
-    row[4]:createText(formatAgo(now - (tonumber(person.since) or now)), { halign = "left" })
-    row[5]:createText(textOf(person.stationName), { halign = "left" })
+    row[1]:createCheckBox(state.marked[key] == true, { width = size, height = size, scaling = false })
+    row[1].handlers.onClick = function(_, checked) return menu.markPerson(key, checked) end
+    row[2]:createText(person.name, { halign = "left" })
+    row[3]:createText(potentialStars(person[role.skill]), { halign = "left" })
+    row[4]:createText(textOf(person.lostShip), { halign = "left", color = person.due and Color["text_positive"] or nil, mouseOverText = dueText(person) })
+    row[5]:createText(sinceText(person, now), { halign = "left" })
+    row[6]:createText(person.placeName, { halign = "left" })
   end
   if state.current ~= nil and menu.peopleRowOf[state.current] then
     ftable:setSelectedRow(menu.peopleRowOf[state.current])
@@ -1345,35 +1641,34 @@ function menu.createStasisPeople(x, y, width, bottomY, data, people)
   end
 end
 
-local function selectedCountText()
-  local count = 0
-  for _ in pairs(menu.stasis.selected) do
-    count = count + 1
+local function keepTopRow()
+  if menu.peopleTable and menu.peopleTable.id then
+    menu.topRows.stasis = GetTopRow(menu.peopleTable.id)
   end
-  return string.format("%s: %d", ReadText(1001, 17), count)
 end
 
--- Selected keys in list order; one person for a pilot or manager, the current one when selected.
-local function selectedKeys(single)
-  local state = menu.stasis
-  if single and state.current ~= nil and state.selected[state.current] then
-    return { state.current }
-  end
-  local keys = {}
-  for _, key in ipairs(menu.peopleOrder or {}) do
-    if state.selected[key] then
-      keys[#keys + 1] = key
-      if single then
-        break
-      end
+function menu.markPerson(key, checked)
+  menu.stasis.marked[key] = checked and true or nil
+  keepTopRow()
+  menu.refreshQueued = true
+end
+
+-- The marked ones among `people`, in their order.
+local function markedOf(people)
+  local marked = {}
+  for _, person in ipairs(people) do
+    if menu.stasis.marked[person.key] then
+      marked[#marked + 1] = person
     end
   end
-  return keys
+  return marked
 end
 
--- Target, Assign, Dismiss, Select all, the count; placed above bottomY, returns its top.
-function menu.createStasisActions(x, bottomY, width, peopleCount)
+-- Target, Move, Dismiss, Select all, the marked count; all but Select all need marked people.
+-- Placed above bottomY, returns its top.
+function menu.createStasisActions(x, bottomY, width, people, data, rangers)
   local state = menu.stasis
+  local marked = markedOf(people)
   local cols = 5
   local ftable = menu.infoFrame:addTable(cols, { tabOrder = 3, x = x, y = 0, width = width, reserveScrollBar = false })
   ftable:setColWidthPercent(2, 13)
@@ -1382,40 +1677,42 @@ function menu.createStasisActions(x, bottomY, width, peopleCount)
   ftable:setColWidthPercent(5, 15)
   local row = ftable:addRow(true, { fixed = true })
   local options, valid = {}, {}
-  for _, target in ipairs(assignTargets(state.role)) do
-    local id = tostring(target.id64)
-    local text = string.format(pageText(4130), target.label, target.free)
-    if target.managerName then
-      text = string.format(pageText(4133), target.label, target.free, target.managerName, target.managerStars)
+  if #marked > 0 then
+    for _, target in ipairs(moveTargets(marked, data, rangers)) do
+      local id = tostring(target.id64)
+      options[#options + 1] = { id = id, text = target.text, icon = "", displayremoveoption = false, mouseovertext = target.text }
+      valid[id] = true
     end
-    options[#options + 1] = { id = id, text = text, icon = "", displayremoveoption = false }
-    valid[id] = true
   end
   if not (state.target and valid[state.target]) then
     state.target = options[1] and options[1].id or nil
   end
-  local none = (state.role == "manager") and 4129 or 4128
   row[1]:createDropDown(options, {
-    startOption = state.target or "", textOverride = (#options == 0) and ReadText(PAGE, none) or nil,
-    active = #options > 0, height = Helper.standardTextHeight, mouseOverText = ReadText(PAGE, (state.role == "manager") and 4134 or 4127),
+    startOption = state.target or "", textOverride = (#options == 0) and ReadText(PAGE, (#marked == 0) and 4129 or 4128) or nil,
+    active = #options > 0, height = Helper.standardTextHeight, mouseOverText = ReadText(PAGE, 4127),
   })
   row[1].handlers.onDropDownConfirmed = function(_, id) state.target = id end
-  row[2]:createButton({ active = #options > 0 and peopleCount > 0 }):setText(ReadText(1001, 3263), { halign = "center" })
-  row[2].handlers.onClick = function() return menu.buttonAssign() end
-  row[3]:createButton({ active = peopleCount > 0 }):setText(ReadText(1001, 12891), { halign = "center" })
+  row[2]:createButton({ active = #options > 0 }):setText(ReadText(PAGE, 4135), { halign = "center" })
+  row[2].handlers.onClick = function() return menu.buttonMove() end
+  local dismissable = 0
+  for _, person in ipairs(marked) do
+    if not isHeld(person) then
+      dismissable = dismissable + 1
+    end
+  end
+  row[3]:createButton({ active = dismissable > 0 }):setText(pageText(4141), { halign = "center" })
   row[3].handlers.onClick = function() return menu.buttonDismiss() end
-  row[4]:createButton({ active = peopleCount > 0 }):setText(ReadText(PAGE, 4126), { halign = "center" })
-  row[4].handlers.onClick = function() return menu.buttonSelectAll() end
-  row[5]:createText(selectedCountText(), { halign = "right" })
-  menu.actionTable = ftable
-  menu.countCell = { row.index, 5 }
+  local allMarked = (#people > 0) and (#marked == #people)
+  row[4]:createButton({ active = #people > 0 }):setText(ReadText(PAGE, allMarked and 4139 or 4126), { halign = "center" })
+  row[4].handlers.onClick = function() return menu.buttonSelectAll(not allMarked) end
+  row[5]:createText(string.format("%s: %d", ReadText(1001, 17), #marked), { halign = "right" })
   ftable.properties.y = bottomY - ftable:getFullHeight()
   return ftable.properties.y
 end
 
--- Texts of the detail panel for a record, or its empty state.
+-- Texts of the detail panel for a person, or its empty state.
 local function detailTexts(person)
-  local texts = { title = person and textOf(person.name) or ReadText(PAGE, 4000) }
+  local texts = { title = person and person.name or ReadText(PAGE, 3012) }
   for _, skill in ipairs(SKILLS) do
     texts[skill.key] = person and Helper.displaySkill(tonumber(person[skill.key]) or 0) or "-"
   end
@@ -1424,8 +1721,8 @@ local function detailTexts(person)
   end
   texts.lostShip = person and textOf(person.lostShip) or "-"
   texts.ranger = person and rangerLabel(person) or "-"
-  texts.since = person and formatAgo(C.GetCurrentGameTime() - (tonumber(person.since) or 0)) or "-"
-  texts.location = person and textOf(person.stationName) or "-"
+  texts.since = person and sinceText(person, C.GetCurrentGameTime()) or "-"
+  texts.location = person and person.placeName or "-"
   return texts
 end
 
@@ -1483,24 +1780,24 @@ function menu.updateStasisDetail()
   end
 end
 
+-- The ages in place, or a rebuild when someone arrived or left (Rescue ships and Dormitories send no event).
 function menu.updateStasisAges()
   if not (menu.peopleTable and menu.peopleTable.id and menu.peopleRowKey and menu.stasisShown) then
+    return
+  end
+  if rescuedSignature(rescuedAll(readStasis(), collectRangers())) ~= menu.peopleSignature then
+    keepTopRow()
+    menu.refreshQueued = true
     return
   end
   local now = C.GetCurrentGameTime()
   for rowIndex, key in pairs(menu.peopleRowKey) do
     local person = menu.stasisShown[key]
     if person then
-      Helper.updateCellText(menu.peopleTable.id, rowIndex, 4, formatAgo(now - (tonumber(person.since) or now)))
+      Helper.updateCellText(menu.peopleTable.id, rowIndex, 5, sinceText(person, now))
     end
   end
   menu.updateStasisDetail()
-end
-
-function menu.updateStasisCount()
-  if menu.actionTable and menu.actionTable.id and menu.countCell then
-    Helper.updateCellText(menu.actionTable.id, menu.countCell[1], menu.countCell[2], selectedCountText())
-  end
 end
 
 local function leasedStations(data)
@@ -1638,46 +1935,61 @@ function menu.createStasisRent(x, topY, bottomY, width, data)
   return ftable.properties.y
 end
 
-function menu.buttonAssign()
+local function refsOf(people)
+  local refs = {}
+  for i, person in ipairs(people) do
+    refs[i] = personRef(person)
+  end
+  return refs
+end
+
+function menu.buttonMove()
   local state = menu.stasis
-  local keys = selectedKeys(state.role == "pilot" or state.role == "manager")
-  if #keys == 0 or not state.target then
-    traceLog("stasis: assign skipped, %d selected, target %s.", #keys, tostring(state.target))
+  local marked = markedOf(menu.stasisList or {})
+  if #marked == 0 or not state.target then
+    traceLog("stasis: move skipped, %d marked, target %s.", #marked, tostring(state.target))
     return
   end
-  debugLog("stasis: assign %d as %s to %s.", #keys, state.role, tostring(state.target))
-  sendStasis("Assign", { keys = keys, target = luaId(state.target), role = state.role })
+  debugLog("stasis: move %d to %s.", #marked, tostring(state.target))
+  state.marked = {}
+  sendStasis("Move", { people = refsOf(marked), target = luaId(state.target) })
 end
 
+-- People due back are kept unless reassigning them is allowed.
 function menu.buttonDismiss()
-  local keys = selectedKeys(false)
-  if #keys > 0 then
-    menu.openConfirm(keys)
+  local people, held = {}, 0
+  for _, person in ipairs(markedOf(menu.stasisList or {})) do
+    if isHeld(person) then
+      held = held + 1
+    else
+      people[#people + 1] = person
+    end
+  end
+  if #people > 0 then
+    local text = string.format(pageText(4125), #people)
+    if held > 0 then
+      text = text .. "\n" .. string.format(pageText(4140), held)
+    end
+    menu.openConfirm(people, nil, text)
   end
 end
 
-function menu.buttonSelectAll()
-  ---@type integer[]
-  local rows = {}
-  local selected = {}
-  for _, key in ipairs(menu.peopleOrder or {}) do
-    rows[#rows + 1] = menu.peopleRowOf[key]
-    selected[key] = true
+function menu.buttonSelectAll(mark)
+  local marked = {}
+  if mark then
+    for _, person in ipairs(menu.stasisList or {}) do
+      marked[person.key] = true
+    end
   end
-  if #rows == 0 or not (menu.peopleTable and menu.peopleTable.id) then
-    return
-  end
-  menu.stasis.selected = selected
-  local firstRow = rows[1] or 0
-  local currentRow = (menu.stasis.current ~= nil) and menu.peopleRowOf[menu.stasis.current] or nil
-  SetSelectedRows(menu.peopleTable.id, rows, currentRow or firstRow)
-  menu.updateStasisCount()
+  menu.stasis.marked = marked
+  keepTopRow()
+  menu.refreshQueued = true
 end
 
 -- Dismiss confirmation, a frame on the context layer; Cancel is preselected.
-function menu.openConfirm(keys)
-  menu.closeConfirm()
-  menu.confirmKeys = keys
+function menu.openConfirm(people, title, text)
+  menu.closeContext()
+  menu.confirmPeople = people
   local width = Helper.scaleX(config.confirmWidth)
   local frame = Helper.createFrameHandle(menu, {
     layer = config.contextLayer, standardButtons = { close = true }, width = width, autoFrameHeight = true,
@@ -1685,35 +1997,159 @@ function menu.openConfirm(keys)
   })
   frame:setBackground("solid", { color = Color["frame_background_semitransparent"] })
   local ftable = frame:addTable(2, { tabOrder = 1, x = Helper.borderSize, y = Helper.borderSize, width = width - 2 * Helper.borderSize, reserveScrollBar = false })
-  titleRow(ftable, 2, ReadText(1001, 12891))
+  titleRow(ftable, 2, title or pageText(4141))
   local row = ftable:addRow(false, {})
-  row[1]:setColSpan(2):createText(string.format(pageText(4125), #keys), { halign = "left", wordwrap = true })
+  row[1]:setColSpan(2):createText(text or string.format(pageText(4125), #people), { halign = "left", wordwrap = true })
   row = ftable:addRow(true, {})
   row[1]:createButton({}):setText(ReadText(1001, 2821), { halign = "center" })
   row[1].handlers.onClick = function() return menu.confirmDismiss() end
   row[2]:createButton({}):setText(ReadText(1001, 64), { halign = "center" })
-  row[2].handlers.onClick = function() return menu.closeConfirm() end
+  row[2].handlers.onClick = function() return menu.closeContext() end
   ftable:setSelectedRow(row.index)
   ftable:setSelectedCol(2)
-  menu.confirmFrame = frame
+  menu.contextFrame = frame
   frame:display()
 end
 
-function menu.closeConfirm()
-  menu.confirmKeys = nil
-  if menu.confirmFrame then
-    menu.confirmFrame = nil
+function menu.closeContext()
+  menu.confirmPeople = nil
+  menu.mouseOutBox = nil
+  if menu.contextFrame then
+    menu.contextFrame = nil
     Helper.clearFrame(menu, config.contextLayer)
   end
 end
 
 function menu.confirmDismiss()
-  local keys = menu.confirmKeys
-  menu.closeConfirm()
-  if keys and #keys > 0 then
-    debugLog("stasis: dismiss %d.", #keys)
-    sendStasis("Dismiss", { keys = keys })
+  local people = menu.confirmPeople
+  menu.closeContext()
+  if people and #people > 0 then
+    debugLog("stasis: dismiss %d.", #people)
+    sendStasis("Dismiss", { people = refsOf(people) })
   end
+end
+
+-- A person's container and NPC seed; a Stasis record is matched by name on its station, the skills decide between namesakes.
+local function personOf(person)
+  local container = person and person.container or 0
+  if not isAlive(container) then
+    return nil
+  end
+  if person.seed then
+    return container, person.seed
+  end
+  local matches = {}
+  for _, npc in ipairs(GetRoleTierNPCs(container, "unassigned", 0) or {}) do
+    if npc.name == person.name then
+      matches[#matches + 1] = C.ConvertStringTo64Bit(tostring(npc.seed))
+    end
+  end
+  if #matches > 1 then
+    local numSkills = C.GetNumSkills()
+    local buf = ffi.new("SkillInfo[?]", numSkills)
+    for _, seed in ipairs(matches) do
+      local same = true
+      for i = 0, C.GetPersonSkills3(buf, numSkills, seed, container) - 1 do
+        local value = tonumber(person[ffi.string(buf[i].id)])
+        if value ~= nil and value ~= buf[i].value then
+          same = false
+          break
+        end
+      end
+      if same then
+        return container, seed
+      end
+    end
+  end
+  return container, matches[1]
+end
+
+-- The person entries of vanilla's map crew context (menu_map createInfoContext), Fire through our Dismiss;
+-- unlike vanilla, also on a leased NPC station: Stasis people are the player's wherever they stay.
+-- Work somewhere else and Fire stay inactive for a person due back unless reassigning is allowed.
+function menu.openPersonContext(key, x, y)
+  local person = menu.stasisShown and menu.stasisShown[key]
+  local container, seed = personOf(person)
+  if not seed then
+    debugLog("stasis: no person aboard for %s.", textOf(person and person.name))
+    return
+  end
+  local held = isHeld(person)
+  local heldText = held and (dueText(person) .. "\n" .. ReadText(PAGE, 4137)) or nil
+  menu.closeContext()
+  local width = Helper.scaleX(config.contextWidth)
+  local frame = Helper.createFrameHandle(menu, {
+    layer = config.contextLayer, standardButtons = { close = true }, width = width, autoFrameHeight = true, x = x, y = 0,
+    closeOnUnhandledClick = true,
+  })
+  frame:setBackground("solid", { color = Color["frame_background_semitransparent"] })
+  local ftable = frame:addTable(1, { tabOrder = 1, x = Helper.borderSize, y = Helper.borderSize, width = width - 2 * Helper.borderSize, highlightMode = "off" })
+  local containerLuaId = luaId(container)
+  local isUnlocked = IsInfoUnlockedForPlayer(containerLuaId, "name")
+  local name = ffi.string(C.GetPersonName(seed, container))
+  local row = ftable:addRow(false, { fixed = true, bgColor = Color["row_background_blue"] })
+  row[1]:createText(Helper.unlockInfo(isUnlocked, name), Helper.headerRowCenteredProperties)
+  local scheduled = C.IsPersonTransferScheduled(container, seed)
+  local arrived = C.HasPersonArrived(container, seed)
+  local instance = C.GetInstantiatedPerson(seed, container)
+  local entity = (instance ~= 0) and ConvertStringTo64Bit(tostring(instance)) or nil
+  local function addEntry(text, onClick, active, mouseOverText)
+    local entry = ftable:addRow(true, { fixed = true })
+    entry[1]:createButton({ bgColor = Color["button_background_hidden"], height = Helper.standardTextHeight, active = active ~= false, mouseOverText = mouseOverText }):setText(text)
+    entry[1].handlers.onClick = onClick
+  end
+  if scheduled then
+    addEntry(ReadText(1001, 9435), function() C.ReleasePersonFromCrewTransfer(container, seed); menu.closeContext() end)
+  end
+  if arrived then
+    local hire = entity and { "signal", entity, 0 } or { "signal", container, 0, seed }
+    addEntry(ReadText(1002, 3008), function()
+      traceLog("stasis: %s works somewhere else.", name)
+      Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, container, nil, "hire", hire })
+      menu.cleanup()
+    end, not held, heldText)
+  end
+  addEntry(ReadText(1002, 15800), function()
+    menu.openConfirm({ person }, string.format(tostring(ReadText(1001, 11202)), name), ReadText(1001, 11201))
+  end, not held, heldText)
+  if not scheduled and arrived then
+    local actor = { context = containerLuaId, person = ConvertStringToLuaID(tostring(seed)) }
+    if entity and C.GetContextByClass(entity, "container", false) == C.GetContextByClass(C.GetPlayerID(), "container", false) then
+      actor = entity
+    end
+    addEntry(ReadText(1001, 3216), function()
+      menu.closeContext()
+      Helper.closeMenuForNewConversation(menu, "default", actor)
+      menu.cleanup()
+    end, isUnlocked)
+  end
+  if frame.properties.x + width > Helper.viewWidth then
+    frame.properties.x = Helper.viewWidth - width - Helper.frameBorder
+  end
+  local height = frame:getUsedHeight()
+  frame.properties.y = (y + height > Helper.viewHeight) and (Helper.viewHeight - height - Helper.frameBorder) or y
+  menu.contextFrame = frame
+  frame:display()
+  local fx, fy = frame.properties.x - Helper.viewWidth / 2, Helper.viewHeight / 2 - frame.properties.y
+  menu.mouseOutBox = {
+    x1 = fx - config.mouseOutRange, x2 = fx + width + config.mouseOutRange,
+    y1 = fy + config.mouseOutRange, y2 = fy - height - config.mouseOutRange,
+  }
+end
+
+function menu.onTableRightMouseClick(uitable, row, posx, posy)
+  if not (menu.peopleTable and uitable == menu.peopleTable.id) then
+    return
+  end
+  local key = menu.peopleRowKey and menu.peopleRowKey[row]
+  if key == nil then
+    return
+  end
+  local x, y = GetLocalMousePosition()
+  if x == nil then
+    x, y = posx, -posy
+  end
+  menu.openPersonContext(key, x + Helper.viewWidth / 2, Helper.viewHeight / 2 - y)
 end
 
 local function onStasisChanged()
@@ -1731,12 +2167,12 @@ local function selectOnMap(id64, tries)
   end
 end
 
--- The selected Rescue ship, or on the Stasis tab the current person's station.
+-- The selected Rescue ship, or on the Rescued tab the current person's station or ship.
 local function selectedObject()
   if menu.tab == "stasis" then
     local current = menu.stasis.current
     local person = (current ~= nil) and menu.stasisShown and menu.stasisShown[current]
-    local id64 = person and componentOf(person.station) or 0
+    local id64 = person and person.container or 0
     return isAlive(id64) and id64 or nil
   end
   local idcode = menu.selected[menu.tab]
@@ -1762,7 +2198,7 @@ function menu.buttonShowOnMap()
   Helper.addDelayedOneTimeCallbackOnUpdate(function() selectOnMap(id64, config.mapSelectTries) end, false, getElapsedTime() + config.mapSelectRetry)
 end
 
--- A multiselect table re-reports its row on redraws: a person row only updates cells in place.
+-- A person row only updates cells in place: a rebuild from here breaks the frame being built.
 function menu.onRowChanged(_row, rowdata, uitable)
   if type(rowdata) ~= "table" then
     return
@@ -1772,18 +2208,12 @@ function menu.onRowChanged(_row, rowdata, uitable)
     menu.topRows[menu.tab] = GetTopRow(uitable)
   elseif rowdata[1] == "person" then
     local state = menu.stasis
+    if menu.mouseOutBox and rowdata[2] ~= state.current then
+      menu.closeContext()
+    end
     state.current = rowdata[2]
     menu.topRows.stasis = GetTopRow(uitable)
-    local selected = {}
-    for _, row in ipairs(GetSelectedRows(uitable) or {}) do
-      local key = menu.peopleRowKey and menu.peopleRowKey[row]
-      if key ~= nil then
-        selected[key] = true
-      end
-    end
-    state.selected = selected
     menu.updateStasisDetail()
-    menu.updateStasisCount()
   end
 end
 
@@ -1821,15 +2251,22 @@ function menu.onUpdate()
   if menu.infoFrame then
     menu.infoFrame:update()
   end
-  if menu.confirmFrame then
-    menu.confirmFrame:update()
+  if menu.contextFrame then
+    menu.contextFrame:update()
+  end
+  if menu.mouseOutBox and ((GetControllerInfo() ~= "gamepad") or C.IsMouseEmulationActive()) then
+    local mx, my = GetLocalMousePosition()
+    local box = menu.mouseOutBox
+    if (mx and (mx < box.x1 or mx > box.x2)) or (my and (my > box.y1 or my < box.y2)) then
+      menu.closeContext()
+    end
   end
 end
 
 -- A third argument means the view is already gone: never refuse that close.
 function menu.onCloseElement(dueToClose, _layer, forced)
-  if menu.confirmFrame and not forced then
-    menu.closeConfirm()
+  if menu.contextFrame and not forced then
+    menu.closeContext()
     return
   end
   Helper.closeMenu(menu, dueToClose)

@@ -4,7 +4,7 @@
     <cue name="Main" version="107">
       <cues>
 
-        <library name="Defaults" version="200">
+        <library name="Defaults" version="201">
           <actions>
             <set_value name="$cfg" exact="table[
               $debugLevel = 'none',
@@ -13,6 +13,7 @@
               $stasisMode = 'off',
               $stasisFriendJumps = 2,
               $stasisAutoRentPercent = 0,
+              $stasisAllowReassign = 0,
             ]" />
           </actions>
         </library>

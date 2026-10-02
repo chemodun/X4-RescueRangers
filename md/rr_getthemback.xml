@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mdscript name="RR_GetThemBack" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
   <cues>
-    <cue name="Main" version="107">
+    <cue name="Main" version="200">
       <conditions>
         <event_cue_signalled cue="md.Setup.Start" />
       </conditions>
@@ -74,6 +74,11 @@
         <remove_value name="$migrationDropped" />
         <remove_value name="$person" />
         <remove_value name="$personIndex" />
+      </patch>
+      <patch sinceversion="200">
+        <do_if value="$personRescuedList?">
+          <include_actions ref="PublishRescued" />
+        </do_if>
       </patch>
       <cues>
 
@@ -188,7 +193,7 @@
           </actions>
         </cue>
 
-        <cue name="ProcessCrewAccountingRequest" instantiate="true" version="200">
+        <cue name="ProcessCrewAccountingRequest" instantiate="true" version="201">
           <conditions>
             <!-- param2 = requester, param3 = [ships to be replaced] -->
             <event_object_signalled object="player.entity" param="'rr_entity_transfer'" />
@@ -252,6 +257,7 @@
                   </do_if>
                   <append_to_list name="$personRescuedIndex" exact="$person.$id" />
                   <append_to_list name="$personRescuedList" exact="$person" />
+                  <include_actions ref="PublishRescued" />
                   <debug_text
                     chance="$debugChance" text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Person Item moved from spacesuit for %s (by %s): %s'.
                     [ player.age, $personRescued, if $personKey then 'template' else 'name', $person ]"
@@ -279,6 +285,7 @@
                   <set_value name="$personRescuedList.{$personIndex}.$container" exact="$personRescuedContainer" />
                   <set_value name="$personRescuedList.{$personIndex}.$containerTag" exact="$personRescuedContainerTag" />
                   <set_value name="$personRescuedList.{$personIndex}.$updated" exact="player.age" /> <!-- Set the update timestamp -->
+                  <include_actions ref="PublishRescued" />
                   <debug_text
                     chance="$traceChance" text="'RR_GetThemBack - ProcessCrewAccountingRequest [%s]: Data Item Updated for %s: %s'.
                     [ player.age, $personRescued, $personRescuedList.{$personIndex} ]"
@@ -309,7 +316,21 @@
           </actions>
         </library>
 
-        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="107">
+        <!-- The rescued people Get-Them-Back still returns, for the overview's Rescued tab -->
+        <library name="PublishRescued" version="200">
+          <actions>
+            <create_list name="$publishList" />
+            <do_for_each name="$publishPerson" in="$personRescuedList">
+              <append_to_list name="$publishList" exact="table[$name = $publishPerson.$name, $container = $publishPerson.$container, $shipId = $publishPerson.$shipId]" />
+            </do_for_each>
+            <set_value name="player.entity.$RescueRangersGetThemBack" exact="$publishList" />
+            <raise_lua_event name="'RescueRangers.StasisChanged'" />
+            <remove_value name="$publishPerson" />
+            <remove_value name="$publishList" />
+          </actions>
+        </library>
+
+        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="200">
           <conditions>
             <check_value value="@player.entity.$RRGetThemBackEnabled + 7600 ge player.age" />
             <check_any>
@@ -341,6 +362,7 @@
               <remove_value name="$personInSpacesuitIndex" />
             </do_if>
             <do_if value="$personRescuedList? and @$personRescuedList.count gt 0">
+              <set_value name="$personRescuedCount" exact="$personRescuedList.count" />
               <set_value name="$personIndex" exact="1" />
               <do_while value="$personIndex le $personRescuedList.count">
                 <set_value name="$person" exact="@$personRescuedList.{$personIndex}" />
@@ -366,6 +388,10 @@
                   <set_value name="$personIndex" operation="add" />
                 </do_else>
               </do_while>
+              <do_if value="$personRescuedList.count != $personRescuedCount">
+                <include_actions ref="PublishRescued" />
+              </do_if>
+              <remove_value name="$personRescuedCount" />
               <remove_value name="$person" />
               <remove_value name="$personExpired" />
               <remove_value name="$personIndex" />
@@ -511,7 +537,7 @@
           </actions>
         </cue>
 
-        <library name="ProcessRecoveryCrew" version="200">
+        <library name="ProcessRecoveryCrew" version="201">
           <actions>
             <set_value name="$commander" exact="@$replacement.commander" />
             <do_if value="@$replacement.toplevelcommander">
@@ -876,6 +902,7 @@
                         </do_if>
                       </do_for_each>
                       <remove_value name="$rescuedIndex" />
+                      <include_actions ref="PublishRescued" />
                     </do_if>
                     <do_else>
                       <debug_text chance="$debugChance" text="'RR_GetThemBack - RecoveryCrew [%s]: No crew assigned'" />
@@ -1002,25 +1029,6 @@
               <remove_value name="$replacementId" />
             </do_while>
             <remove_value name="$delayedIndex" />
-          </actions>
-        </cue>
-
-        <cue name="SwapPilotRequest" instantiate="true" version="200">
-          <conditions>
-            <!-- param2 = table[$ship, $pilot]; the sender has moved $pilot onto $ship already -->
-            <event_object_signalled object="player.entity" param="'rr_swap_pilot'" />
-            <check_value value="typeof event.param2 == datatype.table" />
-            <check_value value="@event.param2.$ship.isclass.ship" />
-            <check_value value="@event.param2.$ship.people.{event.param2.$pilot}.exists" />
-          </conditions>
-          <actions>
-            <include_actions ref="ReadDebugChances" />
-            <append_to_list name="$pilotsToSwap"
-              exact="table[$ship = event.param2.$ship, $shipId = event.param2.$ship.idcode, $pilot = event.param2.$pilot, $updated = player.age]" />
-            <debug_text
-              chance="$debugChance" text="'RR_GetThemBack - SwapPilotRequest [%s]: Pilot to swap added: %s'.
-              [ player.age, @$pilotsToSwap.last ]"
-            />
           </actions>
         </cue>
 
