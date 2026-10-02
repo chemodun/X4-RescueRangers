@@ -6,8 +6,10 @@
 [list]
 [*] Order option `Keep rescued on board as crew`.
 [*] [b]Rescue Rangers[/b] page in the Extension Options: extra rescue range, Stasis defaults, top menu entry, `Debug Level`.
-[*] [b]Rescue Rangers[/b] overview in the top menu: Rescue ships, statistics, Stasis and per-ship settings.
-[*] Stasis: rescued people kept on your stations or on space rented on NPC stations, managed from the overview's [b]Stasis[/b] tab, and returned on Replacement Ships too.
+[*] [b]Rescue Rangers[/b] overview in the top menu: Rescue ships, statistics, rescued people and per-ship settings.
+[*] Stasis: rescued people kept on your stations or on space rented on NPC stations, managed from the overview's [b]Rescued[/b] tab, and returned on Replacement Ships too.
+[*] Overview [b]Rescue ships[/b] tab: ships grouped by sector, with what each one is doing now, the rescued people aboard, where they go next, and warnings when there is no room for them.
+[*] Overview [b]Rescued[/b] tab: everyone rescued in one list; move marked people between places in Stasis and "Dormitory" ships, dismiss them, or right-click a person for the usual context menu.
 [*] Requires `Mod Support APIs`, [b]Options Helper[/b] and `Print Extension List`.
 [*] Czech, Polish, Turkish and Bulgarian translations.
 [/list]
