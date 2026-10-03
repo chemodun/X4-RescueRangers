@@ -2102,8 +2102,16 @@ function menu.openPersonContext(key, x, y)
     addEntry(ReadText(1001, 9435), function() C.ReleasePersonFromCrewTransfer(container, seed); menu.closeContext() end)
   end
   if arrived then
-    local hire = entity and { "signal", entity, 0 } or { "signal", container, 0, seed }
     addEntry(ReadText(1002, 3008), function()
+      local hire = entity and { "signal", entity, 0 } or { "signal", container, 0, seed }
+      -- AssignHiredActor refuses a person on an NPC station: hand it a player-owned instance instead.
+      if not GetComponentData(container, "isplayerowned") then
+        local npc = entity or ConvertStringTo64Bit(tostring(C.CreateNPCFromPerson(seed, container)))
+        if not GetComponentData(npc, "isplayerowned") then
+          C.SetComponentOwner(npc, "player")
+        end
+        hire = { "signal", npc, 0 }
+      end
       traceLog("stasis: %s works somewhere else.", name)
       Helper.closeMenuAndOpenNewMenu(menu, "MapMenu", { 0, 0, true, container, nil, "hire", hire })
       menu.cleanup()
