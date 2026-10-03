@@ -330,7 +330,7 @@
           </actions>
         </library>
 
-        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="200">
+        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="201">
           <conditions>
             <check_value value="@player.entity.$RRGetThemBackEnabled + 7600 ge player.age" />
             <check_any>
@@ -338,10 +338,21 @@
               <check_value value="@$personRescuedList.count gt 0" />
               <check_value value="@$shipsDestroyedList.count gt 0" />
               <check_value value="@$shipsReplacementsList.count gt 0" />
+              <check_value value="@$shipsReplacementsIndex.count != @$shipsReplacementsList.count" />
             </check_any>
           </conditions>
           <actions>
             <include_actions ref="ReadDebugChances" />
+            <!-- An index out of step with its list shifts every lookup; older saves carry stale entries -->
+            <do_if value="$shipsReplacementsList? and @$shipsReplacementsIndex.count != $shipsReplacementsList.count">
+              <create_list name="$shipsReplacementsIndex" />
+              <do_for_each name="$replacement" in="$shipsReplacementsList">
+                <append_to_list name="$shipsReplacementsIndex" exact="if @$replacement.$replacement.idcode then $replacement.$replacement.idcode else ''" />
+              </do_for_each>
+              <debug_text
+                chance="$debugChance" text="'RR_GetThemBack - Refresh Data [%s]: Replacements index rebuilt, %s entries'.[ player.age, $shipsReplacementsIndex.count ]" />
+              <remove_value name="$replacement" />
+            </do_if>
             <do_if value="$personInSpaceList? and @$personInSpaceList.count gt 0">
               <set_value name="$personInSpacesuitIndex" exact="1" />
               <do_while value="$personInSpacesuitIndex le $personInSpaceList.count">
@@ -418,7 +429,7 @@
               <do_while value="$replacementIndex le $shipsReplacementsList.count">
                 <set_value name="$replacement" exact="@$shipsReplacementsList.{$replacementIndex}" />
                 <do_if value="player.age gt ($replacement.$updated + 7200)">
-                  <remove_from_list name="$shipsReplacementsIndex" exact="$replacement.$id" />
+                  <remove_value name="$shipsReplacementsIndex.{$replacementIndex}" />
                   <remove_from_list name="$shipsReplacementsList" exact="$replacement" />
                   <debug_text
                     chance="$traceChance" text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Replacements'.[ player.age, $replacement.$id ]" />
