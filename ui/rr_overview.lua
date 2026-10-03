@@ -433,19 +433,29 @@ local function personMatches(person, filter)
   return false
 end
 
--- Names of a station's unassigned people, read once per list build.
-local function unassignedNames(station, cache)
+-- Seeds and names of a station's unassigned people, read once per list build.
+local function unassignedOn(station, cache)
   local key = tostring(station)
   if not cache[key] then
-    local names = {}
+    local present = { seeds = {}, names = {} }
     if isAlive(station) then
       for _, npc in ipairs(GetRoleTierNPCs(station, "unassigned", 0) or {}) do
-        names[npc.name] = true
+        present.seeds[tostring(npc.seed)] = true
+        present.names[npc.name] = true
       end
     end
-    cache[key] = names
+    cache[key] = present
   end
   return cache[key]
+end
+
+-- A record from before `$seed` matches by name.
+local function recordOnStation(record, cache)
+  local present = unassignedOn(componentOf(record.station), cache)
+  if record.seed ~= nil then
+    return present.seeds[tostring(record.seed)] == true
+  end
+  return present.names[record.name] == true
 end
 
 -- People Get-Them-Back still returns, "<container>|<name>" -> lost ship; none while no Rescue ship has it on.
@@ -468,6 +478,7 @@ local function recordPerson(record, due)
     person[key] = value
   end
   person.recordKey = record.key
+  person.seed = (record.seed ~= nil) and C.ConvertStringTo64Bit(tostring(record.seed)) or nil
   person.container = componentOf(record.station)
   person.name = textOf(record.name)
   person.placeName = textOf(record.stationName)
@@ -505,7 +516,7 @@ local function rescuedAll(data, rangers)
   local due = readGetThemBack()
   local all, onStation = {}, {}
   for _, record in ipairs((data and data.people) or {}) do
-    if unassignedNames(componentOf(record.station), onStation)[record.name] then
+    if recordOnStation(record, onStation) then
       all[#all + 1] = recordPerson(record, due)
     end
   end
@@ -2029,7 +2040,7 @@ function menu.confirmDismiss()
   end
 end
 
--- A person's container and NPC seed; a Stasis record is matched by name on its station, the skills decide between namesakes.
+-- A person's container and NPC seed; a Stasis record without `$seed` is matched by name on its station, the skills decide between namesakes.
 local function personOf(person)
   local container = person and person.container or 0
   if not isAlive(container) then

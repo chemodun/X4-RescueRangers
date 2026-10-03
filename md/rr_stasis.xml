@@ -9,7 +9,7 @@
       </actions>
       <cues>
 
-        <!-- $people records and $leases are what Lua reads; npctemplates stay in $templates, keyed by the record's $key -->
+        <!-- $people records and $leases are what Lua reads; $templates (by record $key) is the npctemplate authority, $record.$seed its copy for Lua -->
         <library name="Prepare" version="200">
           <actions>
             <set_value name="$debugLevel" exact="@player.entity.$RescueRangersConfig.$debugLevel" />
@@ -261,7 +261,8 @@
                 $since = player.age,
                 $ranger = @$inRanger.idcode,
                 $rangerName = @$inRanger.knownname,
-                $lostShip = ''
+                $lostShip = '',
+                $seed = $inTemplate
               ]" />
             <set_value name="$templates.{$nextKey}" exact="$inTemplate" />
             <set_value name="$nextKey" operation="add" />
