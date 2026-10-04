@@ -208,3 +208,4 @@ The Rescue ship shows an on-screen notice once, when it and the "Dormitory" ship
 - [EGOSOFT](https://www.egosoft.com) - for the X series.
 - [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659) - for the `Mod Support APIs` that power the overview and the `Options Helper` behind the options page.
 - [staeuber](https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=132068) - for the solution to the unnecessary undocking on applying the order.
+
