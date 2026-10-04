@@ -4,21 +4,21 @@
     <cue name="Main" version="107">
       <cues>
 
-        <library name="Defaults" version="201">
+        <library name="Defaults" version="202">
           <actions>
             <set_value name="$cfg" exact="table[
               $debugLevel = 'none',
               $extraRange = 0,
               $topMenuIcon = 1,
               $stasisMode = 'off',
-              $stasisFriendJumps = 2,
+              $returnKeepHours = 2,
               $stasisAutoRentPercent = 0,
               $stasisAllowReassign = 0,
             ]" />
           </actions>
         </library>
 
-        <cue name="RegisterMenu" instantiate="true" version="200">
+        <cue name="RegisterMenu" instantiate="true" version="201">
           <conditions>
             <event_cue_signalled cue="md.Simple_Menu_API.Reloaded" />
           </conditions>
@@ -34,6 +34,7 @@
                 </do_if>
               </do_for_each>
               <remove_value name="$key" />
+              <remove_value name="player.entity.$RescueRangersConfig.$stasisFriendJumps" />
             </do_else>
             <remove_value name="$cfg" />
 
@@ -47,7 +48,7 @@
           </actions>
         </cue>
 
-        <cue name="OptionsMenu" instantiate="true" version="200">
+        <cue name="OptionsMenu" instantiate="true" version="201">
           <conditions>
             <event_cue_signalled />
           </conditions>
@@ -69,6 +70,21 @@
                 <param name="colSpan" value="12" />
                 <param name="min" value="0" />
                 <param name="max" value="5" />
+                <param name="step" value="1" />
+                <param name="data" value="$cfg" />
+                <param name="handle" value="HandleSlider" />
+              </run_actions>
+
+              <include_actions ref="md.Options_Helper.Add_Empty_Row" />
+              <run_actions ref="md.Options_Helper.Add_Title_Row">
+                <param name="title" value="{1972092402, 106}" />
+              </run_actions>
+              <run_actions ref="md.Options_Helper.Add_Slider">
+                <param name="id" value="'returnKeepHours'" />
+                <param name="text" value="{1972092402, 90410}" />
+                <param name="colSpan" value="12" />
+                <param name="min" value="1" />
+                <param name="max" value="24" />
                 <param name="step" value="1" />
                 <param name="data" value="$cfg" />
                 <param name="handle" value="HandleSlider" />
@@ -99,16 +115,6 @@
               </run_actions>
               <remove_value name="$stasisModeOptions" />
               <remove_value name="$stasisModeIndex" />
-              <run_actions ref="md.Options_Helper.Add_Slider">
-                <param name="id" value="'stasisFriendJumps'" />
-                <param name="text" value="{1972092402, 90320}" />
-                <param name="colSpan" value="12" />
-                <param name="min" value="0" />
-                <param name="max" value="5" />
-                <param name="step" value="1" />
-                <param name="data" value="$cfg" />
-                <param name="handle" value="HandleSlider" />
-              </run_actions>
               <run_actions ref="md.Options_Helper.Add_Slider">
                 <param name="id" value="'stasisAutoRentPercent'" />
                 <param name="text" value="{1972092402, 90330}" />

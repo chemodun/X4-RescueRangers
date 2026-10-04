@@ -8,7 +8,7 @@
       <cues>
 
         <!-- player.entity.$RescueRangersStats holds strings and numbers only: ui/rr_overview.lua reads it from the blackboard -->
-        <library name="EnsureStats" version="200">
+        <library name="EnsureStats" version="201">
           <actions>
             <do_if value="not player.entity.$RescueRangersStats?">
               <set_value name="player.entity.$RescueRangersStats"
@@ -17,6 +17,7 @@
                   $ejected = 0,
                   $rescued = 0,
                   $lost = 0,
+                  $pickedUp = 0,
                   $toDormitory = 0,
                   $toStasis = 0,
                   $joinedCrew = 0,
@@ -26,9 +27,14 @@
                   $hours = []
                 ]" />
             </do_if>
-            <do_elseif value="not player.entity.$RescueRangersStats.$toStasis?">
-              <set_value name="player.entity.$RescueRangersStats.$toStasis" exact="0" />
-            </do_elseif>
+            <do_else>
+              <do_if value="not player.entity.$RescueRangersStats.$toStasis?">
+                <set_value name="player.entity.$RescueRangersStats.$toStasis" exact="0" />
+              </do_if>
+              <do_if value="not player.entity.$RescueRangersStats.$pickedUp?">
+                <set_value name="player.entity.$RescueRangersStats.$pickedUp" exact="0" />
+              </do_if>
+            </do_else>
           </actions>
         </library>
 
@@ -42,7 +48,7 @@
         </library>
 
         <!-- In: $event = table[$kind, $count, $ranger, $person, $sector, $other]; $kind is one of the counter names -->
-        <library name="Record" version="200">
+        <library name="Record" version="201">
           <actions>
             <include_actions ref="EnsureStats" />
             <set_value name="$stats" exact="player.entity.$RescueRangersStats" />
@@ -54,7 +60,7 @@
 
             <set_value name="$hour" exact="(player.age / 3600)i" />
             <do_if value="$stats.$hours.count == 0 or @$stats.$hours.{$stats.$hours.count}.$h != $hour">
-              <append_to_list name="$stats.$hours" exact="table[$h = $hour, $ejected = 0, $rescued = 0, $lost = 0, $returned = 0]" />
+              <append_to_list name="$stats.$hours" exact="table[$h = $hour, $ejected = 0, $rescued = 0, $lost = 0, $pickedUp = 0, $returned = 0]" />
               <do_if value="$stats.$hours.count gt 168">
                 <remove_value name="$stats.$hours.{1}" />
               </do_if>
@@ -104,9 +110,9 @@
               <remove_value name="$stats.$events.{1}" />
             </do_if>
             <debug_text chance="$debugChance"
-              text="'RR_Stats [%s]: %s x%s, ranger %s, person %s, sector %s, other %s. Totals: ejected %s, rescued %s, lost %s, dormitory %s, stasis %s, crew %s, returned %s'.[
+              text="'RR_Stats [%s]: %s x%s, ranger %s, person %s, sector %s, other %s. Totals: ejected %s, rescued %s, lost %s, picked up %s, dormitory %s, stasis %s, crew %s, returned %s'.[
                 player.age, $event.$kind, $count, @$event.$ranger.debugname, @$event.$person, @$event.$sector.knownname, @$event.$other.debugname,
-                $stats.$ejected, $stats.$rescued, $stats.$lost, $stats.$toDormitory, $stats.$toStasis, $stats.$joinedCrew, $stats.$returned]" />
+                $stats.$ejected, $stats.$rescued, $stats.$lost, $stats.$pickedUp, $stats.$toDormitory, $stats.$toStasis, $stats.$joinedCrew, $stats.$returned]" />
             <remove_value name="$bucket" />
             <remove_value name="$hour" />
             <remove_value name="$count" />
@@ -180,6 +186,46 @@
             <set_value name="$event" exact="table[$kind = 'lost', $count = 1, $person = @event.param.pilot.knownname, $sector = event.param.sector]" />
             <include_actions ref="Record" />
             <remove_value name="$event" />
+          </actions>
+        </cue>
+
+        <!-- A docked suit is removed, and so is one whose oxygen ran out outside the player's attention: no dock target means it died -->
+        <cue name="OnSpacesuitRemoved" instantiate="true" version="200">
+          <conditions>
+            <event_player_owned_destroyed />
+            <check_value value="event.param.isclass.spacesuit" />
+            <check_value value="event.param3 == killmethod.removed" />
+            <check_value value="event.param != player.occupiedship" />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <set_value name="$suit" exact="event.param" />
+            <set_value name="$target" exact="@$suit.dock.container" />
+            <do_if value="not $target">
+              <set_value name="$target" exact="@$suit.assigneddock.container" />
+            </do_if>
+            <do_if value="not $target and @$suit.order.id == 'DockAt'">
+              <set_value name="$target" exact="@$suit.order.$destination" />
+            </do_if>
+            <!-- A Rescue ship counts its own rescues; a Mimic runs the order through Assist -->
+            <set_value name="$byRanger"
+              exact="@$target.defaultorder.id == 'RescueRangers' or (@$target.defaultorder.id == 'Assist' and @$target.commander.defaultorder.id == 'RescueRangers')" />
+            <debug_text chance="$traceChance"
+              text="'RR_Stats [%s]: suit %s of %s removed, target %s, by a Rescue ship %s, oxygen left %s'.[
+                player.age, $suit.knownname, @$suit.pilot.knownname, @$target.debugname, $byRanger, @$suit.oxygentimeremaining]" />
+            <do_if value="not $byRanger">
+              <do_if value="$target">
+                <set_value name="$event" exact="table[$kind = 'pickedUp', $count = 1, $person = @$suit.pilot.knownname, $sector = $suit.sector, $other = $target]" />
+              </do_if>
+              <do_else>
+                <set_value name="$event" exact="table[$kind = 'lost', $count = 1, $person = @$suit.pilot.knownname, $sector = $suit.sector]" />
+              </do_else>
+              <include_actions ref="Record" />
+              <remove_value name="$event" />
+            </do_if>
+            <remove_value name="$byRanger" />
+            <remove_value name="$target" />
+            <remove_value name="$suit" />
           </actions>
         </cue>
 

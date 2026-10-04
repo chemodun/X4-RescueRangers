@@ -66,6 +66,7 @@ local COUNTERS = {
   { key = "ejected",     textId = 3040 },
   { key = "rescued",     textId = 3041 },
   { key = "lost",        textId = 3042 },
+  { key = "pickedUp",    textId = 3079 },
   { key = "toDormitory", textId = 3043 },
   { key = "toStasis",    textId = 3064 },
   { key = "joinedCrew",  textId = 3044 },
@@ -76,11 +77,12 @@ local SERIES = {
   { key = "ejected",  textId = 3040, color = "graph_data_1" },
   { key = "rescued",  textId = 3041, color = "graph_data_4" },
   { key = "lost",     textId = 3042, color = "graph_data_2" },
+  { key = "pickedUp", textId = 3079, color = "graph_data_7" },
   { key = "returned", textId = 3045, color = "graph_data_6" },
 }
 local GRAPH_HOURS = 24
 local Y_STEPS = { 1, 2, 5, 10, 20, 50, 100, 200, 500 }
-local EVENT_TEXT = { rescued = 3050, ejected = 3051, lost = 3052, toDormitory = 3053, joinedCrew = 3054, returned = 3055, toStasis = 3065 }
+local EVENT_TEXT = { rescued = 3050, ejected = 3051, lost = 3052, toDormitory = 3053, joinedCrew = 3054, returned = 3055, toStasis = 3065, pickedUp = 3080 }
 local EVENT_COLOR = { rescued = "text_positive", lost = "text_negative", returned = "text_positive" }
 
 local rr = {
@@ -467,7 +469,7 @@ local function readGetThemBack()
   end
   local list = GetNPCBlackboard(rr.playerId, "$RescueRangersGetThemBack")
   for _, entry in ipairs((type(list) == "table") and list or {}) do
-    due[tostring(componentOf(entry.container)) .. "|" .. tostring(entry.name)] = textOf(entry.shipId)
+    due[tostring(componentOf(entry.container)) .. "|" .. tostring(entry.name)] = textOf(entry.shipLabel or entry.shipId)
   end
   return due
 end
@@ -807,6 +809,8 @@ local function eventText(event)
     return string.format(pageText(textId), other, tostring(event.count or 0), tostring(event.sector or ""))
   elseif event.kind == "lost" then
     return string.format(pageText(textId), tostring(event.person or ""), tostring(event.sector or ""))
+  elseif event.kind == "pickedUp" then
+    return string.format(pageText(textId), tostring(event.person or ""), other, tostring(event.sector or ""))
   elseif event.kind == "toDormitory" or event.kind == "toStasis" then
     return string.format(pageText(textId), ranger, tostring(event.count or 0), other)
   elseif event.kind == "joinedCrew" then
@@ -1618,9 +1622,9 @@ function menu.createStasisPeople(x, y, width, bottomY, people)
   local ftable = menu.infoFrame:addTable(cols, { tabOrder = 2, x = x, y = y, width = width, maxVisibleHeight = bottomY - y })
   ftable:setColWidth(1, size, false)
   ftable:setColWidthPercent(3, 14)
-  ftable:setColWidthPercent(4, 16)
-  ftable:setColWidthPercent(5, 16)
-  ftable:setColWidthPercent(6, 26)
+  ftable:setColWidthPercent(4, 22)
+  ftable:setColWidthPercent(5, 12)
+  ftable:setColWidthPercent(6, 24)
   headerRow(ftable, { "", ReadText(1001, 2809), role.text(), ReadText(PAGE, 4101), ReadText(PAGE, 4102), ReadText(1001, 2943) })
   menu.peopleTable = ftable
   menu.peopleRowKey = {}

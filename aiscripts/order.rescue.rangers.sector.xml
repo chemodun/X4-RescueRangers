@@ -135,8 +135,6 @@
         </do_for_each>
         <set_value name="$stasisFailed" exact="$stasisFailedKept" />
         <include_interrupt_actions ref="GetBlacklistgroup" />
-        <set_value name="$stasisFriendJumps"
-          exact="if player.entity.$RescueRangersConfig? and player.entity.$RescueRangersConfig.$stasisFriendJumps? then player.entity.$RescueRangersConfig.$stasisFriendJumps else 2" />
         <set_value name="$stasisDockSize" exact="this.assignedcontrolled.docksize" />
         <create_list name="$stasisCandidates" />
         <set_value name="$stasisPlaces" exact="@player.entity.$RescueRangersStasis.$places" />
@@ -177,10 +175,10 @@
                   .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, $stasisStation.debugname, $blacklistgroup]" />
               <continue />
             </do_if>
-            <!-- Player stations first; a friend's lease wins unless a dock-only one is more than $stasisFriendJumps closer -->
+            <!-- Player stations first, then leases, nearest first -->
             <append_to_list name="$stasisCandidates"
               exact="table[$station = $stasisStation, $free = $stasisStation.people.free,
-                $order = $stasisDistance + (if @$stasisEntry.$isLease then 1000 else 0) + (if @$stasisEntry.$friend then 0 else $stasisFriendJumps + 0.5)]" />
+                $order = $stasisDistance + (if @$stasisEntry.$isLease then 1000 else 0)]" />
           </do_for_each>
         </do_if>
         <sort_list list="$stasisCandidates" sortbyvalue="loop.element.$order" />
@@ -213,7 +211,6 @@
         <remove_value name="$stasisEntry" />
         <remove_value name="$stasisPlaces" />
         <remove_value name="$stasisDockSize" />
-        <remove_value name="$stasisFriendJumps" />
         <remove_value name="$stasisSkip" />
         <remove_value name="$stasisFailedKept" />
       </actions>
@@ -576,7 +573,7 @@
     <set_value name="$skipDockingMessageAfterScriptUpdate" exact="not $isStartedByPlayer" />
 
     <debug_text chance="$debugChance"
-      text="'RescueRangers [%s at %s, Mode: %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nParking At: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s. \nDock: [%s at %s], parked at: [%s at %s], has context: %s. Skip docking message: %s'
+      text="'RescueRangers [%s at %s, Mode: %s] - Free: %s. Started (by player: %s) version %s. \nSector: %s. Distance: %s. \nParking At: [%s at %s]. Dormitory: [%s at %s], free: %s. \nSectors: %s. \nSort by oxygen: %s. \nRecord to logbook: %s. \nDebug chance: %s. \nDock: [%s at %s], parked at: [%s at %s], has context: %s. Skip docking message: %s'
         .[
           this.assignedcontrolled.debugname,
           this.assignedcontrolled.sector.knownname,
@@ -1399,6 +1396,8 @@
           text="'RescueRangers [%s at %s, Mode: %s] - Not docked at Stasis place %s (result %s, dock %s), skipped for an hour'
             .[this.assignedcontrolled.debugname, this.assignedcontrolled.sector.knownname, @$rescueMode, @$stasisPlace.debugname, @$docked, @this.assignedcontrolled.dock.container.debugname]" />
         <append_to_list name="$stasisFailed" exact="table[$station = $stasisPlace, $at = player.age]" />
+        <!-- a failed order.dock marks this order failed -->
+        <clear_order_failure order="this.assignedcontrolled.order" />
         <resume label="transferPeople" />
       </do_if>
 

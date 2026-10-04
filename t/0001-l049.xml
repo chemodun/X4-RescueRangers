@@ -78,6 +78,8 @@
       <t id="3076">Schlafsaal voll</t>
       <t id="3077">Schlafsaal verloren</t>
       <t id="3078">Schiff voll, keine Rettungen mehr</t>
+      <t id="3079">Von anderen Schiffen oder Stationen aufgenommen</t>
+      <t id="3080">%s wurde von %s in %s aufgenommen</t>
       <t id="4000">Stasis</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Platz für Personen in Stasis auf %s gemietet: %s {1001,101} pro Tag</t>
@@ -95,6 +97,7 @@
       <t id="4031">Stasis-Platz auf %s kann nicht gemietet werden: deine Schiffe dürfen dort nicht andocken</t>
       <t id="4032">Stasis-Platz auf %s kann nicht gemietet werden: kein freier Platz für Personen</t>
       <t id="4033">Der Mietvertrag auf %s kann nicht beendet werden. Personen ohne Platz anderswo: %s</t>
+      <t id="4034">Stasis-Platz auf %s kann nicht gemietet werden: die Beziehung zu %s ist zu niedrig</t>
       <t id="4040">Gerettete Personen nach %s verlegt: %s</t>
       <t id="4041">Niemand konnte nach %s verlegt werden: kein freier Platz für Personen</t>
       <t id="4042">Gerettete Personen verabschiedet: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Übersicht</t>
       <t id="90210">Die Rettungs-Ranger-Übersicht im oberen Menü anzeigen</t>
       <t id="90310">Gerettete in Stasis verlegen</t>
-      <t id="90320">Zusätzliche Sprünge, die ein gemieteter Ort auf einer freundlichen Station weiter entfernt sein darf als einer auf einer neutralen Station</t>
       <t id="90330">Automatisch einen Ort auf einer NPC-Station mieten, wenn ein Tag Miete höchstens diesen Prozentsatz deines Geldes beträgt \(0: nie\)</t>
+      <t id="90410">Stunden, die ein verlorenes Schiff und seine gerettete Crew gemerkt werden, solange kein Ersatzschiff in der Warteschlange ist</t>
       <t id="90900">Debug</t>
       <t id="90910">Debug-Stufe</t>
       <t id="90911">Keine</t>

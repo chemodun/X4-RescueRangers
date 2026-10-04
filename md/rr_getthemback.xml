@@ -91,7 +91,7 @@
           </actions>
         </library>
 
-        <cue name="CollectCrewInfoFromDestroyedShip" instantiate="true" version="107">
+        <cue name="CollectCrewInfoFromDestroyedShip" instantiate="true" version="200">
           <conditions>
             <event_player_owned_destroyed />
             <check_value
@@ -169,6 +169,7 @@
                   $containerTag = 'spacesuit',
                   $macro = $destroyedShip.macro,
                   $shipId = @$destroyedShip.idcode,
+                  $shipLabel = {1972092402, 1010}.[$destroyedShip.knownname, $destroyedShip.idcode],
                   $updated = player.age]" />
               <debug_text chance="$traceChance" text="'RR_GetThemBack - Data Item [%s]: %s.'.[ player.age, $person ]" />
               <append_to_list name="$personInSpaceIndex" exact="$spacesuit.pilot.npctemplate" />
@@ -317,11 +318,12 @@
         </library>
 
         <!-- The rescued people Get-Them-Back still returns, for the overview's Rescued tab -->
-        <library name="PublishRescued" version="200">
+        <library name="PublishRescued" version="201">
           <actions>
             <create_list name="$publishList" />
             <do_for_each name="$publishPerson" in="$personRescuedList">
-              <append_to_list name="$publishList" exact="table[$name = $publishPerson.$name, $container = $publishPerson.$container, $shipId = $publishPerson.$shipId]" />
+              <append_to_list name="$publishList" exact="table[$name = $publishPerson.$name, $container = $publishPerson.$container, $shipId = $publishPerson.$shipId,
+                $shipLabel = if $publishPerson.$shipLabel? then $publishPerson.$shipLabel else $publishPerson.$shipId]" />
             </do_for_each>
             <set_value name="player.entity.$RescueRangersGetThemBack" exact="$publishList" />
             <raise_lua_event name="'RescueRangers.StasisChanged'" />
@@ -330,7 +332,7 @@
           </actions>
         </library>
 
-        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="201">
+        <cue name="RefreshGetThemBackData" instantiate="true" checkinterval="10s" version="202">
           <conditions>
             <check_value value="@player.entity.$RRGetThemBackEnabled + 7600 ge player.age" />
             <check_any>
@@ -407,20 +409,28 @@
               <remove_value name="$personExpired" />
               <remove_value name="$personIndex" />
             </do_if>
+            <set_value name="$keepFor" exact="3600 * (if @player.entity.$RescueRangersConfig.$returnKeepHours gt 0 then player.entity.$RescueRangersConfig.$returnKeepHours else 2)" />
             <do_if value="$shipsDestroyedList? and @$shipsDestroyedList.count gt 0">
+              <!-- ui/rr_fleet_units.lua answers with BuildQueued per lost ship idcode -->
+              <do_if value="player.age ge @$buildsCheckedAt + 60">
+                <set_value name="$buildsCheckedAt" exact="player.age" />
+                <raise_lua_event name="'RescueRangers.QueuedBuilds'" />
+              </do_if>
               <set_value name="$destroyedIndex" exact="1" />
               <do_while value="$destroyedIndex le $shipsDestroyedList.count">
                 <set_value name="$destroyed" exact="@$shipsDestroyedList.{$destroyedIndex}" />
-                <do_if value="player.age gt ($destroyed.$updated + 7200)">
+                <set_value name="$keptSince" exact="if @$destroyed.$queuedAt gt $destroyed.$updated then $destroyed.$queuedAt else $destroyed.$updated" />
+                <do_if value="player.age gt ($keptSince + $keepFor)">
                   <remove_from_list name="$shipsDestroyedIndex" exact="$destroyed.$id" />
                   <remove_from_list name="$shipsDestroyedList" exact="$destroyed" />
                   <debug_text
-                    chance="$traceChance" text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Destroyed Ships'.[ player.age, $destroyed.$id ]" />
+                    chance="$debugChance" text="'RR_GetThemBack - Refresh Data [%s]: Removed %s from Destroyed Ships, no build queued since %s'.[ player.age, $destroyed.$id, $keptSince ]" />
                 </do_if>
                 <do_else>
                   <set_value name="$destroyedIndex" operation="add" />
                 </do_else>
               </do_while>
+              <remove_value name="$keptSince" />
               <remove_value name="$destroyed" />
               <remove_value name="$destroyedIndex" />
             </do_if>
@@ -428,7 +438,7 @@
               <set_value name="$replacementIndex" exact="1" />
               <do_while value="$replacementIndex le $shipsReplacementsList.count">
                 <set_value name="$replacement" exact="@$shipsReplacementsList.{$replacementIndex}" />
-                <do_if value="player.age gt ($replacement.$updated + 7200)">
+                <do_if value="player.age gt ($replacement.$updated + $keepFor)">
                   <remove_value name="$shipsReplacementsIndex.{$replacementIndex}" />
                   <remove_from_list name="$shipsReplacementsList" exact="$replacement" />
                   <debug_text
@@ -441,6 +451,23 @@
               <remove_value name="$replacement" />
               <remove_value name="$replacementIndex" />
             </do_if>
+            <remove_value name="$keepFor" />
+          </actions>
+        </cue>
+
+        <cue name="BuildQueued" instantiate="true" version="200">
+          <conditions>
+            <!-- param3 = the lost ship's idcode -->
+            <event_ui_triggered screen="'RescueRangers.FleetUnits'" control="'BuildQueued'" />
+          </conditions>
+          <actions>
+            <do_for_each name="$queuedInfo" in="$shipsDestroyedList">
+              <do_if value="$queuedInfo.$id == event.param3">
+                <set_value name="$queuedInfo.$queuedAt" exact="player.age" />
+                <break />
+              </do_if>
+            </do_for_each>
+            <remove_value name="$queuedInfo" />
           </actions>
         </cue>
 

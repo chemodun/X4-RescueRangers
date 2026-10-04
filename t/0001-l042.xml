@@ -78,6 +78,8 @@
       <t id="3076">Dormitář plný</t>
       <t id="3077">Dormitář ztracen</t>
       <t id="3078">Loď plná, záchrany zastaveny</t>
+      <t id="3079">Vyzvednuto jinými loděmi nebo stanicemi</t>
+      <t id="3080">%s: vyzvednutí lodí či stanicí %s v %s</t>
       <t id="4000">Stáze</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Pronajato místo pro lidi ve Stázi na %s za %s {1001,101} denně</t>
@@ -95,6 +97,7 @@
       <t id="4031">Nelze pronajmout místo ve Stázi na %s: vaše lodě tam nesmí dokovat</t>
       <t id="4032">Nelze pronajmout místo ve Stázi na %s: žádné volné místo pro lidi</t>
       <t id="4033">Nelze ukončit pronájem na %s. Lidé bez místa jinde: %s</t>
+      <t id="4034">Nelze pronajmout místo ve Stázi na %s: vztah k frakci %s je příliš nízký</t>
       <t id="4040">Zachránění lidé přesunuti do %s: %s</t>
       <t id="4041">Nikoho nebylo možné přesunout do %s: žádné volné místo pro lidi</t>
       <t id="4042">Zachránění lidé propuštěni: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Přehled</t>
       <t id="90210">Zobrazit přehled Záchranářů v horní nabídce</t>
       <t id="90310">Přesouvat zachráněné lidi do Stáze</t>
-      <t id="90320">Skoky navíc: o kolik dál smí být pronajaté místo na přátelské stanici než místo na neutrální stanici</t>
       <t id="90330">Automaticky pronajmout místo na stanici NPC, pokud denní nájemné činí nejvýše toto procento vašich peněz \(0: nikdy\)</t>
+      <t id="90410">Počet hodin, po které zůstává ztracená loď a její zachráněná posádka v paměti, když není ve frontě žádná náhradní loď</t>
       <t id="90900">Ladění</t>
       <t id="90910">Úroveň ladění</t>
       <t id="90911">Žádná</t>

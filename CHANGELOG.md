@@ -5,7 +5,7 @@
 ### Added
 
 - Order option `Keep rescued on board as crew`.
-- `Rescue Rangers` page in the Extension Options: extra rescue range, Stasis defaults, top menu entry, `Debug Level`.
+- `Rescue Rangers` page in the Extension Options: extra rescue range, how long a loss is remembered for `Return them back on Replacement Ship`, Stasis defaults, top menu entry, `Debug Level`.
 - `Rescue Rangers` overview in the top menu: Rescue ships, statistics, rescued people and per-ship settings.
 - Stasis: rescued people kept on your stations or on space rented on NPC stations, managed from the overview's `Rescued` tab, and returned on Replacement Ships too.
 - Overview `Rescue ships` tab: ships grouped by sector, with what each one is doing now, the rescued people aboard, where they go next, and warnings when there is no room for them.
@@ -29,7 +29,7 @@
 - `Mimic` subordinates always ran with `Return them back on Replacement Ship` off.
 - `Return them back on Replacement Ship` could stop tracking losses and replacements while all Rescue ships were busy for more than 5 minutes.
 - `Return them back on Replacement Ship`: rescued crew is now returned on the replacement of the very ship they were lost from. Before, any recent loss of the same model nearby could take its place, even one from a fleet without `Lost Ships Replacement`.
-- `Return them back on Replacement Ship`: rescued crew whose Replacement Ship took more than an hour to build and arrive was forgotten before it joined the fleet.
+- `Return them back on Replacement Ship`: rescued crew whose Replacement Ship took more than an hour to build and arrive was forgotten before it joined the fleet. A loss is now remembered while its Replacement Ship is queued or being built, and for 2 more hours (set in the Extension Options) when none is.
 - `Return them back on Replacement Ship`: crew members were tracked by name, so two people with the same name could be skipped or mixed up. They are tracked one by one now; a save from an older version is converted on load.
 - `Return them back on Replacement Ship`: once a first Replacement Ship record had expired, later Replacement Ships could get the wrong people or nobody. A save from an older version is repaired automatically.
 - The order can no longer be added to a repeat orders loop.

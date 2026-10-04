@@ -78,6 +78,8 @@
       <t id="3076">Dortoir plein</t>
       <t id="3077">Dortoir perdu</t>
       <t id="3078">Vaisseau plein, sauvetages arrêtés</t>
+      <t id="3079">Récupérés par d'autres vaisseaux ou stations</t>
+      <t id="3080">%s a été récupéré par %s dans %s</t>
       <t id="4000">Stase</t>
       <t id="4001">\033O{1972092402, 1} : {1972092402, 4000}\033X</t>
       <t id="4010">Espace loué pour les personnes en Stase sur %s pour %s {1001,101} par jour</t>
@@ -95,6 +97,7 @@
       <t id="4031">Impossible de louer un espace de Stase sur %s : vos vaisseaux n'ont pas le droit de s'y amarrer</t>
       <t id="4032">Impossible de louer un espace de Stase sur %s : pas d'espace libre pour des personnes</t>
       <t id="4033">Impossible de mettre fin à la location sur %s. Personnes sans place ailleurs : %s</t>
+      <t id="4034">Impossible de louer un espace de Stase sur %s : la relation avec %s est trop faible</t>
       <t id="4040">Personnes rescapées transférées vers %s : %s</t>
       <t id="4041">Personne n'a pu être transféré vers %s : pas d'espace libre pour des personnes</t>
       <t id="4042">Personnes rescapées renvoyées : %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Vue d'ensemble</t>
       <t id="90210">Afficher la vue d'ensemble Rangers de Sauvetage dans le menu supérieur</t>
       <t id="90310">Transférer les rescapés en Stase</t>
-      <t id="90320">Nombre de sauts supplémentaires dont un emplacement loué sur une station amicale peut être plus éloigné qu'un emplacement sur une station neutre</t>
       <t id="90330">Louer automatiquement un emplacement sur une station PNJ si un jour de loyer représente au plus ce pourcentage de votre argent \(0 : jamais\)</t>
+      <t id="90410">Heures pendant lesquelles un vaisseau perdu et son équipage sauvé restent en mémoire sans vaisseau de remplacement en file d'attente</t>
       <t id="90900">Débogage</t>
       <t id="90910">Niveau de débogage</t>
       <t id="90911">Aucun</t>

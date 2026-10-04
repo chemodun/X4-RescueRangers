@@ -78,6 +78,8 @@
       <t id="3076">Dormitório cheio</t>
       <t id="3077">Dormitório perdido</t>
       <t id="3078">Nave cheia, resgates interrompidos</t>
+      <t id="3079">Recolhidos por outras naves ou estações</t>
+      <t id="3080">%s foi recolhido por %s em %s</t>
       <t id="4000">Estase</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Espaço de Estase para pessoas alugado em %s por %s {1001,101} por dia</t>
@@ -95,6 +97,7 @@
       <t id="4031">Não é possível alugar espaço de Estase em %s: suas naves não podem atracar lá</t>
       <t id="4032">Não é possível alugar espaço de Estase em %s: sem espaço livre para pessoas</t>
       <t id="4033">Não é possível encerrar o aluguel em %s. Pessoas sem lugar em outro local: %s</t>
+      <t id="4034">Não é possível alugar espaço de Estase em %s: a relação com %s é baixa demais</t>
       <t id="4040">Pessoas resgatadas transferidas para %s: %s</t>
       <t id="4041">Ninguém pôde ser transferido para %s: sem espaço livre para pessoas</t>
       <t id="4042">Pessoas resgatadas dispensadas: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Visão geral</t>
       <t id="90210">Mostrar a visão geral dos Rangers de Resgate no menu superior</t>
       <t id="90310">Transferir pessoas resgatadas para a Estase</t>
-      <t id="90320">Saltos extras de distância permitidos para um local alugado em uma estação amigável, em relação a uma estação neutra</t>
       <t id="90330">Alugar automaticamente um local em uma estação de NPC se um dia de aluguel custar no máximo esta porcentagem do seu dinheiro \(0: nunca\)</t>
+      <t id="90410">Horas em que uma nave perdida e sua tripulação resgatada ficam na memória sem nenhuma Nave de Substituição na fila</t>
       <t id="90900">Depuração</t>
       <t id="90910">Nível de depuração</t>
       <t id="90911">Nenhum</t>

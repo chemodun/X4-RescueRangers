@@ -78,6 +78,8 @@
       <t id="3076">Yurt dolu</t>
       <t id="3077">Yurt kaybedildi</t>
       <t id="3078">Gemi dolu, kurtarma durdu</t>
+      <t id="3079">Başka gemi veya istasyonlarca alınan</t>
+      <t id="3080">%s, %s tarafından alındı, sektör: %s</t>
       <t id="4000">Stazis</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">%s istasyonunda Stazis'teki insanlar için yer kiralandı, günlük %s {1001,101}</t>
@@ -95,6 +97,7 @@
       <t id="4031">%s istasyonunda Stazis yeri kiralanamıyor: gemileriniz oraya kenetlenemez</t>
       <t id="4032">%s istasyonunda Stazis yeri kiralanamıyor: insanlar için boş yer yok</t>
       <t id="4033">%s istasyonundaki kira sonlandırılamıyor. Başka yerde yeri olmayan insanlar: %s</t>
+      <t id="4034">%s istasyonunda Stazis yeri kiralanamıyor: %s ile ilişki çok düşük</t>
       <t id="4040">Kurtarılan insanlar %s hedefine taşındı: %s</t>
       <t id="4041">%s hedefine kimse taşınamadı: insanlar için boş yer yok</t>
       <t id="4042">Serbest bırakılan kurtarılanlar: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Genel Bakış</t>
       <t id="90210">Kurtarma Timi genel bakışını üst menüde göster</t>
       <t id="90310">Kurtarılan insanları Stazis'e taşı</t>
-      <t id="90320">Dost bir istasyondaki kiralık yerin, tarafsız bir istasyondakine göre fazladan kaç sıçrama uzakta olabileceği</t>
       <t id="90330">Günlük kira paranızın en fazla bu yüzdesi kadarsa NPC istasyonunda otomatik olarak yer kirala \(0: asla\)</t>
+      <t id="90410">Sırada Yenileme Gemisi yokken kaybedilen bir geminin ve kurtarılan mürettebatının hatırlandığı saat sayısı</t>
       <t id="90900">Hata Ayıklama</t>
       <t id="90910">Hata Ayıklama Seviyesi</t>
       <t id="90911">Yok</t>

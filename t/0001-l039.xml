@@ -78,6 +78,8 @@
       <t id="3076">Dormitorio pieno</t>
       <t id="3077">Dormitorio perso</t>
       <t id="3078">Nave piena, salvataggi interrotti</t>
+      <t id="3079">Recuperati da altre navi o stazioni</t>
+      <t id="3080">%s è stato recuperato da %s in %s</t>
       <t id="4000">Stasi</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Affittato spazio per le persone in Stasi su %s per %s {1001,101} al giorno</t>
@@ -95,6 +97,7 @@
       <t id="4031">Impossibile affittare spazio di Stasi su %s: le tue navi non possono attraccarvi</t>
       <t id="4032">Impossibile affittare spazio di Stasi su %s: nessuno spazio libero per le persone</t>
       <t id="4033">Impossibile terminare la locazione su %s. Persone senza spazio altrove: %s</t>
+      <t id="4034">Impossibile affittare spazio di Stasi su %s: la relazione con %s è troppo bassa</t>
       <t id="4040">Persone salvate trasferite a %s: %s</t>
       <t id="4041">Nessuno è stato trasferito a %s: nessuno spazio libero per le persone</t>
       <t id="4042">Persone salvate congedate: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Panoramica</t>
       <t id="90210">Mostra la panoramica di Rangers di salvataggio nel menu superiore</t>
       <t id="90310">Trasferisci i salvati in Stasi</t>
-      <t id="90320">Salti in più consentiti per un luogo affittato su una stazione amichevole rispetto a uno su una stazione neutrale</t>
       <t id="90330">Affitta automaticamente un luogo su una stazione NPC se un giorno di affitto è al massimo questa percentuale del tuo denaro \(0: mai\)</t>
+      <t id="90410">Ore in cui una nave persa e il suo equipaggio salvato restano in memoria senza alcuna nave di sostituzione in coda</t>
       <t id="90900">Debug</t>
       <t id="90910">Livello di debug</t>
       <t id="90911">Nessuno</t>

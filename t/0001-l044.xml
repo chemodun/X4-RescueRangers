@@ -78,6 +78,8 @@
       <t id="3076">Dormitory full</t>
       <t id="3077">Dormitory lost</t>
       <t id="3078">Ship full, rescues stopped</t>
+      <t id="3079">Picked up by other ships or stations</t>
+      <t id="3080">%s was picked up by %s in %s</t>
       <t id="4000">Stasis</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Rented space for people in Stasis on %s for %s {1001,101} per day</t>
@@ -95,6 +97,7 @@
       <t id="4031">Cannot rent Stasis space on %s: your ships may not dock there</t>
       <t id="4032">Cannot rent Stasis space on %s: no free space for people</t>
       <t id="4033">Cannot end the lease on %s. People with no room elsewhere: %s</t>
+      <t id="4034">Cannot rent Stasis space on %s: the relation to %s is too low</t>
       <t id="4040">Rescued people moved to %s: %s</t>
       <t id="4041">Nobody could be moved to %s: no free space for people</t>
       <t id="4042">Rescued people dismissed: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Overview</t>
       <t id="90210">Show the Rescue Rangers overview in the top menu</t>
       <t id="90310">Move rescued people to Stasis</t>
-      <t id="90320">Extra jumps a rented place on a friendly station may be farther than one on a neutral station</t>
       <t id="90330">Rent a place on an NPC station automatically if a day of rent is at most this percent of your money \(0: never\)</t>
+      <t id="90410">Hours a lost ship and its rescued crew are remembered with no Replacement Ship queued</t>
       <t id="90900">Debug</t>
       <t id="90910">Debug Level</t>
       <t id="90911">None</t>

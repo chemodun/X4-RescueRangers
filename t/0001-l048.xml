@@ -78,6 +78,8 @@
       <t id="3076">Bursa pełna</t>
       <t id="3077">Bursa utracona</t>
       <t id="3078">Statek pełny, ratowanie wstrzymane</t>
+      <t id="3079">Podjęci przez inne statki lub stacje</t>
+      <t id="3080">%s: podjęcie przez %s w %s</t>
       <t id="4000">Staza</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Wynajęto miejsce dla ludzi w Stazie na %s za %s {1001,101} dziennie</t>
@@ -95,6 +97,7 @@
       <t id="4031">Nie można wynająć miejsca w Stazie na %s: Twoje statki nie mogą tam dokować</t>
       <t id="4032">Nie można wynająć miejsca w Stazie na %s: brak wolnego miejsca dla ludzi</t>
       <t id="4033">Nie można zakończyć najmu na %s. Ludzie bez miejsca gdzie indziej: %s</t>
+      <t id="4034">Nie można wynająć miejsca w Stazie na %s: relacja z frakcją %s jest zbyt niska</t>
       <t id="4040">Uratowani ludzie przeniesieni do %s: %s</t>
       <t id="4041">Nikogo nie można było przenieść do %s: brak wolnego miejsca dla ludzi</t>
       <t id="4042">Uratowani ludzie odprawieni: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Przegląd</t>
       <t id="90210">Pokaż przegląd Ratowników w górnym menu</t>
       <t id="90310">Przenoś uratowanych ludzi do Stazy</t>
-      <t id="90320">Dodatkowe skoki: o ile dalej może być wynajęte miejsce na przyjaznej stacji niż na neutralnej stacji</t>
       <t id="90330">Automatycznie wynajmij miejsce na stacji NPC, jeśli dzienny czynsz wynosi najwyżej tyle procent Twoich pieniędzy \(0: nigdy\)</t>
+      <t id="90410">Liczba godzin, przez które utracony statek i jego uratowana załoga pozostają w pamięci, gdy żaden statek zastępczy nie czeka w kolejce</t>
       <t id="90900">Debugowanie</t>
       <t id="90910">Poziom debugowania</t>
       <t id="90911">Brak</t>

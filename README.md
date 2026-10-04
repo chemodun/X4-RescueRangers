@@ -93,7 +93,7 @@ The `Lost Ships Replacement` feature should be enabled for appropriate fleet com
 
 The rescued crew is returned on the replacement of the very ship they were lost from. Ships lost outside a fleet with `Lost Ships Replacement` get no replacement, so their rescued crew stays where the Rescue ship put it.
 
-A loss is remembered for two hours: a Replacement Ship finished later than that (for example, while the shipyards were short of resources) gets no rescued crew back.
+A loss is remembered while a Replacement Ship for it is queued or being built, and for two more hours after that (see `Hours a lost ship and its rescued crew are remembered with no Replacement Ship queued` in the options): a Replacement Ship queued later than that gets no rescued crew back.
 
 **Important note**: This feature is configured on each Rescue ship separately!
 
@@ -134,6 +134,10 @@ These options are on the `Rescue Rangers` page of the `Extension options` menu. 
 
 From `0` (the default) to `5`. Raises the highest `Max gate distance to rescue` you can select for any Rescue ship by this number. It changes only what the order menu lets you pick; set the distance on each Rescue ship as before.
 
+### Hours a lost ship and its rescued crew are remembered with no Replacement Ship queued
+
+From `1` to `24`, `2` by default. For `Return them back on Replacement Ship`: a lost ship is remembered as long as a Replacement Ship for it is queued or being built, and for this many hours when none is. A finished Replacement Ship waits this long for its rescued crew too.
+
 ### Show the Rescue Rangers overview in the top menu
 
 `Enabled` by default. Adds the `Rescue Rangers` overview to the row of top menu icons, right after the map.
@@ -141,10 +145,6 @@ From `0` (the default) to `5`. Raises the highest `Max gate distance to rescue` 
 ### Move rescued people to Stasis
 
 `Off` by default. When Rescue ships move their rescued people to Stasis, unless a Rescue ship has its own `Stasis` option set: `Off`, `When the ship and the Dormitory are full`, or `Instead of the Dormitory`.
-
-### Extra jumps a rented place on a friendly station may be farther than one on a neutral station
-
-From `0` to `5`, `2` by default. A Rescue ship prefers a rented place on a station whose owner is friendly to you, unless one on a neutral station is more than this many jumps closer.
 
 ### Rent a place on an NPC station automatically
 
@@ -163,7 +163,7 @@ Sets how much the extension writes to the game's debug log:
 Open it with its icon in the top menu, right after the map. It has four tabs:
 
 - `Rescue ships` - every ship on the order, grouped by the sector it is in now, each Mimic right under its commander (hover a ship for its mode: `Sector`, `Fleet` or `Mimic`): whether it is rescuing, docked or under way; what it is doing (the person it is picking up and where, or where it takes them: home or a place in Stasis); the rescued people it has aboard; where they go next (its "Dormitory" or its own crew, with the free space left, or Stasis); and warnings when it has no place in Stasis, its "Dormitory" is lost or full, or it is full and stopped rescuing. Double-click a row, or use `Show on Map`, to see the ship on the map.
-- `Statistics` - how many crew members were ejected from your lost ships, rescued, died in space, moved to "Dormitories" or to Stasis, joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
+- `Statistics` - how many crew members were ejected from your lost ships, rescued, died in space (also when their oxygen ran out far from you), picked up by other ships or stations, moved to "Dormitories" or to Stasis, joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
 - `Rescued` - everyone rescued, in Stasis, on "Dormitory" ships and aboard Rescue ships; the places in Stasis and the rent of space on NPC stations, see `Keeping rescued people in Stasis` below.
 - `Settings` - each Rescue ship's `Max gate distance to rescue`, its four options and its `Stasis` option. A change applies at once and restarts that ship's order, as the same change in the order menu does. The `All Rescue ships` row on top changes a setting for every Rescue ship at once (a range is capped by each pilot's skill). A Mimic follows its commander's settings.
 
@@ -180,8 +180,8 @@ Stasis keeps rescued people on stations until you need them, instead of filling 
 ![Rescue Rangers overview, Rescued](docs/images/overview_rescued.png)
 
 - **Places**: your own stations with free space for people come first, then space you rented on NPC stations, nearest first. A Rescue ship flies to the place and docks there, as it does with the "Dormitory", so docking and your sector blacklists must allow it.
-- **Rent**: in the `Rescued` tab, `Find stations` lists the known NPC stations where your ships may dock and that have free space, nearest first, friendly ones preferred; `Rent` rents the whole free space of one station for a flat rent per day. When a Rescue ship finds no place, the tab proposes a station, or it is rented automatically, see `Rent a place on an NPC station automatically`. End a lease with `End lease` when you no longer need it: its people move to another place in Stasis first, and with no room elsewhere the lease stays.
-- **Unpaid rent or a low relation**: the rent of a day you cannot pay becomes a debt, paid when the money is there. While a lease has a debt, or its owner's relation to you drops too low for your ships to dock there, its people move at once to another place in Stasis and the lease ends. With no room elsewhere they stay, the place takes no newcomers, and you are told once a day.
+- **Rent**: in the `Rescued` tab, `Find stations` lists the known NPC stations where your ships may dock, whose owner is friendly to you and that have free space, nearest first; `Rent` rents the whole free space of one station for a flat rent per day. When a Rescue ship finds no place, the tab proposes a station, or it is rented automatically, see `Rent a place on an NPC station automatically`. End a lease with `End lease` when you no longer need it: its people move to another place in Stasis first, and with no room elsewhere the lease stays.
+- **Unpaid rent or a low relation**: the rent of a day you cannot pay becomes a debt, paid when the money is there. While a lease has a debt, or its owner is no longer friendly to you, its people move at once to another place in Stasis and the lease ends. With no room elsewhere they stay, the place takes no newcomers, and you are told once a day.
 - **People**: one list of everyone rescued: in Stasis, on "Dormitory" ships and aboard Rescue ships, with their skills, location and Rescue ship, and the ship they were lost from when their Rescue ship has `Return them back on Replacement Ship` enabled; filter it by name, ship or station and sort it. Mark people to `Move` them to another place in Stasis or a "Dormitory" ship with room for all of them, or to `Dismiss` them for good. Right-click a person for the usual context menu: `Work somewhere else for me`, `Fire`, `Comm`.
 
 ![The context menu of a rescued person](docs/images/overview_rescued_context.png)

@@ -78,6 +78,8 @@
       <t id="3076">Dormitorio lleno</t>
       <t id="3077">Dormitorio perdido</t>
       <t id="3078">Nave llena, rescates detenidos</t>
+      <t id="3079">Recogidos por otras naves o estaciones</t>
+      <t id="3080">%s fue recogido por %s en %s</t>
       <t id="4000">Estasis</t>
       <t id="4001">\033O{1972092402, 1}: {1972092402, 4000}\033X</t>
       <t id="4010">Espacio alquilado para personas en Estasis en %s por %s {1001,101} al día</t>
@@ -95,6 +97,7 @@
       <t id="4031">No se puede alquilar espacio de Estasis en %s: tus naves no pueden atracar allí</t>
       <t id="4032">No se puede alquilar espacio de Estasis en %s: no hay espacio libre para personas</t>
       <t id="4033">No se puede terminar el alquiler en %s. Personas sin sitio en otro lugar: %s</t>
+      <t id="4034">No se puede alquilar espacio de Estasis en %s: la relación con %s es demasiado baja</t>
       <t id="4040">Personas rescatadas trasladadas a %s: %s</t>
       <t id="4041">No se pudo trasladar a nadie a %s: no hay espacio libre para personas</t>
       <t id="4042">Personas rescatadas dadas de baja: %s</t>
@@ -148,8 +151,8 @@
       <t id="90200">Vista General</t>
       <t id="90210">Mostrar la vista general de Rescatadores en el menú superior</t>
       <t id="90310">Trasladar a las personas rescatadas a Estasis</t>
-      <t id="90320">Saltos extra que un lugar alquilado en una estación amistosa puede estar más lejos que uno en una estación neutral</t>
       <t id="90330">Alquilar automáticamente un lugar en una estación NPC si un día de alquiler es como máximo este porcentaje de tu dinero \(0: nunca\)</t>
+      <t id="90410">Horas que se recuerdan una nave perdida y su tripulación rescatada sin ninguna Nave de Reemplazo en cola</t>
       <t id="90900">Depuración</t>
       <t id="90910">Nivel de depuración</t>
       <t id="90911">Ninguno</t>
