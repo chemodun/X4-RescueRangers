@@ -4,40 +4,29 @@
 
 ### Added
 
-- Order option `Keep rescued on board as crew`.
-- `Rescue Rangers` page in the Extension Options: extra rescue range, how long a loss is remembered for `Return them back on Replacement Ship`, Stasis defaults, top menu entry, `Debug Level`.
 - `Rescue Rangers` overview in the top menu: Rescue ships, statistics, rescued people and per-ship settings.
-- Stasis: rescued people kept on your stations or on space rented on NPC stations, managed from the overview's `Rescued` tab, and returned on Replacement Ships too.
-- Overview `Rescue ships` tab: ships grouped by sector, with what each one is doing now, the rescued people aboard, where they go next, and warnings when there is no room for them.
-- Overview `Rescued` tab: everyone rescued in one list; move marked people between places in Stasis and "Dormitory" ships, dismiss them, or right-click a person for the usual context menu.
-- Requires `Mod Support APIs`, `Options Helper` and `Print Extension List`.
+- Stasis: rescued people kept on your stations or on space rented on NPC stations.
+- Order options `Keep rescued on board as crew` and `Stasis`.
+- `Rescue Rangers` page in the Extension Options.
 - Czech, Polish, Turkish and Bulgarian translations.
 
 ### Changed
 
-- Nothing is written to the game's debug log unless `Debug Level` is set to `Debug` or `Trace`.
-- A full Rescue ship and "Dormitory" no longer call you every few minutes: one notice until there is free space again.
-- Workshop sync is off by default, as for other extensions.
+- Requires `Mod Support APIs`, `Options Helper` and `Print Extension List`.
+- Nothing is written to the game's debug log unless `Debug Level` is `Debug` or `Trace`.
+- A full Rescue ship and "Dormitory" tell you once, not every few minutes.
+- The order can no longer be added to a repeat orders loop.
 
 ### Fixed
 
-- A successful rescue was not recognized after the rescue flight: no "rescued" logbook entry, no pilot experience, and `Return them back` never registered the person.
-- `Return them back`: a rescued person was often dropped from tracking between docking at the Rescue ship and being registered, so they never returned to the Replacement Ship.
-- Several Rescue ships in one area: a person picked by a Rescue ship that then failed, was destroyed or got other orders was skipped by all other Rescue ships for good.
-- Rescue ships whose order was started with version 1.00 ignored ship losses in their own sector.
-- With a `Max gate distance to rescue` above 0, a Rescue ship that found nobody in one sector went home instead of checking the other sectors in range. Spacesuits left from losses during a rescue flight are now picked up too.
+- A successful rescue was not recognized: no logbook entry, no pilot experience, no `Return them back` registration.
+- With `Max gate distance to rescue` above 0, a Rescue ship that found nobody in one sector went home instead of searching the rest of its range.
+- Several Rescue ships in one area: a person picked by a Rescue ship that then failed was skipped by all the others for good.
+- Rescue ships started on 1.00 ignored losses in their own sector.
 - `Mimic` subordinates always ran with `Return them back on Replacement Ship` off.
-- `Return them back on Replacement Ship` could stop tracking losses and replacements while all Rescue ships were busy for more than 5 minutes.
-- `Return them back on Replacement Ship`: rescued crew is now returned on the replacement of the very ship they were lost from. Before, any recent loss of the same model nearby could take its place, even one from a fleet without `Lost Ships Replacement`.
-- `Return them back on Replacement Ship`: rescued crew whose Replacement Ship took more than an hour to build and arrive was forgotten before it joined the fleet. A loss is now remembered while its Replacement Ship is queued or being built, and for 2 more hours (set in the Extension Options) when none is.
-- `Return them back on Replacement Ship`: crew members were tracked by name, so two people with the same name could be skipped or mixed up. They are tracked one by one now; a save from an older version is converted on load.
-- `Return them back on Replacement Ship`: once a first Replacement Ship record had expired, later Replacement Ships could get the wrong people or nobody. A save from an older version is repaired automatically.
-- The order can no longer be added to a repeat orders loop.
-- A Rescue ship destroyed while on the order wrote errors to the game's debug log.
-- A Rescue ship undocking from a station other than its Home Station wrote an error to the game's debug log.
-- The Traditional Chinese translation showed Bengali text in several places.
-- Japanese, Korean and Simplified Chinese: some logbook messages put the person, sector, count or destination in the wrong place, or left one out.
-- The "cannot dock" message named the Rescue ship and the "dormitory" ship the wrong way round.
+- `Return them back on Replacement Ship`: rescued people could be dropped from tracking, mixed up by equal names, returned on the wrong ship, or forgotten while the replacement was being built or all Rescue ships were busy. Older saves are repaired on load.
+- Debug log errors when a Rescue ship was destroyed or undocked away from its Home Station.
+- Wrong texts in the Traditional Chinese, Japanese, Korean and Simplified Chinese translations; the "cannot dock" message swapped the two ship names.
 
 ## [1.06] - 2025-06-16
 

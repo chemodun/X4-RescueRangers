@@ -1,7 +1,6 @@
 # Rescue Rangers
 
-This extension allows you to rescue crews' members from the destroyed ships in a designated sector.
-Always the closest possible spacesuit will be selected to rescue.
+Your ships rescue the crews of your destroyed ships from space and bring them to a station, a "Dormitory" ship, or Stasis.
 
 ## Compatibility
 
@@ -21,30 +20,27 @@ Compatible with `X4: Foundations 8.00` and `9.00`. It was written and tested wit
 
 ## Features
 
-Several ships with one order can work in one sector or crossed sectors.
-`Mimic` order in a fleet is fully supported.
-From version 1.03 can work without `Home station` set - in the `Fleet support` mode.
-From version 2.00 the `Rescue Rangers` overview in the top menu shows every Rescue ship, the rescue statistics, the people in Stasis and each Rescue ship's settings.
-From version 2.00 rescued people can be kept in Stasis: on your stations with free space for people, or on space rented on NPC stations.
+- **Sector mode** - the Rescue ship waits at its Home Station and covers the Home Sector and the sectors within its gate range.
+- **Fleet support mode** - with no Home Station set, the Rescue ship docks at its "Dormitory" ship and covers the sector it is in.
+- **Mimic** - fully supported in fleets.
+- **Rescue priority** - the nearest spacesuit first, or the one with the least oxygen left.
+- **Several Rescue ships** - can share one sector or overlapping ranges without chasing the same person.
+- **Return them back on Replacement Ship** - rescued crew is returned on the Replacement Ship of the ship they were lost from.
+- **Keep rescued on board as crew** - rescued people join the Rescue ship's crew right away.
+- **Stasis** - rescued people are kept on your stations or on space rented on NPC stations, instead of filling a "Dormitory" ship.
+- **Overview** - the `Rescue Rangers` overview in the top menu shows every Rescue ship, the rescue statistics, everyone rescued and each Rescue ship's settings.
 
 ## How it works
 
-The ship with order "Rescue Rangers" will wait docked in the Home Station or "Dormitory" ship for event, when any player ship in the Home Sector (or sector where the "Dormitory" is located) will be destroyed. After that, the ship will fly to find spacesuits and fly to it to rescue the crew's members.
-When the ship will collect all crew's members it will fly back to the Home Sector and dock to the Home Station or "Dormitory" ship.
-If case it will be full before the ship will collect all crew's members - it will try to transfer the rescued crew to the "Dormitory" ship and continue the rescue operation.
-If Rescue ship will return to the Home Station, it will not immediately transfer the rescued crew to the "Dormitory" ship. It will wait for the some period of "silence" before to do it.
-As in "Fleet support" mode it will dock to the "Dormitory" ship then it will transfer the rescued crew immediately after the docking.
-If the "Dormitory" ship will be full - the Rescue ship will try to inform you.
-Please don't forget to check the "Dormitory" ship and transfer the rescued crew to new ships.
-
-## Download
-
-You can download the latest version via Steam client - [Rescue Rangers](https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966)
-Or you can do it via the [Rescue Rangers](https://www.nexusmods.com/x4foundations/mods/1571)
+The Rescue ship waits docked at its Home Station, or at its "Dormitory" ship in the `Fleet support` mode. When one of your ships is destroyed in the area it covers, it flies out and picks up the spacesuits of the crew. When the sector of the loss has no spacesuits left, it checks the other sectors in range, nearest first.
+If it gets full before everybody is picked up, it transfers the rescued crew to the "Dormitory" ship and goes on with the rescue.
+When everybody is picked up, it flies back and docks. At the Home Station it waits for a quiet period before it transfers the rescued crew to the "Dormitory" ship; in the `Fleet support` mode it transfers them right after docking.
+With `Keep rescued on board as crew` the rescued people stay aboard as crew, and with Stasis they go to a place in Stasis, see below.
+Check the "Dormitory" ship from time to time and move the rescued crew to new ships, or let `Return them back on Replacement Ship` do it.
 
 ## Executing the order
 
-You can select the order as any other, "default", from the "Navigation" section of  orders.
+You can select the order as any other, "default", from the "Navigation" section of orders.
 Please be aware - this order requires the ship captain to have at least `one star` in the "Pilot" skill.
 
 ## Configuration
@@ -59,7 +55,7 @@ This is a sector where the ship will rescue the crew. You can select it from the
 
 ### Max gate distance to rescue
 
-This is a maximum distance from the Home Sector to the sector where the ship can rescue the crews' members. The ship will not react to ship destructions in the sectors further than this distance.
+This is a maximum distance from the Home Sector to the sector where the ship can rescue the crew members. The ship will not react to ship destructions in the sectors further than this distance.
 Default value is `0`.
 
 The highest value you can select depends on the captain's `Pilot` skill: `0` for up to one star, `1` for two stars, `2` for three stars and `3` for four or five stars. The `Extra max gate distance above the pilot skill limit` setting in the Extension Options adds to it, see `Rescue Rangers options`.
@@ -75,14 +71,14 @@ If during setup the order the station was not selected, the ship will be in the 
 
 ### Ship - "Dormitory"
 
-This is a ship where the rescued crew will be placed. You can select it from the list of your ships. The ship should have enough capacity to place all rescued crews' members.
+This is a ship where the rescued crew will be placed. You can select it from the list of your ships. The ship should have enough capacity to place all rescued crew members.
 Please take into account - in the `Fleet support` mode the "Dormitory" has to be capable to provide docking for the Rescuer ship.
 
 ### Priority by oxygen remained
 
 `Disabled` by default.
 
-This option allows you to select the priority of the rescue by the oxygen remaining in the spacesuit instead of the distance to the ship. If enabled, the ship will try to rescue the crews' members with the lowest oxygen remaining in the spacesuit.
+This option allows you to select the priority of the rescue by the oxygen remaining in the spacesuit instead of the distance to the ship. If enabled, the ship will try to rescue the crew members with the lowest oxygen remaining in the spacesuit.
 
 ### Return them back on Replacement Ship
 
@@ -105,13 +101,13 @@ A loss is remembered while a Replacement Ship for it is queued or being built, a
 
 `Disabled` by default.
 
-If enabled, the rescued crews' members join the Rescue ship's crew right away: as `Service crew`, or as `Marines` when their boarding skill is higher than their engineering skill. They are not transferred to the "Dormitory" ship, so you can take them from the Rescue ship directly. When the Rescue ship has no free space left, it stops rescuing and tells you once, until you move some crew off it.
+If enabled, the rescued crew members join the Rescue ship's crew right away: as `Service crew`, or as `Marines` when their boarding skill is higher than their engineering skill. They are not transferred to the "Dormitory" ship, so you can take them from the Rescue ship directly. When the Rescue ship has no free space left, it stops rescuing and tells you once, until you move some crew off it.
 
 ### Record to logbook
 
 `Enabled` by default.
 
-If enabled, the ship will record the events to the logbook. I.e. starts, travel to desired sector, flying to the target, attacking the target, destroying the target, etc.
+If enabled, the ship records its actions to the logbook: starts, flights to a sector, people rescued, transfers to the "Dormitory" or Stasis, and full-ship notices.
 
 ### Stasis
 
@@ -194,6 +190,11 @@ Stasis keeps rescued people on stations until you need them, instead of filling 
 ## Situation when both ships are full
 
 The Rescue ship shows an on-screen notice once, when it and the "Dormitory" ship run out of space. If the Record to logbook is enabled, the same notice goes to the logbook. It stays silent after that, until there is free space again. With `Keep rescued on board as crew` enabled, the Rescue ship alone being full is enough for the notice.
+
+## Download
+
+You can download the latest version via Steam client - [Rescue Rangers](https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966)
+Or you can do it via the [Rescue Rangers](https://www.nexusmods.com/x4foundations/mods/1571)
 
 ## Links
 
