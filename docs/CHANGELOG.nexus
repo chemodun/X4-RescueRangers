@@ -1,19 +1,19 @@
 [size=4][u]Changelog[/u][/size]
 
-[size=3][u][b][2.00] - 2026-10-??[/b][/u][/size]
+[size=3][u][b][2.00] - 2026-10-04[/b][/u][/size]
 
 [size=3][u][i]Added[/i][/u][/size]
 [list]
 [*] [b]Rescue Rangers[/b] overview in the top menu: Rescue ships, statistics, rescued people and per-ship settings.
 [*] Stasis: rescued people kept on your stations or on space rented on NPC stations.
-[*] Order options [b]Keep rescued on board as crew[/b] and `Stasis`.
+[*] Order options [b]Keep rescued on board as crew[/b] and [b]Stasis[/b].
 [*] [b]Rescue Rangers[/b] page in the Extension Options.
 [*] Czech, Polish, Turkish and Bulgarian translations.
 [/list]
 [size=3][u][i]Changed[/i][/u][/size]
 [list]
-[*] Requires `Mod Support APIs`, [b]Options Helper[/b] and `Print Extension List`.
-[*] Nothing is written to the game's debug log unless [b]Debug Level[/b] is [b]Debug[/b] or `Trace`.
+[*] Requires [b]Mod Support APIs[/b], [b]Options Helper[/b] and [b]Print Extension List[/b].
+[*] Nothing is written to the game's debug log unless [b]Debug Level[/b] is [b]Debug[/b] or [b]Trace[/b].
 [*] A full Rescue ship and "Dormitory" tell you once, not every few minutes.
 [*] The order can no longer be added to a repeat orders loop.
 [/list]
@@ -24,7 +24,7 @@
 [*] Several Rescue ships in one area: a person picked by a Rescue ship that then failed was skipped by all the others for good.
 [*] Rescue ships started on 1.00 ignored losses in their own sector.
 [*] [b]Mimic[/b] subordinates always ran with [b]Return them back on Replacement Ship[/b] off.
-[*] `Return them back on Replacement Ship`: rescued people could be dropped from tracking, mixed up by equal names, returned on the wrong ship, or forgotten while the replacement was being built or all Rescue ships were busy. Older saves are repaired on load.
+[*] [b]Return them back on Replacement Ship[/b]: rescued people could be dropped from tracking, mixed up by equal names, returned on the wrong ship, or forgotten while the replacement was being built or all Rescue ships were busy. Older saves are repaired on load.
 [*] Debug log errors when a Rescue ship was destroyed or undocked away from its Home Station.
 [*] Wrong texts in the Traditional Chinese, Japanese, Korean and Simplified Chinese translations; the "cannot dock" message swapped the two ship names.
 [/list]

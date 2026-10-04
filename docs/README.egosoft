@@ -2,28 +2,6 @@
 
 Your ships rescue the crews of your destroyed ships from space and bring them to a station, a "Dormitory" ship, or Stasis.
 
-[size=130][u]Compatibility[/u][/size]
-
-Compatible with [b]X4: Foundations 8.00[/b] and `9.00`. It was written and tested with these versions.
-
-[size=130][u]Requirements[/u][/size]
-[list]
-[*] [b]Mod Support APIs[/b] by [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url] to be installed and enabled. Version [b]1.95[/b] and upper is required.
-[list]
-[*] It is available via Steam - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274]SirNukes Mod Support APIs[/url]
-[*] Or via the Nexus Mods - [url=https://www.nexusmods.com/x4foundations/mods/503]Mod Support APIs[/url]
-[/list]
-[*] `Options Helper`, to provide the in-game options page. Version [b]1.10[/b] and upper is required.
-[list]
-[*] It is available via Steam - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556]Options Helper[/url]
-[*] Or via the Nexus Mods - [url=https://www.nexusmods.com/x4foundations/mods/2089]Options Helper[/url]
-[/list]
-[*] `Print Extension List`, to record the game version and the enabled extensions in the log. Version [b]1.00[/b] and upper is required.
-[list]
-[*] It is available via Steam - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339]Print Extension List[/url]
-[*] Or via the Nexus Mods - [url=https://www.nexusmods.com/x4foundations/mods/2191]Print Extension List[/url]
-[/list]
-[/list]
 [size=130][u]Features[/u][/size]
 [list]
 [*] [b]Sector mode[/b] - the Rescue ship waits at its Home Station and covers the Home Sector and the sectors within its gate range.
@@ -36,6 +14,34 @@ Compatible with [b]X4: Foundations 8.00[/b] and `9.00`. It was written and teste
 [*] [b]Stasis[/b] - rescued people are kept on your stations or on space rented on NPC stations, instead of filling a "Dormitory" ship.
 [*] [b]Overview[/b] - the [b]Rescue Rangers[/b] overview in the top menu shows every Rescue ship, the rescue statistics, everyone rescued and each Rescue ship's settings.
 [/list]
+[size=130][u]Requirements[/u][/size]
+[list]
+[*] [b]X4: Foundations[/b]: Version 8.00 or 9.00.
+[*] [b]Mod Support APIs[/b]: Version 1.95 or higher by [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url].
+[list]
+[*] Available on Steam: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274]SirNukes Mod Support APIs[/url]
+[*] Available on Nexus Mods: [url=https://www.nexusmods.com/x4foundations/mods/503]Mod Support APIs[/url]
+[/list]
+[*] [b]Options Helper[/b]: Version 1.10 or higher by [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url].
+[list]
+[*] Available on Steam: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556]Options Helper[/url]
+[*] Available on Nexus Mods: [url=https://www.nexusmods.com/x4foundations/mods/2089]Options Helper[/url]
+[/list]
+[*] [b]Print Extension List[/b]: Version 1.00 or higher by [url=https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659]Chem O`Dun[/url].
+[list]
+[*] Available on Steam: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339]Print Extension List[/url]
+[*] Available on Nexus Mods: [url=https://www.nexusmods.com/x4foundations/mods/2191]Print Extension List[/url]
+[/list]
+[/list]
+[size=130][u]Installation[/u][/size]
+[list]
+[*] [b]Steam Workshop[/b]: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966]Rescue Rangers[/url]
+[*] [b]Nexus Mods[/b]: [url=https://www.nexusmods.com/x4foundations/mods/1571]Rescue Rangers[/url]
+[/list]
+[size=130][u]Save state[/u][/size]
+
+[b]No[/b] (removing the extension does not break saves).
+
 [size=130][u]How it works[/u][/size]
 
 The Rescue ship waits docked at its Home Station, or at its "Dormitory" ship in the [b]Fleet support[/b] mode. When one of your ships is destroyed in the area it covers, it flies out and picks up the spacesuits of the crew. When the sector of the loss has no spacesuits left, it checks the other sectors in range, nearest first.
@@ -62,9 +68,9 @@ This is a sector where the ship will rescue the crew. You can select it from the
 [size=125][u]Max gate distance to rescue[/u][/size]
 
 This is a maximum distance from the Home Sector to the sector where the ship can rescue the crew members. The ship will not react to ship destructions in the sectors further than this distance.
-Default value is `0`.
+Default value is [b]0[/b].
 
-The highest value you can select depends on the captain's [b]Pilot[/b] skill: [b]0[/b] for up to one star, [b]1[/b] for two stars, [b]2[/b] for three stars and [b]3[/b] for four or five stars. The [b]Extra max gate distance above the pilot skill limit[/b] setting in the Extension Options adds to it, see `Rescue Rangers options`.
+The highest value you can select depends on the captain's [b]Pilot[/b] skill: [b]0[/b] for up to one star, [b]1[/b] for two stars, [b]2[/b] for three stars and [b]3[/b] for four or five stars. The [b]Extra max gate distance above the pilot skill limit[/b] setting in the Extension Options adds to it, see [b]Rescue Rangers options[/b].
 
 When the sector of a loss has no spacesuits left, the ship checks the other sectors in range, nearest first.
 
@@ -107,7 +113,7 @@ A loss is remembered while a Replacement Ship for it is queued or being built, a
 
 [b]Disabled[/b] by default.
 
-If enabled, the rescued crew members join the Rescue ship's crew right away: as `Service crew`, or as [b]Marines[/b] when their boarding skill is higher than their engineering skill. They are not transferred to the "Dormitory" ship, so you can take them from the Rescue ship directly. When the Rescue ship has no free space left, it stops rescuing and tells you once, until you move some crew off it.
+If enabled, the rescued crew members join the Rescue ship's crew right away: as [b]Service crew[/b], or as [b]Marines[/b] when their boarding skill is higher than their engineering skill. They are not transferred to the "Dormitory" ship, so you can take them from the Rescue ship directly. When the Rescue ship has no free space left, it stops rescuing and tells you once, until you move some crew off it.
 
 [size=125][u]Record to logbook[/u][/size]
 
@@ -119,7 +125,7 @@ If enabled, the ship records its actions to the logbook: starts, flights to a se
 
 [b]0[/b] by default. When this Rescue ship moves its rescued people to Stasis, see [b]Keeping rescued people in Stasis[/b] below:
 [list]
-[*] [b]0[/b] - as set in the Extension Options, see `Move rescued people to Stasis`.
+[*] [b]0[/b] - as set in the Extension Options, see [b]Move rescued people to Stasis[/b].
 [*] [b]1[/b] - never.
 [*] [b]2[/b] - only when the Rescue ship and its "Dormitory" are full.
 [*] [b]3[/b] - always, instead of the "Dormitory".
@@ -134,11 +140,11 @@ These options are on the [b]Rescue Rangers[/b] page of the [b]Extension options[
 
 [size=125][u]Extra max gate distance above the pilot skill limit[/u][/size]
 
-From [b]0[/b] (the default) to `5`. Raises the highest [b]Max gate distance to rescue[/b] you can select for any Rescue ship by this number. It changes only what the order menu lets you pick; set the distance on each Rescue ship as before.
+From [b]0[/b] (the default) to [b]5[/b]. Raises the highest [b]Max gate distance to rescue[/b] you can select for any Rescue ship by this number. It changes only what the order menu lets you pick; set the distance on each Rescue ship as before.
 
 [size=125][u]Hours a lost ship and its rescued crew are remembered with no Replacement Ship queued[/u][/size]
 
-From [b]1[/b] to `24`, [b]2[/b] by default. For `Return them back on Replacement Ship`: a lost ship is remembered as long as a Replacement Ship for it is queued or being built, and for this many hours when none is. A finished Replacement Ship waits this long for its rescued crew too.
+From [b]1[/b] to [b]24[/b], [b]2[/b] by default. For [b]Return them back on Replacement Ship[/b]: a lost ship is remembered as long as a Replacement Ship for it is queued or being built, and for this many hours when none is. A finished Replacement Ship waits this long for its rescued crew too.
 
 [size=125][u]Show the Rescue Rangers overview in the top menu[/u][/size]
 
@@ -146,28 +152,28 @@ From [b]1[/b] to `24`, [b]2[/b] by default. For `Return them back on Replacement
 
 [size=125][u]Move rescued people to Stasis[/u][/size]
 
-[b]Off[/b] by default. When Rescue ships move their rescued people to Stasis, unless a Rescue ship has its own [b]Stasis[/b] option set: `Off`, `When the ship and the Dormitory are full`, or `Instead of the Dormitory`.
+[b]Off[/b] by default. When Rescue ships move their rescued people to Stasis, unless a Rescue ship has its own [b]Stasis[/b] option set: [b]Off[/b], [b]When the ship and the Dormitory are full[/b], or [b]Instead of the Dormitory[/b].
 
 [size=125][u]Rent a place on an NPC station automatically[/u][/size]
 
-From [b]0[/b] (the default, never) to `100`. When a Rescue ship finds no place in Stasis, space on an NPC station is rented automatically if a day of rent is at most this percent of your money. Otherwise the [b]Rescued[/b] tab proposes a station to rent.
+From [b]0[/b] (the default, never) to [b]100[/b]. When a Rescue ship finds no place in Stasis, space on an NPC station is rented automatically if a day of rent is at most this percent of your money. Otherwise the [b]Rescued[/b] tab proposes a station to rent.
 
 [size=125][u]Debug Level[/u][/size]
 
 Sets how much the extension writes to the game's debug log:
 [list]
 [*] [b]None[/b] - nothing, the default.
-[*] [b]Debug[/b] - one line per action: order start and settings, rescue target selected, rescue result, transfers to the "Dormitory", and the main steps of `Return them back on Replacement Ship`. Please use this level for a log attached to a problem report.
+[*] [b]Debug[/b] - one line per action: order start and settings, rescue target selected, rescue result, transfers to the "Dormitory", and the main steps of [b]Return them back on Replacement Ship[/b]. Please use this level for a log attached to a problem report.
 [*] [b]Trace[/b] - in addition, every spacesuit checked, every loop of the order, and the vanilla docking and undocking details.
 [/list]
 [size=130][u]Rescue Rangers overview[/u][/size]
 
 Open it with its icon in the top menu, right after the map. It has four tabs:
 [list]
-[*] [b]Rescue ships[/b] - every ship on the order, grouped by the sector it is in now, each Mimic right under its commander (hover a ship for its mode: `Sector`, [b]Fleet[/b] or `Mimic`): whether it is rescuing, docked or under way; what it is doing (the person it is picking up and where, or where it takes them: home or a place in Stasis); the rescued people it has aboard; where they go next (its "Dormitory" or its own crew, with the free space left, or Stasis); and warnings when it has no place in Stasis, its "Dormitory" is lost or full, or it is full and stopped rescuing. Double-click a row, or use `Show on Map`, to see the ship on the map.
+[*] [b]Rescue ships[/b] - every ship on the order, grouped by the sector it is in now, each Mimic right under its commander (hover a ship for its mode: [b]Sector[/b], [b]Fleet[/b] or [b]Mimic[/b]): whether it is rescuing, docked or under way; what it is doing (the person it is picking up and where, or where it takes them: home or a place in Stasis); the rescued people it has aboard; where they go next (its "Dormitory" or its own crew, with the free space left, or Stasis); and warnings when it has no place in Stasis, its "Dormitory" is lost or full, or it is full and stopped rescuing. Double-click a row, or use [b]Show on Map[/b], to see the ship on the map.
 [*] [b]Statistics[/b] - how many crew members were ejected from your lost ships, rescued, died in space (also when their oxygen ran out far from you), picked up by other ships or stations, moved to "Dormitories" or to Stasis, joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
 [*] [b]Rescued[/b] - everyone rescued, in Stasis, on "Dormitory" ships and aboard Rescue ships; the places in Stasis and the rent of space on NPC stations, see [b]Keeping rescued people in Stasis[/b] below.
-[*] [b]Settings[/b] - each Rescue ship's `Max gate distance to rescue`, its four options and its [b]Stasis[/b] option. A change applies at once and restarts that ship's order, as the same change in the order menu does. The [b]All Rescue ships[/b] row on top changes a setting for every Rescue ship at once (a range is capped by each pilot's skill). A Mimic follows its commander's settings.
+[*] [b]Settings[/b] - each Rescue ship's [b]Max gate distance to rescue[/b], its four options and its [b]Stasis[/b] option. A change applies at once and restarts that ship's order, as the same change in the order menu does. The [b]All Rescue ships[/b] row on top changes a setting for every Rescue ship at once (a range is capped by each pilot's skill). A Mimic follows its commander's settings.
 [/list]
 [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-RescueRangers/refs/heads/main/docs/images/overview_rescue_ships.png[/img][/spoiler]
 
@@ -182,9 +188,9 @@ Stasis keeps rescued people on stations until you need them, instead of filling 
 [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-RescueRangers/refs/heads/main/docs/images/overview_rescued.png[/img][/spoiler]
 [list]
 [*] [b]Places[/b]: your own stations with free space for people come first, then space you rented on NPC stations, nearest first. A Rescue ship flies to the place and docks there, as it does with the "Dormitory", so docking and your sector blacklists must allow it.
-[*] [b]Rent[/b]: in the [b]Rescued[/b] tab, [b]Find stations[/b] lists the known NPC stations where your ships may dock, whose owner is friendly to you and that have free space, nearest first; [b]Rent[/b] rents the whole free space of one station for a flat rent per day. When a Rescue ship finds no place, the tab proposes a station, or it is rented automatically, see `Rent a place on an NPC station automatically`. End a lease with [b]End lease[/b] when you no longer need it: its people move to another place in Stasis first, and with no room elsewhere the lease stays.
+[*] [b]Rent[/b]: in the [b]Rescued[/b] tab, [b]Find stations[/b] lists the known NPC stations where your ships may dock, whose owner is friendly to you and that have free space, nearest first; [b]Rent[/b] rents the whole free space of one station for a flat rent per day. When a Rescue ship finds no place, the tab proposes a station, or it is rented automatically, see [b]Rent a place on an NPC station automatically[/b]. End a lease with [b]End lease[/b] when you no longer need it: its people move to another place in Stasis first, and with no room elsewhere the lease stays.
 [*] [b]Unpaid rent or a low relation[/b]: the rent of a day you cannot pay becomes a debt, paid when the money is there. While a lease has a debt, or its owner is no longer friendly to you, its people move at once to another place in Stasis and the lease ends. With no room elsewhere they stay, the place takes no newcomers, and you are told once a day.
-[*] [b]People[/b]: one list of everyone rescued: in Stasis, on "Dormitory" ships and aboard Rescue ships, with their skills, location and Rescue ship, and the ship they were lost from when their Rescue ship has [b]Return them back on Replacement Ship[/b] enabled; filter it by name, ship or station and sort it. Mark people to [b]Move[/b] them to another place in Stasis or a "Dormitory" ship with room for all of them, or to [b]Dismiss[/b] them for good. Right-click a person for the usual context menu: `Work somewhere else for me`, `Fire`, `Comm`.
+[*] [b]People[/b]: one list of everyone rescued: in Stasis, on "Dormitory" ships and aboard Rescue ships, with their skills, location and Rescue ship, and the ship they were lost from when their Rescue ship has [b]Return them back on Replacement Ship[/b] enabled; filter it by name, ship or station and sort it. Mark people to [b]Move[/b] them to another place in Stasis or a "Dormitory" ship with room for all of them, or to [b]Dismiss[/b] them for good. Right-click a person for the usual context menu: [b]Work somewhere else for me[/b], [b]Fire[/b], [b]Comm[/b].
 [/list]
 [spoiler][img]https://raw.githubusercontent.com/chemodun/X4-RescueRangers/refs/heads/main/docs/images/overview_rescued_context.png[/img][/spoiler]
 [list]
@@ -197,11 +203,15 @@ Stasis keeps rescued people on stations until you need them, instead of filling 
 
 The Rescue ship shows an on-screen notice once, when it and the "Dormitory" ship run out of space. If the Record to logbook is enabled, the same notice goes to the logbook. It stays silent after that, until there is free space again. With [b]Keep rescued on board as crew[/b] enabled, the Rescue ship alone being full is enough for the notice.
 
-[size=130][u]Download[/u][/size]
-
-You can download the latest version via Steam client - [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966]Rescue Rangers[/url]
-Or you can do it via the [url=https://www.nexusmods.com/x4foundations/mods/1571]Rescue Rangers[/url]
-
-[size=130][u]Links[/u][/size]
-
-There is a thread on EgoSoft forum - [[url=https://forum.egosoft.com/viewtopic.php?p=5260786]Mod/AIScript] Order "Rescue Rangers"[/url]. Feel free to ask any questions or report issues there.
+[size=130][u]Credits[/u][/size]
+[list]
+[*] [b]Author[/b]: Chem O`Dun, on [url=https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659]Nexus Mods[/url] and [url=https://steamcommunity.com/id/chemodun/myworkshopfiles/?appid=392160]Steam Workshop[/url]
+[*] [b]Support[/b]: questions and issue reports in the EgoSoft forum thread [[url=https://forum.egosoft.com/viewtopic.php?p=5260786]Mod/AIScript] Order "Rescue Rangers"[/url]
+[*] [i]"X4: Foundations"[/i] is a trademark of [url=https://www.egosoft.com]Egosoft[/url].
+[/list]
+[size=130][u]Acknowledgements[/u][/size]
+[list]
+[*] [url=https://www.egosoft.com]EGOSOFT[/url] - for the X series.
+[*] [url=https://next.nexusmods.com/profile/sirnukes?gameId=2659]SirNukes[/url] - for the [b]Mod Support APIs[/b] that power the overview and the [b]Options Helper[/b] behind the options page.
+[*] [url=https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=132068]staeuber[/url] - for the solution to the unnecessary undocking on applying the order.
+[/list]
