@@ -2,22 +2,6 @@
 
 Your ships rescue the crews of your destroyed ships from space and bring them to a station, a "Dormitory" ship, or Stasis.
 
-## Compatibility
-
-Compatible with `X4: Foundations 8.00` and `9.00`. It was written and tested with these versions.
-
-## Requirements
-
-- `Mod Support APIs` by [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659) to be installed and enabled. Version `1.95` and upper is required.
-  - It is available via Steam - [SirNukes Mod Support APIs](https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274)
-  - Or via the Nexus Mods - [Mod Support APIs](https://www.nexusmods.com/x4foundations/mods/503)
-- `Options Helper`, to provide the in-game options page. Version `1.10` and upper is required.
-  - It is available via Steam - [Options Helper](https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556)
-  - Or via the Nexus Mods - [Options Helper](https://www.nexusmods.com/x4foundations/mods/2089)
-- `Print Extension List`, to record the game version and the enabled extensions in the log. Version `1.00` and upper is required.
-  - It is available via Steam - [Print Extension List](https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339)
-  - Or via the Nexus Mods - [Print Extension List](https://www.nexusmods.com/x4foundations/mods/2191)
-
 ## Features
 
 - **Sector mode** - the Rescue ship waits at its Home Station and covers the Home Sector and the sectors within its gate range.
@@ -29,6 +13,28 @@ Compatible with `X4: Foundations 8.00` and `9.00`. It was written and tested wit
 - **Keep rescued on board as crew** - rescued people join the Rescue ship's crew right away.
 - **Stasis** - rescued people are kept on your stations or on space rented on NPC stations, instead of filling a "Dormitory" ship.
 - **Overview** - the `Rescue Rangers` overview in the top menu shows every Rescue ship, the rescue statistics, everyone rescued and each Rescue ship's settings.
+
+## Requirements
+
+- **X4: Foundations**: Version 8.00 or 9.00.
+- **Mod Support APIs**: Version 1.95 or higher by [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659).
+  - Available on Steam: [SirNukes Mod Support APIs](https://steamcommunity.com/sharedfiles/filedetails/?id=2042901274)
+  - Available on Nexus Mods: [Mod Support APIs](https://www.nexusmods.com/x4foundations/mods/503)
+- **Options Helper**: Version 1.10 or higher by [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659).
+  - Available on Steam: [Options Helper](https://steamcommunity.com/sharedfiles/filedetails/?id=3715253556)
+  - Available on Nexus Mods: [Options Helper](https://www.nexusmods.com/x4foundations/mods/2089)
+- **Print Extension List**: Version 1.00 or higher by [Chem O`Dun](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659).
+  - Available on Steam: [Print Extension List](https://steamcommunity.com/sharedfiles/filedetails/?id=3770927339)
+  - Available on Nexus Mods: [Print Extension List](https://www.nexusmods.com/x4foundations/mods/2191)
+
+## Installation
+
+- **Steam Workshop**: [Rescue Rangers](https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966)
+- **Nexus Mods**: [Rescue Rangers](https://www.nexusmods.com/x4foundations/mods/1571)
+
+## Save state
+
+**No** (removing the extension does not break saves).
 
 ## How it works
 
@@ -191,11 +197,14 @@ Stasis keeps rescued people on stations until you need them, instead of filling 
 
 The Rescue ship shows an on-screen notice once, when it and the "Dormitory" ship run out of space. If the Record to logbook is enabled, the same notice goes to the logbook. It stays silent after that, until there is free space again. With `Keep rescued on board as crew` enabled, the Rescue ship alone being full is enough for the notice.
 
-## Download
+## Credits
 
-You can download the latest version via Steam client - [Rescue Rangers](https://steamcommunity.com/sharedfiles/filedetails/?id=3385833966)
-Or you can do it via the [Rescue Rangers](https://www.nexusmods.com/x4foundations/mods/1571)
+- **Author**: Chem O`Dun, on [Nexus Mods](https://next.nexusmods.com/profile/ChemODun/mods?gameId=2659) and [Steam Workshop](https://steamcommunity.com/id/chemodun/myworkshopfiles/?appid=392160)
+- **Support**: questions and issue reports in the EgoSoft forum thread [[Mod/AIScript] Order "Rescue Rangers"](https://forum.egosoft.com/viewtopic.php?p=5260786)
+- *"X4: Foundations"* is a trademark of [Egosoft](https://www.egosoft.com).
 
-## Links
+## Acknowledgements
 
-There is a thread on EgoSoft forum - [[Mod/AIScript] Order "Rescue Rangers"](https://forum.egosoft.com/viewtopic.php?p=5260786). Feel free to ask any questions or report issues there.
+- [EGOSOFT](https://www.egosoft.com) - for the X series.
+- [SirNukes](https://next.nexusmods.com/profile/sirnukes?gameId=2659) - for the `Mod Support APIs` that power the overview and the `Options Helper` behind the options page.
+- [staeuber](https://forum.egosoft.com/memberlist.php?mode=viewprofile&u=132068) - for the solution to the unnecessary undocking on applying the order.
