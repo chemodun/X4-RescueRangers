@@ -150,6 +150,7 @@
       <t id="90110">Distanza massima del portale aggiuntiva oltre il limite di abilità del pilota</t>
       <t id="90200">Panoramica</t>
       <t id="90210">Mostra la panoramica di Rangers di salvataggio nel menu superiore</t>
+      <t id="90220">Mostra l'icona della panoramica nella barra laterale destra dei menu delle stazioni e della ricerca</t>
       <t id="90310">Trasferisci i salvati in Stasi</t>
       <t id="90330">Affitta automaticamente un luogo su una stazione NPC se un giorno di affitto è al massimo questa percentuale del tuo denaro \(0: mai\)</t>
       <t id="90410">Ore in cui una nave persa e il suo equipaggio salvato restano in memoria senza alcuna nave di sostituzione in coda</t>

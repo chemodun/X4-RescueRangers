@@ -12,7 +12,7 @@ Your ships rescue the crews of your destroyed ships from space and bring them to
 - **Return them back on Replacement Ship** - rescued crew is returned on the Replacement Ship of the ship they were lost from.
 - **Keep rescued on board as crew** - rescued people join the Rescue ship's crew right away.
 - **Stasis** - rescued people are kept on your stations or on space rented on NPC stations, instead of filling a "Dormitory" ship.
-- **Overview** - the `Rescue Rangers` overview in the top menu shows every Rescue ship, the rescue statistics, everyone rescued and each Rescue ship's settings.
+- **Overview** - the `Rescue Rangers` overview, opened from the top menu or the right-click menu of a Rescue ship, shows every Rescue ship, the rescue statistics, everyone rescued and each Rescue ship's settings.
 
 ## Requirements
 
@@ -142,7 +142,11 @@ From `1` to `24`, `2` by default. For `Return them back on Replacement Ship`: a 
 
 ### Show the Rescue Rangers overview in the top menu
 
-`Enabled` by default. Adds the `Rescue Rangers` overview to the row of top menu icons, right after the map.
+`Enabled` by default. Adds the `Rescue Rangers` overview to the row of top menu icons, right after the map. When the row is full, it switches to scrolling, see `A full top menu` below. Switching this option off frees a place in the row.
+
+### Show the overview icon on the right side bar of the station and research menus
+
+`Disabled` by default. Adds the `Rescue Rangers` overview to the right side bar of the station and research menus (`Station configuration`, `Logical station overview`, `Transaction Log`, `Research`, `Terraforming`), after the Protect Sector icon when that mod is installed. The overview opened from there keeps the bar for the same station, so a click goes back to any of those menus; opened elsewhere, it shows the bar for your headquarters.
 
 ### Move rescued people to Stasis
 
@@ -162,7 +166,7 @@ Sets how much the extension writes to the game's debug log:
 
 ## Rescue Rangers overview
 
-Open it with its icon in the top menu, right after the map. It has four tabs:
+Open it with its icon in the top menu, right after the map, with its icon on the right side bar of the station and research menus when that option is on, or with `Rescue Rangers` in the right-click menu of a Rescue ship or of a ship assisting one, which opens it on that ship. It has four tabs:
 
 - `Rescue ships` - every ship on the order, grouped by the sector it is in now, each Mimic right under its commander (hover a ship for its mode: `Sector`, `Fleet` or `Mimic`): whether it is rescuing, docked or under way; what it is doing (the person it is picking up and where, or where it takes them: home or a place in Stasis); the rescued people it has aboard; where they go next (its "Dormitory" or its own crew, with the free space left, or Stasis); and warnings when it has no place in Stasis, its "Dormitory" is lost or full, or it is full and stopped rescuing. Double-click a row, or use `Show on Map`, to see the ship on the map.
 - `Statistics` - how many crew members were ejected from your lost ships, rescued, died in space (also when their oxygen ran out far from you), picked up by other ships or stations, moved to "Dormitories" or to Stasis, joined a Rescue ship's crew and were returned on Replacement Ships; the same per Rescue ship, including the ones that are gone; and the recent events. Counting starts when the extension is first loaded in a game.
@@ -174,6 +178,14 @@ Open it with its icon in the top menu, right after the map. It has four tabs:
 ![Rescue Rangers overview, Statistics](docs/images/overview_statistics.png)
 
 ![Rescue Rangers overview, Settings](docs/images/overview_settings.png)
+
+![Rescue Rangers overview opened from the right side bar of a station](docs/images/right_side_bar.png)
+
+### A full top menu
+
+The top menu row has room for 11 icons. When the icons of the game and of your mods do not fit, Rescue Rangers switches the row to the game's own scrolling view: five icons around the current one, the others a click away on either side. The game log names the reason and the way back: switch `Show the Rescue Rangers overview in the top menu` off in `Extension Options`, and the full row returns once the rest fits. Switching the option on or off turns the scrolling on or off at once; the row takes its new shape the next time a menu draws it.
+
+![The top menu in the scrolling view](docs/images/top_menu_scrolling.png)
 
 ## Keeping rescued people in Stasis
 

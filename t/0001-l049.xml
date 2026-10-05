@@ -150,6 +150,7 @@
       <t id="90110">Zusätzliche maximale Tor-Distanz über dem Limit der Pilotenfähigkeit</t>
       <t id="90200">Übersicht</t>
       <t id="90210">Die Rettungs-Ranger-Übersicht im oberen Menü anzeigen</t>
+      <t id="90220">Übersichtssymbol in der rechten Seitenleiste der Stations- und Forschungsmenüs anzeigen</t>
       <t id="90310">Gerettete in Stasis verlegen</t>
       <t id="90330">Automatisch einen Ort auf einer NPC-Station mieten, wenn ein Tag Miete höchstens diesen Prozentsatz deines Geldes beträgt \(0: nie\)</t>
       <t id="90410">Stunden, die ein verlorenes Schiff und seine gerettete Crew gemerkt werden, solange kein Ersatzschiff in der Warteschlange ist</t>

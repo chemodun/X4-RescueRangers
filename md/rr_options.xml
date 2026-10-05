@@ -4,12 +4,13 @@
     <cue name="Main" version="107">
       <cues>
 
-        <library name="Defaults" version="202">
+        <library name="Defaults" version="203">
           <actions>
             <set_value name="$cfg" exact="table[
               $debugLevel = 'none',
               $extraRange = 0,
               $topMenuIcon = 1,
+              $rightBarIcon = 0,
               $stasisMode = 'off',
               $returnKeepHours = 2,
               $stasisAutoRentPercent = 0,
@@ -48,7 +49,7 @@
           </actions>
         </cue>
 
-        <cue name="OptionsMenu" instantiate="true" version="201">
+        <cue name="OptionsMenu" instantiate="true" version="202">
           <conditions>
             <event_cue_signalled />
           </conditions>
@@ -135,6 +136,14 @@
                 <param name="col" value="1" />
                 <param name="textColSpan" value="11" />
                 <param name="text" value="{1972092402, 90210}" />
+                <param name="data" value="$cfg" />
+                <param name="handle" value="HandleCheckbox" />
+              </run_actions>
+              <run_actions ref="md.Options_Helper.Add_Checkbox">
+                <param name="id" value="'rightBarIcon'" />
+                <param name="col" value="1" />
+                <param name="textColSpan" value="11" />
+                <param name="text" value="{1972092402, 90220}" />
                 <param name="data" value="$cfg" />
                 <param name="handle" value="HandleCheckbox" />
               </run_actions>

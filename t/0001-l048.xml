@@ -150,6 +150,7 @@
       <t id="90110">Dodatkowa maks. odległość od bramy ponad limit umiejętności pilota</t>
       <t id="90200">Przegląd</t>
       <t id="90210">Pokaż przegląd Ratowników w górnym menu</t>
+      <t id="90220">Pokaż ikonę przeglądu na prawym pasku bocznym menu stacji i badań</t>
       <t id="90310">Przenoś uratowanych ludzi do Stazy</t>
       <t id="90330">Automatycznie wynajmij miejsce na stacji NPC, jeśli dzienny czynsz wynosi najwyżej tyle procent Twoich pieniędzy \(0: nigdy\)</t>
       <t id="90410">Liczba godzin, przez które utracony statek i jego uratowana załoga pozostają w pamięci, gdy żaden statek zastępczy nie czeka w kolejce</t>

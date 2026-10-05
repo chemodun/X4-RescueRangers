@@ -229,6 +229,43 @@
           </actions>
         </cue>
 
+        <!-- interact-menu entry on a ranger, or on a ship assisting one -->
+        <cue name="AddInteractAction" instantiate="true">
+          <conditions>
+            <event_cue_signalled cue="md.Interact_Menu_API.Get_Actions" />
+          </conditions>
+          <actions>
+            <set_value name="$ranger" exact="event.param.$object" />
+            <do_if value="$ranger != null and @$ranger.isclass.ship and @$ranger.trueowner == faction.player">
+              <do_while value="@$ranger.defaultorder.id == 'Assist' and @$ranger.commander != null">
+                <set_value name="$ranger" exact="$ranger.commander" />
+              </do_while>
+              <do_if value="@$ranger.defaultorder.id == 'RescueRangers'">
+                <signal_cue_instantly cue="md.Interact_Menu_API.Add_Action"
+                  param="table[
+                    $id       = 'rescue_rangers_overview_open',
+                    $text     = {1972092402, 1},
+                    $section  = 'main',
+                    $callback = InteractCallback,
+                    $echo     = $ranger,
+                  ]" />
+              </do_if>
+            </do_if>
+            <remove_value name="$ranger" />
+          </actions>
+        </cue>
+
+        <cue name="InteractCallback" instantiate="true">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <include_actions ref="ReadDebugChances" />
+            <debug_text text="'RR_Stats [%s]: overview opened from the context menu of %s, ranger %s'.[player.age, @event.param.$object.debugname, @event.param.$echo.debugname]" chance="$debugChance" />
+            <raise_lua_event name="'RescueRangers.OpenOverview'" param="event.param.$echo" />
+          </actions>
+        </cue>
+
       </cues>
     </cue>
   </cues>

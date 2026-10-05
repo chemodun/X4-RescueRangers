@@ -150,6 +150,7 @@
       <t id="90110">Distance maximale de la porte en plus de la limite de compétence du pilote</t>
       <t id="90200">Vue d'ensemble</t>
       <t id="90210">Afficher la vue d'ensemble Rangers de Sauvetage dans le menu supérieur</t>
+      <t id="90220">Afficher l'icône de l'aperçu dans la barre latérale droite des menus des stations et de la recherche</t>
       <t id="90310">Transférer les rescapés en Stase</t>
       <t id="90330">Louer automatiquement un emplacement sur une station PNJ si un jour de loyer représente au plus ce pourcentage de votre argent \(0 : jamais\)</t>
       <t id="90410">Heures pendant lesquelles un vaisseau perdu et son équipage sauvé restent en mémoire sans vaisseau de remplacement en file d'attente</t>

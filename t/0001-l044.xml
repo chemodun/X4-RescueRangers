@@ -150,6 +150,7 @@
       <t id="90110">Extra max gate distance above the pilot skill limit</t>
       <t id="90200">Overview</t>
       <t id="90210">Show the Rescue Rangers overview in the top menu</t>
+      <t id="90220">Show the overview icon on the right side bar of the station and research menus</t>
       <t id="90310">Move rescued people to Stasis</t>
       <t id="90330">Rent a place on an NPC station automatically if a day of rent is at most this percent of your money \(0: never\)</t>
       <t id="90410">Hours a lost ship and its rescued crew are remembered with no Replacement Ship queued</t>

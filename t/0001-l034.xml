@@ -150,6 +150,7 @@
       <t id="90110">Distancia máxima de puerta adicional sobre el límite de habilidad del piloto</t>
       <t id="90200">Vista General</t>
       <t id="90210">Mostrar la vista general de Rescatadores en el menú superior</t>
+      <t id="90220">Mostrar el icono del resumen en la barra lateral derecha de los menús de estaciones e investigación</t>
       <t id="90310">Trasladar a las personas rescatadas a Estasis</t>
       <t id="90330">Alquilar automáticamente un lugar en una estación NPC si un día de alquiler es como máximo este porcentaje de tu dinero \(0: nunca\)</t>
       <t id="90410">Horas que se recuerdan una nave perdida y su tripulación rescatada sin ninguna Nave de Reemplazo en cola</t>

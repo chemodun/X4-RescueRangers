@@ -150,6 +150,7 @@
       <t id="90110">Dodatečná maximální vzdálenost brány nad limit dovednosti pilota</t>
       <t id="90200">Přehled</t>
       <t id="90210">Zobrazit přehled Záchranářů v horní nabídce</t>
+      <t id="90220">Zobrazit ikonu přehledu v pravém postranním panelu nabídek stanic a výzkumu</t>
       <t id="90310">Přesouvat zachráněné lidi do Stáze</t>
       <t id="90330">Automaticky pronajmout místo na stanici NPC, pokud denní nájemné činí nejvýše toto procento vašich peněz \(0: nikdy\)</t>
       <t id="90410">Počet hodin, po které zůstává ztracená loď a její zachráněná posádka v paměti, když není ve frontě žádná náhradní loď</t>

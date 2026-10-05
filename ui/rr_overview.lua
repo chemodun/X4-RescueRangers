@@ -8,6 +8,8 @@ local C   = ffi.C
 
 local PAGE         = 1972092402
 local TOP_LEVEL_ID = "rescuerangers"
+-- Our mode in Helper.rightSideBar, the station menus' right bar.
+local RIGHT_BAR_MODE = "rescuerangers"
 local ORDER_ID     = "RescueRangers"
 
 -- Order param positions, as declared in aiscripts/order.rescue.rangers.sector.xml.
@@ -33,6 +35,7 @@ local config = {
   contextWidth    = 260, -- vanilla InteractMenu width, as the map's person context
   mouseOutRange   = 100, -- the person context closes once the mouse is this far outside it, as vanilla Personnel
   getThemBackTtl  = 1800, -- seconds $RRGetThemBackEnabled stays valid, as md/rr_getthemback.xml checks it
+  topLevelCheck   = 5, -- real seconds between checks that the top-level row still fits; on overflow it scrolls
 }
 
 local TABS = {
@@ -95,7 +98,7 @@ local rr = {
 -- *** debug helpers ***
 
 local function readConfig()
-  local cfg = GetNPCBlackboard(rr.playerId, "$RescueRangersConfig")
+  local cfg = (rr.playerId ~= 0) and GetNPCBlackboard(rr.playerId, "$RescueRangersConfig") or nil
   rr.cfg = (type(cfg) == "table") and cfg or {}
   rr.debugLevel = tostring(rr.cfg.debugLevel or "none")
 end
@@ -899,23 +902,25 @@ end
 
 -- *** top-level entry ***
 
-local function addTopLevelEntry()
-  ---@type table[]
-  local list = Helper.topLevelMenus
-  local pos = #list + 1
-  for i, entry in ipairs(list) do
-    if entry.id == TOP_LEVEL_ID then
-      return
-    end
-    if entry.id == "map" then
-      pos = i + 1
+-- Vanilla builds the row as one table of shown entries + 2 columns; past Helper.maxTableCols every top-level menu fails to open.
+local function topLevelRoom()
+  local shown = 0
+  for _, entry in ipairs(Helper.topLevelMenus) do
+    if Helper.checkTopLevelConditions(entry) then
+      shown = shown + 1
     end
   end
-  table.insert(list, pos, {
-    id = TOP_LEVEL_ID, name = ReadText(PAGE, 1), icon = "tlt_rescuerangers", shortcut = "",
-    menu = menu.name, helpOverlayID = "toplevel_rescuerangers", helpOverlayText = ReadText(PAGE, 3000), param = { 0, 0 },
-  })
-  debugLog("top-level entry added at %d of %d.", pos, #list)
+  local max = (Helper.maxTableCols or 13) - 2
+  return max - shown, shown, max
+end
+
+local function hasTopLevelEntry()
+  for _, entry in ipairs(Helper.topLevelMenus) do
+    if entry.id == TOP_LEVEL_ID then
+      return true
+    end
+  end
+  return false
 end
 
 local function removeTopLevelEntry()
@@ -930,6 +935,81 @@ local function removeTopLevelEntry()
   end
 end
 
+-- Shared with Protect Sector: either mod switches vanilla's 5-icon carousel off again, but only one of them switched on.
+local SCROLLING_MARK = "chemodunOverflowScrolling"
+
+-- Not behind the debug level: a player's log must show why the top menu scrolls.
+local function enableTopLevelScrolling(shown, max)
+  local cfg = Helper.topLevelConfig
+  if (not cfg) or cfg.scrolling then
+    return
+  end
+  cfg.scrolling = true
+  cfg[SCROLLING_MARK] = true
+  DebugError(string.format("RR_Overview: the top menu shows %d entries, at most %d fit in a row: switched it to scrolling. Switch the Rescue Rangers top menu icon off in Extension Options to get the row back.", shown, max))
+end
+
+local function releaseTopLevelScrolling()
+  local cfg = Helper.topLevelConfig
+  if not (cfg and cfg.scrolling and cfg[SCROLLING_MARK]) then
+    return
+  end
+  local room, shown, max = topLevelRoom()
+  if room < 0 then
+    debugLog("top menu keeps scrolling: %d entries, at most %d fit.", shown, max)
+    return
+  end
+  cfg.scrolling = false
+  cfg[SCROLLING_MARK] = nil
+  DebugError(string.format("RR_Overview: the top menu shows %d entries, at most %d fit in a row: switched scrolling off.", shown, max))
+end
+
+local function checkTopLevelRow()
+  rr.topLevelCheckQueued = nil
+  if not hasTopLevelEntry() then
+    return
+  end
+  local room, shown, max = topLevelRoom()
+  if room < 0 then
+    enableTopLevelScrolling(shown, max)
+  end
+  rr.scheduleTopLevelCheck()
+end
+
+-- Other mods may add their entries after ours, and vanilla's own count changes mid-game (terraforming, ventures).
+function rr.scheduleTopLevelCheck()
+  if rr.topLevelCheckQueued then
+    return
+  end
+  rr.topLevelCheckQueued = true
+  Helper.addDelayedOneTimeCallbackOnUpdate(checkTopLevelRow, false, getElapsedTime() + config.topLevelCheck)
+end
+
+local function addTopLevelEntry()
+  ---@type table[]
+  local list = Helper.topLevelMenus
+  local pos = #list + 1
+  for i, entry in ipairs(list) do
+    if entry.id == TOP_LEVEL_ID then
+      return
+    end
+    -- After the map, and after Protect Sector's entry when it is there; Protect Sector inserts right after the map.
+    if entry.id == "map" or entry.id == "protectsector" then
+      pos = i + 1
+    end
+  end
+  table.insert(list, pos, {
+    id = TOP_LEVEL_ID, name = ReadText(PAGE, 1), icon = "tlt_rescuerangers", shortcut = "",
+    menu = menu.name, helpOverlayID = "toplevel_rescuerangers", helpOverlayText = ReadText(PAGE, 3000), param = { 0, 0 },
+  })
+  local room, shown, max = topLevelRoom()
+  debugLog("top-level entry added at %d of %d, %d of %d shown.", pos, #list, shown, max)
+  if room < 0 then
+    enableTopLevelScrolling(shown, max)
+  end
+  rr.scheduleTopLevelCheck()
+end
+
 -- Unset counts as on: the first load reads the config before the MD creates it.
 local function topMenuIconOn()
   return rr.cfg.topMenuIcon == nil or toBool(rr.cfg.topMenuIcon)
@@ -940,12 +1020,88 @@ local function syncTopLevelEntry()
     addTopLevelEntry()
   else
     removeTopLevelEntry()
+    releaseTopLevelScrolling()
   end
 end
 
+-- Unset counts as off.
+local function rightBarIconOn()
+  return toBool(rr.cfg.rightBarIcon)
+end
+
+-- Last, so after Protect Sector's entry, which goes before ours.
+local function addRightBarEntry()
+  ---@type table[]
+  local list = Helper.rightSideBar
+  for _, entry in ipairs(list) do
+    if entry.mode == RIGHT_BAR_MODE then
+      return
+    end
+  end
+  table.insert(list, {
+    name = ReadText(PAGE, 1), icon = "tlt_rescuerangers", mode = RIGHT_BAR_MODE,
+    helpOverlayID = "rightbar_rescuerangers", helpOverlayText = ReadText(PAGE, 3000),
+  })
+  debugLog("right side bar entry added at %d.", #list)
+end
+
+local function removeRightBarEntry()
+  ---@type table[]
+  local list = Helper.rightSideBar
+  for i, entry in ipairs(list) do
+    if entry.mode == RIGHT_BAR_MODE then
+      table.remove(list, i)
+      debugLog("right side bar entry removed.")
+      return
+    end
+  end
+end
+
+local function syncRightBarEntry()
+  if not Helper.rightSideBar then
+    return
+  end
+  if rightBarIconOn() then
+    addRightBarEntry()
+  else
+    removeRightBarEntry()
+  end
+end
+
+-- Vanilla maps each mode to its menu in a fixed if-chain; ours opens the overview on the same station.
+local function wrapButtonRightBar()
+  local original = Helper.buttonRightBar
+  if not original then
+    return
+  end
+  Helper.buttonRightBar = function(container, currentmode, callback, selfcallback, mode, row)
+    if mode == RIGHT_BAR_MODE and mode ~= currentmode then
+      traceLog("right side bar: open from %s.", tostring(currentmode))
+      return callback(menu.name, { 0, 0, 0, container })
+    end
+    return original(container, currentmode, callback, selfcallback, mode, row)
+  end
+end
+
+-- The station the right bar was clicked on, else the player's HQ; nil draws no bar.
+local function rightBarStationOf(param)
+  local id64 = componentOf(param)
+  if isAlive(id64) then
+    return id64
+  end
+  local hqs = {}
+  Helper.ffiVLA(hqs, "UniverseID", C.GetNumHQs, C.GetHQs, "player")
+  if hqs[1] ~= nil then
+    return ConvertStringTo64Bit(tostring(hqs[1]))
+  end
+  return nil
+end
+
+-- Raised for every checkbox on the Options page.
 local function onTopMenuIconChanged()
   readConfig()
   syncTopLevelEntry()
+  syncRightBarEntry()
 end
 
 -- *** menu ***
@@ -971,11 +1127,26 @@ function menu.onShowMenu(state)
     menu.selected = menu.selected or {}
     menu.topRows = menu.topRows or {}
   end
+  -- Opened from a ranger's context menu: show that ranger.
+  local ranger = (not state) and type(menu.param) == "table" and menu.param[3]
+  if ranger and isAlive(ranger) then
+    menu.tab = "rangers"
+    menu.selected.rangers = ffi.string(C.GetObjectIDCode(ranger))
+    menu.topRows.rangers = nil
+  end
   menu.stasis = menu.stasis or { marked = {}, filter = "", sort = "name", role = "service" }
   menu.stasis.allowReassign = toBool(rr.cfg.stasisAllowReassign)
   menu.stasis.wantCandidates = (menu.tab == "stasis")
+  syncRightBarEntry()
+  menu.rightBarStation = rightBarStationOf(type(menu.param) == "table" and menu.param[4])
+  traceLog("right side bar station: %s.", tostring(menu.rightBarStation))
   Helper.setTabScrollCallback(menu, menu.onTabScroll)
   menu.createFrame()
+end
+
+function menu.buttonRightBar(newmenu, params)
+  Helper.closeMenuAndOpenNewMenu(menu, newmenu, params, true)
+  menu.cleanup()
 end
 
 function menu.selectTab(id)
@@ -1061,6 +1232,15 @@ function menu.createFrame()
   local topLevelBottom = topMenuIconOn() and Helper.createTopLevelTab(menu, TOP_LEVEL_ID, menu.infoFrame, "", nil, true) or nil
   local top = menu.createTabRow(topLevelBottom) + Helper.borderSize
   local width = Helper.viewWidth - 2 * Helper.frameBorder
+  if menu.rightBarStation and rightBarIconOn() then
+    width = width - Helper.scaleX(Helper.sidebarWidth) - Helper.borderSize
+    -- 8.00 takes no menu argument
+    if rr.isV9 then
+      Helper.createRightSideBar(menu, menu.infoFrame, menu.rightBarStation, true, RIGHT_BAR_MODE, menu.buttonRightBar)
+    else
+      Helper.createRightSideBar(menu.infoFrame, menu.rightBarStation, true, RIGHT_BAR_MODE, menu.buttonRightBar)
+    end
+  end
   local rangers = collectRangers()
   local stats = readStats()
   if menu.tab == "stats" then
@@ -2301,6 +2481,13 @@ function menu.onSaveState()
   return true
 end
 
+-- The map stays the back target, as from the top menu.
+local function onOpenOverview(_, rangerLuaId)
+  local id64 = componentOf(rangerLuaId)
+  traceLog("open from the context menu of %s.", (id64 ~= 0) and ffi.string(C.GetObjectIDCode(id64)) or "nothing")
+  OpenMenu(menu.name, { 0, 0, id64 }, { "MapMenu", { 0, 0 }, nil })
+end
+
 local function Init()
   rr.playerId = ConvertStringTo64Bit(tostring(C.GetPlayerID()))
   rr.isV9 = C.GetGameVersion().major >= 9
@@ -2308,9 +2495,12 @@ local function Init()
   if Helper then
     Helper.registerMenu(menu)
     syncTopLevelEntry()
+    wrapButtonRightBar()
+    syncRightBarEntry()
   end
   RegisterEvent("RescueRangers.TopMenuIcon", onTopMenuIconChanged)
   RegisterEvent("RescueRangers.StasisChanged", onStasisChanged)
+  RegisterEvent("RescueRangers.OpenOverview", onOpenOverview)
 end
 
 Register_OnLoad_Init(Init)

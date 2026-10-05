@@ -150,6 +150,7 @@
       <t id="90110">Distância máxima da porta adicional acima do limite de habilidade do piloto</t>
       <t id="90200">Visão geral</t>
       <t id="90210">Mostrar a visão geral dos Rangers de Resgate no menu superior</t>
+      <t id="90220">Mostrar o ícone da visão geral na barra lateral direita dos menus de estações e pesquisa</t>
       <t id="90310">Transferir pessoas resgatadas para a Estase</t>
       <t id="90330">Alugar automaticamente um local em uma estação de NPC se um dia de aluguel custar no máximo esta porcentagem do seu dinheiro \(0: nunca\)</t>
       <t id="90410">Horas em que uma nave perdida e sua tripulação resgatada ficam na memória sem nenhuma Nave de Substituição na fila</t>
