@@ -1,5 +1,16 @@
 [size=4][u]Changelog[/u][/size]
 
+[size=3][u][b][2.01] - 2026-10-05[/b][/u][/size]
+
+[size=3][u][i]Added[/i][/u][/size]
+[list]
+[*] [b]Rescue Rangers[/b] entry in the context menu of a rescue ship, and of a ship assisting one, opens the overview on that rescue ship.
+[*] Option to show the overview icon on the right side bar of the station and research menus (off by default).
+[/list]
+[size=3][u][i]Fixed[/i][/u][/size]
+[list]
+[*] With many mods adding top menu icons, every menu (map, options) stopped opening: a full top menu now switches to scrolling.
+[/list]
 [size=3][u][b][2.00] - 2026-10-04[/b][/u][/size]
 
 [size=3][u][i]Added[/i][/u][/size]
